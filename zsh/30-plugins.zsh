@@ -22,3 +22,12 @@ if [[ -f "${PLUGIN_PREFIX}/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]]
 elif [[ -f "/usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" ]]; then
     source "/usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
 fi
+
+# Enable history substring search (if available)
+if [[ -f "${PLUGIN_PREFIX}/share/zsh-history-substring-search/zsh-history-substring-search.zsh" ]]; then
+    source "${PLUGIN_PREFIX}/share/zsh-history-substring-search/zsh-history-substring-search.zsh"
+elif [[ -f "/usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh" ]]; then
+    source "/usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh"
+elif [[ -f "/usr/share/zsh-history-substring-search/zsh-history-substring-search.zsh" ]]; then
+    source "/usr/share/zsh-history-substring-search/zsh-history-substring-search.zsh"
+fi
