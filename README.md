@@ -14,8 +14,22 @@ Personal dotfiles configuration for macOS and Linux, featuring oh-my-posh, enhan
 
 ## Quick Install
 
+### One-liner Installation
+
+Using curl:
 ```bash
-git clone https://github.com/BeeGass/dotfiles.git ~/.dotfiles
+curl -sSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install.sh | bash -s -- --remote
+```
+
+Using wget:
+```bash
+wget -qO- https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install.sh | bash -s -- --remote
+```
+
+### Traditional Installation
+
+```bash
+git clone git@github.com:BeeGass/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 ./install.sh
 ```

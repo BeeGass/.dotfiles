@@ -7,6 +7,28 @@ echo "🚀 Dotfiles Installation Script"
 echo "=============================="
 echo ""
 
+# Check if running from remote (one-liner install)
+REMOTE_INSTALL=false
+if [[ "$1" == "--remote" ]]; then
+    REMOTE_INSTALL=true
+    echo "Running remote installation..."
+    
+    # Clone the repository first
+    if [ ! -d "$HOME/.dotfiles" ]; then
+        echo "Cloning dotfiles repository..."
+        git clone https://github.com/BeeGass/.dotfiles.git "$HOME/.dotfiles" || {
+            echo "Failed to clone repository. Trying with git@github.com..."
+            git clone git@github.com:BeeGass/.dotfiles.git "$HOME/.dotfiles" || {
+                echo "Failed to clone repository. Please check your internet connection and GitHub access."
+                exit 1
+            }
+        }
+    fi
+    
+    # Change to the dotfiles directory
+    cd "$HOME/.dotfiles" || exit 1
+fi
+
 # Detect OS
 OS="$(uname -s)"
 case "${OS}" in
