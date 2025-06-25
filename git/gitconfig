@@ -1,0 +1,57 @@
+[user]
+    name = Bryan Gass
+    username = BeeGass
+    email = bryank123@live.com
+    signingkey = 0xACC3640C138D96A2
+
+[github]
+    user = BeeGass
+    # Note: GitHub token should be stored in a credential helper, not in gitconfig
+    # token = <use git credential helper instead>
+
+[commit]
+    gpgsign = true
+
+[gpg]
+    program = gpg
+
+[push]
+    autosetupremote = true
+
+[core]
+    editor = nvim
+    pager = delta
+
+[interactive]
+    diffFilter = delta --color-only
+
+[delta]
+    navigate = true
+    light = false
+    side-by-side = false
+    line-numbers = true
+
+[merge]
+    conflictstyle = diff3
+
+[diff]
+    colorMoved = default
+
+[alias]
+    st = status
+    co = checkout
+    br = branch
+    ci = commit
+    unstage = reset HEAD --
+    last = log -1 HEAD
+    visual = !gitk
+    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+
+[pull]
+    rebase = false
+
+[init]
+    defaultBranch = main
+
+[credential]
+    helper = osxkeychain

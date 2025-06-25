@@ -1,0 +1,130 @@
+let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
+if empty(glob(data_dir . '/autoload/plug.vim'))
+  silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+
+call plug#begin('~/.vim/plugged')
+
+" Install vim-plug if not found
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+endif
+
+" Run PlugInstall if there are missing plugins
+autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+  \| PlugInstall --sync | source $MYVIMRC
+\| endif
+
+"------------------------------------------------Plugins------------------------------------------------
+" Plugin 'flazz/vim-colorschemes'
+
+"Async Language Server Protocol plugin for vim8 and neovim"
+Plug 'prabirshrestha/vim-lsp'
+
+"current theme im using 
+Plug 'jaredgorski/spacecamp'
+
+"need to look up
+Plug 'valloric/youcompleteme'
+
+"need to look up
+Plug 'jremmen/vim-ripgrep'
+
+"need to look up
+Plug 'tpope/vim-fugitive'
+
+"surrounds highlighted text with whatever character you want 
+Plug 'tpope/vim-surround'
+
+"need to look up
+Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
+
+"allows for the fun colorful footer at the bottom of the vim
+Plug 'vim-airline/vim-airline'
+
+"need to look up
+Plug 'mbbill/undotree'
+
+"need to look up
+Plug 'leafgarland/typescript-vim'
+
+"need to look up
+Plug 'vim-utils/vim-man'
+
+"autocomplete for python
+Plug 'davidhalter/jedi-vim'
+
+"I believe this is a dependency for vim plugins
+Plug 'tpope/vim-sensible'
+
+"need to look up
+Plug 'nathanaelkane/vim-indent-guides'
+
+"coloring theme
+Plug 'altercation/vim-colors-solarized'
+
+"Allows for multiple cursor editing
+Plug 'terryma/vim-multiple-cursors'
+
+"creates file managing tree to the left of vim
+Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
+
+"creates error messages and general error handling
+Plug 'dense-analysis/ale'
+
+"Fuzzy finder for vim
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+
+
+
+call plug#end()
+"---------------------------------------------End Of Plugins--------------------------------------------
+
+
+
+"_______________________________________________________________________________________________________
+""                                               Settings
+""______________________________________________________________________________________________________
+
+"------------------------------------------------Colors-------------------------------------------------
+syntax on
+syntax enable		    " enable syntax processing
+set tabstop=4		    " number of visual spaces per TAB
+set softtabstop=4	    " number of spaces in tab when editing
+set expandtab		    " tabs are spaces
+set smartindent		    " vim's best attempt to know when to indent
+set nowrap		        " characters will go off the screen instead of wrapping over to next line
+set noswapfile		    " vim wont make an excess amount of temporary files
+set smartcase		    " case sensitive searches
+set incsearch		    " get searches as you type incremently 
+
+
+"-----------------------------------------------UI Config-----------------------------------------------
+set number              " show line numbers
+set showcmd             " show command in bottom bar
+set cursorline          " highlight current line
+filetype indent on      " load filetype-specific indent files
+set wildmenu            " visual autocomplete for command menu
+set showmatch           " highlight matching [{()}]
+set ruler		        " Shows the line number, column number and cursor postion
+set visualbell		    " Blink cursor on error instead of beeping (grr)
+set encoding=utf-8	    " Encoding
+
+
+"-----------------------------------------------Searching-----------------------------------------------
+set incsearch           " search as characters are entered
+set hlsearch            " highlight matches
+
+"_______________________________________________________________________________________________________
+"                                              Key Bindings
+"_______________________________________________________________________________________________________
+                                              
+"------------------------------------------------Colors-------------------------------------------------
+nnoremap j gj
+nnoremap k gk
+
+
+"----------------------------------------------Color Schemes--------------------------------------------
+colorscheme spacecamp

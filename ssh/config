@@ -1,0 +1,27 @@
+Host github
+        User git
+        HostName github.com
+        IdentitiesOnly yes
+        IdentityFile ~/.ssh/id_rsa_yubikey.pub
+Host beegassdesk
+        User beegass
+        HostName hostnetwork.beegass.dev
+        IdentityFile ~/.ssh/id_rsa_yubikey.pub
+        Port 4296
+Host mydesktop
+        user beegass
+        #user BeeGass-Desktop
+        HostName 130.44.135.194
+        ServerAliveInterval 60
+        ServerAliveCountMax 3
+        #HostName 192.168.1.97
+        #HostName 192.168.1.20
+        # IdentityFile ~/.ssh/id_rsa_yubikey.pub
+        #IdentityFile ~/.ssh/a_pubkey.pub
+        Port 7569
+Host mcopp
+        user beegass
+        HostName mcopp.com
+        ServerAliveInterval 60
+        ServerAliveCountMax 3
+        Port 12211

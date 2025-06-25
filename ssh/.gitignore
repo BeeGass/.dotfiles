@@ -1,0 +1,9 @@
+# NEVER commit SSH private keys
+id_*
+!id_*.pub
+known_hosts
+authorized_keys
+*.pem
+*.key
+*.p12
+*.pfx
