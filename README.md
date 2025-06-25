@@ -66,22 +66,55 @@ git clone git@github.com:mehant-kr/Google-Sans-Mono.git
 # Copy .ttf files to ~/Library/Fonts/
 ```
 
-### Linux
+### Linux (Ubuntu/Debian)
 
 ```bash
-# Install tools (Ubuntu/Debian)
+# Install most tools
 sudo apt update
-sudo apt install fzf eza bat ripgrep git-delta zsh-syntax-highlighting zsh-autosuggestions
+sudo apt install -y fzf bat ripgrep zsh-syntax-highlighting zsh-autosuggestions
+
+# Install eza (requires adding repository)
+sudo apt install -y gpg
+wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
+echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
+sudo apt update && sudo apt install -y eza
+
+# Install git-delta
+wget https://github.com/dandavison/delta/releases/latest/download/git-delta-musl_*_amd64.deb
+sudo dpkg -i git-delta-musl_*_amd64.deb
 
 # Install oh-my-posh
 curl -s https://ohmyposh.dev/install.sh | bash -s
 
-# Clone and setup (same as macOS)
-git clone https://github.com/BeeGass/dotfiles.git ~/.dotfiles
-ln -sfn ~/.dotfiles/zsh/zshrc ~/.zshrc
-ln -sfn ~/.dotfiles/git/gitconfig ~/.gitconfig
+# Clone and setup
+git clone https://github.com/BeeGass/.dotfiles.git ~/.dotfiles
+cd ~/.dotfiles && ./install.sh
 
 # Install fonts to ~/.local/share/fonts/ and run fc-cache -f -v
+```
+
+### NixOS
+
+Add to your `configuration.nix`:
+```nix
+environment.systemPackages = with pkgs; [
+  fzf
+  eza
+  bat
+  ripgrep
+  delta
+  oh-my-posh
+  zsh-syntax-highlighting
+  zsh-autosuggestions
+  zsh-history-substring-search
+];
+```
+
+Then:
+```bash
+sudo nixos-rebuild switch
+git clone https://github.com/BeeGass/.dotfiles.git ~/.dotfiles
+cd ~/.dotfiles && ./install.sh
 ```
 
 ## Directory Structure
