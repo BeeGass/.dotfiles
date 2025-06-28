@@ -77,6 +77,9 @@ check "~/.gitconfig → ~/.dotfiles/git/gitconfig" \
 check "~/.vimrc → ~/.dotfiles/vim/vimrc" \
     "[ -L '$HOME/.vimrc' ] && [ -e '$HOME/.vimrc' ] && [ -e '$HOME/.dotfiles/vim/vimrc' ]"
 
+check "~/.config/wezterm/wezterm.lua → ~/.dotfiles/wezterm/wezterm.lua" \
+    "[ -L '$HOME/.config/wezterm/wezterm.lua' ] && [ -e '$HOME/.config/wezterm/wezterm.lua' ] && [ -e '$HOME/.dotfiles/wezterm/wezterm.lua' ]"
+
 check "~/.ssh/config → ~/.dotfiles/ssh/config" \
     "[ -L '$HOME/.ssh/config' ] && [ -e '$HOME/.ssh/config' ] && [ -e '$HOME/.dotfiles/ssh/config' ]"
 
@@ -114,6 +117,9 @@ check "git-delta installed" "command -v delta &> /dev/null"
 # Optional tools
 warn_check "uv (Python) installed" "command -v uv &> /dev/null" \
     "Install with: curl -LsSf https://astral.sh/uv/install.sh | sh"
+
+warn_check "WezTerm installed" "command -v wezterm &> /dev/null" \
+    "Install via package manager (see install.sh for details)"
 
 echo ""
 echo "3. Checking PATH Configuration"

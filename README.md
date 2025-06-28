@@ -12,6 +12,7 @@ Personal dotfiles configuration for macOS and Linux, featuring oh-my-posh, enhan
 - 📁 **Smart Directory Navigation** - Bookmarks and enhanced completion
 - 🎨 **Google Sans Mono** - Clean typography with Nerd Font fallback for icons
 - 📜 **Custom Scripts** - Utility scripts automatically installed to ~/.local/bin
+- 💻 **WezTerm** - GPU-accelerated terminal with custom configuration
 
 ## Quick Install
 
@@ -50,7 +51,7 @@ cd ~/.dotfiles
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Install required tools
-brew install fzf eza bat ripgrep git-delta
+brew install fzf eza bat ripgrep git-delta wezterm
 brew install jandedobbeleer/oh-my-posh/oh-my-posh
 brew install zsh-syntax-highlighting zsh-autosuggestions
 
@@ -88,6 +89,11 @@ sudo dpkg -i git-delta-musl_*_amd64.deb
 
 # Install oh-my-posh
 curl -s https://ohmyposh.dev/install.sh | bash -s
+
+# Install WezTerm
+curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /usr/share/keyrings/wezterm-fury.gpg
+echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
+sudo apt update && sudo apt install -y wezterm
 
 # Clone and setup
 git clone https://github.com/BeeGass/.dotfiles.git ~/.dotfiles
@@ -154,6 +160,8 @@ cd ~/.dotfiles && ./install.sh
 │   └── gitconfig.local    # Local overrides (git ignored)
 ├── vim/                   # Vim configuration
 │   └── vimrc              # Vim settings (symlinked to ~/.vimrc)
+├── wezterm/               # WezTerm terminal configuration
+│   └── wezterm.lua        # WezTerm config (symlinked to ~/.config/wezterm/wezterm.lua)
 ├── ssh/                   # SSH configuration
 │   ├── config             # SSH client config (symlinked to ~/.ssh/config)
 │   └── .gitignore         # Ensures private keys are never committed
@@ -166,13 +174,29 @@ cd ~/.dotfiles && ./install.sh
 
 ## Configuration
 
-### Terminal Font Setup (iTerm2)
+### Terminal Font Setup
 
+#### iTerm2
 1. Open iTerm2 Preferences (`⌘,`)
 2. Go to **Profiles → Text**
 3. Set **Font**: Google Sans Mono (13-14pt)
 4. Enable **Use a different font for non-ASCII text**
 5. Set **Non-ASCII Font**: Any Nerd Font (for icons)
+
+#### WezTerm
+WezTerm is pre-configured with:
+- **Font**: Google Sans Mono with Nerd Font fallback
+- **Color Scheme**: Catppuccin Mocha
+- **Transparency**: 90% window opacity
+- **Key Bindings**: tmux-style with `Ctrl+A` as leader
+- **GPU Acceleration**: Enabled for smooth performance
+
+Key shortcuts:
+- `Ctrl+A` then `|` = split horizontally
+- `Ctrl+A` then `-` = split vertically
+- `Ctrl+A` then `h/j/k/l` = navigate panes
+- `Ctrl+A` then `c` = new tab
+- `Ctrl+A` then `r` = reload config
 
 ### Directory Bookmarks
 

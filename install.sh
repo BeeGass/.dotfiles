@@ -74,6 +74,10 @@ create_symlink "$HOME/.dotfiles/git/gitconfig" "$HOME/.gitconfig"
 # Vim configuration
 create_symlink "$HOME/.dotfiles/vim/vimrc" "$HOME/.vimrc"
 
+# WezTerm configuration
+mkdir -p "$HOME/.config/wezterm"
+create_symlink "$HOME/.dotfiles/wezterm/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua"
+
 # SSH configuration
 mkdir -p "$HOME/.ssh"
 create_symlink "$HOME/.dotfiles/ssh/config" "$HOME/.ssh/config"
@@ -113,7 +117,7 @@ if [[ "$OS_TYPE" == "macOS" ]]; then
     fi
     
     echo "  Installing tools via Homebrew..."
-    brew install fzf eza bat ripgrep git-delta
+    brew install fzf eza bat ripgrep git-delta wezterm
     brew install jandedobbeleer/oh-my-posh/oh-my-posh
     brew install zsh-syntax-highlighting zsh-autosuggestions
     
@@ -138,6 +142,7 @@ elif [[ "$OS_TYPE" == "Linux" ]]; then
         echo "        zsh-syntax-highlighting"
         echo "        zsh-autosuggestions"
         echo "        zsh-history-substring-search"
+        echo "        wezterm"
         echo "      ];"
         echo ""
         echo "    Then run: sudo nixos-rebuild switch"
@@ -162,6 +167,12 @@ elif [[ "$OS_TYPE" == "Linux" ]]; then
         echo ""
         echo "    # Install Oh-My-Posh"
         echo "    curl -s https://ohmyposh.dev/install.sh | bash -s"
+        echo ""
+        echo "    # Install WezTerm"
+        echo "    curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /usr/share/keyrings/wezterm-fury.gpg"
+        echo "    echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list"
+        echo "    sudo apt update"
+        echo "    sudo apt install -y wezterm"
     fi
 fi
 
