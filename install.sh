@@ -78,6 +78,29 @@ create_symlink "$HOME/.dotfiles/vim/vimrc" "$HOME/.vimrc"
 mkdir -p "$HOME/.ssh"
 create_symlink "$HOME/.dotfiles/ssh/config" "$HOME/.ssh/config"
 
+# Scripts - symlink to ~/.local/bin
+echo ""
+echo "Setting up scripts..."
+mkdir -p "$HOME/.local/bin"
+
+# Symlink all scripts in the scripts directory
+if [ -d "$HOME/.dotfiles/scripts" ]; then
+    for script in "$HOME/.dotfiles/scripts"/*; do
+        if [ -f "$script" ]; then
+            script_name=$(basename "$script")
+            create_symlink "$script" "$HOME/.local/bin/$script_name"
+            chmod +x "$script"
+            echo "  Made $script_name executable"
+        fi
+    done
+fi
+
+# Ensure ~/.local/bin is in PATH
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    echo ""
+    echo "  ⚠️  ~/.local/bin is not in your PATH. It will be added when you source ~/.zshrc"
+fi
+
 echo ""
 echo "2. Installing required tools..."
 echo ""
@@ -165,9 +188,19 @@ echo "    git clone git@github.com:hprobotic/Google-Sans-Font.git"
 echo "    git clone git@github.com:mehant-kr/Google-Sans-Mono.git"
 echo ""
 if [[ "$OS_TYPE" == "macOS" ]]; then
-    echo "  On macOS: Copy .ttf files to ~/Library/Fonts/"
+    echo "  On macOS:"
+    echo "    # Copy all .ttf files to the user fonts directory"
+    echo "    cp Google-Sans-Font/*.ttf ~/Library/Fonts/"
+    echo "    cp Google-Sans-Mono/*.ttf ~/Library/Fonts/"
 else
-    echo "  On Linux: Copy .ttf files to ~/.local/share/fonts/ and run fc-cache -f -v"
+    echo "  On Linux:"
+    echo "    # Create fonts directory if it doesn't exist"
+    echo "    mkdir -p ~/.local/share/fonts"
+    echo "    # Copy all .ttf files to the user fonts directory"
+    echo "    cp Google-Sans-Font/*.ttf ~/.local/share/fonts/"
+    echo "    cp Google-Sans-Mono/*.ttf ~/.local/share/fonts/"
+    echo "    # Update font cache"
+    echo "    fc-cache -f -v"
 fi
 
 echo ""

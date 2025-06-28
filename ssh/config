@@ -25,3 +25,7 @@ Host mcopp
         ServerAliveInterval 60
         ServerAliveCountMax 3
         Port 12211
+        StreamLocalBindUnlink yes
+        ForwardAgent yes
+        RemoteForward /run/user/1001/gnupg/S.gpg-agent /Users/beegass/.gnupg/S.gpg-agent.extra
+        RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh /Users/beegass/.gnupg/S.gpg-agent.ssh

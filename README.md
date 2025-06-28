@@ -11,6 +11,7 @@ Personal dotfiles configuration for macOS and Linux, featuring oh-my-posh, enhan
 - 🔐 **GPG/YubiKey Integration** - Secure key management and SSH authentication
 - 📁 **Smart Directory Navigation** - Bookmarks and enhanced completion
 - 🎨 **Google Sans Mono** - Clean typography with Nerd Font fallback for icons
+- 📜 **Custom Scripts** - Utility scripts automatically installed to ~/.local/bin
 
 ## Quick Install
 
@@ -63,7 +64,9 @@ ln -sfn ~/.dotfiles/git/gitconfig ~/.gitconfig
 # Install fonts
 git clone git@github.com:hprobotic/Google-Sans-Font.git
 git clone git@github.com:mehant-kr/Google-Sans-Mono.git
-# Copy .ttf files to ~/Library/Fonts/
+# Copy all .ttf files to the user fonts directory
+cp Google-Sans-Font/*.ttf ~/Library/Fonts/
+cp Google-Sans-Mono/*.ttf ~/Library/Fonts/
 ```
 
 ### Linux (Ubuntu/Debian)
@@ -90,7 +93,16 @@ curl -s https://ohmyposh.dev/install.sh | bash -s
 git clone https://github.com/BeeGass/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles && ./install.sh
 
-# Install fonts to ~/.local/share/fonts/ and run fc-cache -f -v
+# Install fonts
+git clone git@github.com:hprobotic/Google-Sans-Font.git
+git clone git@github.com:mehant-kr/Google-Sans-Mono.git
+# Create fonts directory if it doesn't exist
+mkdir -p ~/.local/share/fonts
+# Copy all .ttf files to the user fonts directory
+cp Google-Sans-Font/*.ttf ~/.local/share/fonts/
+cp Google-Sans-Mono/*.ttf ~/.local/share/fonts/
+# Update font cache
+fc-cache -f -v
 ```
 
 ### NixOS
@@ -145,8 +157,9 @@ cd ~/.dotfiles && ./install.sh
 ├── ssh/                   # SSH configuration
 │   ├── config             # SSH client config (symlinked to ~/.ssh/config)
 │   └── .gitignore         # Ensures private keys are never committed
-├── scripts/               # Utility scripts
+├── scripts/               # Utility scripts (symlinked to ~/.local/bin)
 ├── install.sh            # Installation script
+├── refresh.sh            # Configuration verification script
 ├── README.md             # This file
 └── .gitignore            # Repository ignore rules
 ```
@@ -173,6 +186,10 @@ Quick navigation shortcuts are pre-configured:
 - `cd ~docs` → `~/Documents`
 
 ### Custom Commands
+
+#### Utility Scripts
+- `repo_to_text` - Convert repository contents to text format
+- All scripts in `~/.dotfiles/scripts/` are automatically symlinked to `~/.local/bin/` and made executable
 
 #### Oh-My-Posh
 - `edit-omp` - Edit the oh-my-posh theme
@@ -218,6 +235,30 @@ Edit `~/.dotfiles/oh-my-posh/config.json` to customize your prompt. The theme is
 1. Add aliases to `~/.dotfiles/zsh/40-aliases.zsh`
 2. Add functions to `~/.dotfiles/zsh/50-functions.zsh`
 3. Reload with `source ~/.zshrc`
+
+## Maintenance
+
+### Verifying Installation
+
+Run the refresh script to check if everything is properly configured:
+
+```bash
+~/.dotfiles/refresh.sh
+```
+
+This script will verify:
+- All symlinks are correctly set up
+- Required tools are installed
+- PATH configuration is correct
+- Git is properly configured
+- ZSH plugins are available
+- Fonts are installed
+- Oh-My-Posh theme is valid
+
+The script uses color-coded output:
+- ✓ Green: Component is properly configured
+- ⚠ Yellow: Optional component missing (warning)
+- ✗ Red: Required component missing (failure)
 
 ## Troubleshooting
 

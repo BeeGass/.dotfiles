@@ -10,7 +10,9 @@ export E_KEYID=0x21691AE75B0463CC
 export A_KEYID=0x27D667E55F655FD2
 
 # Node Version Manager
-export NVM_DIR="$HOME/.nvm"
+# export NVM_DIR="$HOME/.nvm"
+# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # Path Configuration
 export PATH="$HOME/.local/bin:$PATH"

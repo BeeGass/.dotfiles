@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# Usage:
+#   repo_to_text "<IGNORE_PATTERN>"
+# Example:
+#   repo_to_text "*.log|node_modules|.git"
+
+set -euo pipefail
+
+IGNORE_PATTERN="${1:-}"
+# Sanitize the ignore pattern to remove empty parts that might cause issues.
+IGNORE_PATTERN=$(echo "$IGNORE_PATTERN" | tr -s '|' | sed -e 's/^|//' -e 's/|$//')
+
+if [[ -z "$IGNORE_PATTERN" ]]; then
+  echo "Usage: repo_to_text <IGNORE_PATTERN>"
+  echo "Example: repo_to_text "*.log|node_modules|.git""
+  exit 1
+fi
+
+ROOT="."
+
+echo "=== DIRECTORY STRUCTURE ==="
+if ! command -v tree &> /dev/null; then
+  echo "Error: 'tree' command not found. Please install it (e.g., 'brew install tree' on macOS)."
+  exit 1
+fi
+
+if [[ -n "$IGNORE_PATTERN" ]]; then
+  tree -a -I "$IGNORE_PATTERN" "$ROOT"
+else
+  tree -a "$ROOT"
+fi
+
+echo -e "\n=== FILE CONTENTS ==="
+
+IFS='|' read -ra EXCLUDES_RAW <<< "$IGNORE_PATTERN"
+
+# Build the find command with all exclude patterns.
+CMD=("find" "$ROOT")
+for pattern in "${EXCLUDES_RAW[@]}"; do
+  if [[ -n "$pattern" ]]; then
+    # Use -not -path for each pattern
+    CMD+=("-not" "-path" "*/$pattern*")
+  fi
+done
+CMD+=("-type" "f")
+
+# Execute the find command and process the files.
+"${CMD[@]}" | while read -r file; do
+  echo -e "\n--- $file ---"
+  # Determine file type to avoid issues with pipes in loops.
+  file_type=$(file -b -- "$file")
+  # Check if it's a text file or an empty file.
+  if [[ "$file_type" == *"text"* || "$file_type" == "empty" ]]; then
+    cat "$file"
+  else
+    echo "[binary file skipped]"
+  fi
+done

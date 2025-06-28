@@ -1,130 +1,243 @@
+"==============================================================================
+" vimrc for beegass
+"==============================================================================
+"
+" This configuration is organized into the following sections:
+"   1. Vim-Plug Plugin Management
+"   2. General Settings
+"   3. UI Configuration
+"   4. Key Mappings
+"   5. Plugin Configurations
+"
+"==============================================================================
+" 1. VIM-PLUG PLUGIN MANAGEMENT
+"==============================================================================
+" Auto-install vim-plug if it's not found
 let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
 if empty(glob(data_dir . '/autoload/plug.vim'))
   silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 
+" Begin plugin list
 call plug#begin('~/.vim/plugged')
 
-" Install vim-plug if not found
-if empty(glob('~/.vim/autoload/plug.vim'))
-  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
-    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-endif
+"------------------------------------------------------------------------------
+" § A. Foundational Plugins
+"------------------------------------------------------------------------------
+Plug 'tpope/vim-sensible'    " Provides sensible default settings for a modern Vim experience.
 
-" Run PlugInstall if there are missing plugins
+"------------------------------------------------------------------------------
+" § B. UI & Appearance
+"------------------------------------------------------------------------------
+Plug 'jaredgorski/spacecamp'              " The primary colorscheme being used.
+Plug 'altercation/vim-colors-solarized'   " Another popular colorscheme.
+Plug 'vim-airline/vim-airline'            " A sleek and colorful status/tabline.
+Plug 'nathanaelkane/vim-indent-guides'    " Visually display indentation levels.
+
+"------------------------------------------------------------------------------
+" § C. File & Project Navigation
+"------------------------------------------------------------------------------
+Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' } " A classic file system tree explorer.
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }     " A command-line fuzzy finder.
+Plug 'jremmen/vim-ripgrep'                 " Integrates Ripgrep for fast, project-wide search.
+
+"------------------------------------------------------------------------------
+" § D. Code Completion & Linting
+"
+" NOTE: You have multiple plugins for code intelligence (LSP, ALE, YCM, Jedi).
+" This can lead to conflicts. Consider choosing one primary system for linting
+" and completion to ensure the best performance and avoid unexpected behavior.
+"------------------------------------------------------------------------------
+Plug 'dense-analysis/ale'                 " Asynchronous linting and fixing engine.
+Plug 'prabirshrestha/vim-lsp'             " Asynchronous Language Server Protocol plugin.
+" YouCompleteMe is a heavy-duty completion engine that requires compilation.
+" Run `./install.py` in its plugin directory after installing.
+" Plug 'valloric/youcompleteme'             " Powerful code-completion engine. (Consider removing if using LSP)
+" Plug 'davidhalter/jedi-vim'               " Python autocompletion using the Jedi library. (Consider removing if using LSP)
+
+"------------------------------------------------------------------------------
+" § E. Language Support & Syntax
+"------------------------------------------------------------------------------
+Plug 'leafgarland/typescript-vim'         " Enhanced syntax highlighting for TypeScript.
+Plug 'suan/vim-instant-markdown', {'for': 'markdown'} " Live preview for Markdown files.
+
+"------------------------------------------------------------------------------
+" § F. Git Integration
+"------------------------------------------------------------------------------
+Plug 'tpope/vim-fugitive'                 " A premier Git wrapper for Vim.
+
+"------------------------------------------------------------------------------
+" § G. General Utility & Editing Enhancements
+"------------------------------------------------------------------------------
+Plug 'tpope/vim-surround'                 " Easily delete, change, and add 'surroundings' like quotes, brackets, etc.
+Plug 'terryma/vim-multiple-cursors'       " Sublime Text-style multiple cursor editing.
+Plug 'mbbill/undotree'                    " Visualizes your undo history as a tree.
+Plug 'vim-utils/vim-man'                  " View man pages inside Vim.
+
+" Initialize plugin system
+call plug#end()
+
+" Auto-install missing plugins on Vim startup
 autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
   \| PlugInstall --sync | source $MYVIMRC
 \| endif
 
-"------------------------------------------------Plugins------------------------------------------------
-" Plugin 'flazz/vim-colorschemes'
 
-"Async Language Server Protocol plugin for vim8 and neovim"
-Plug 'prabirshrestha/vim-lsp'
+"==============================================================================
+" 2. GENERAL SETTINGS
+"==============================================================================
+set encoding=utf-8          " Set default encoding to UTF-8.
+set backspace=indent,eol,start " Allow backspacing over everything in insert mode.
+set history=1000            " Increase command history.
+set noswapfile              " Disable creation of swap files.
+set undofile                " Persist undo history between sessions.
+set autoread                " Automatically re-read files if changed outside of Vim.
 
-"current theme im using 
-Plug 'jaredgorski/spacecamp'
+"------------------------------------------------------------------------------
+" § Tabs & Indentation
+"------------------------------------------------------------------------------
+set tabstop=4               " Number of visual spaces per TAB.
+set softtabstop=4           " Number of spaces in tab when editing.
+set shiftwidth=4            " Number of spaces to use for auto-indent.
+set expandtab               " Use spaces instead of tabs.
+set smartindent             " Be smart about indentation.
+filetype indent on          " Load filetype-specific indent files.
 
-"need to look up
-Plug 'valloric/youcompleteme'
-
-"need to look up
-Plug 'jremmen/vim-ripgrep'
-
-"need to look up
-Plug 'tpope/vim-fugitive'
-
-"surrounds highlighted text with whatever character you want 
-Plug 'tpope/vim-surround'
-
-"need to look up
-Plug 'suan/vim-instant-markdown', {'for': 'markdown'}
-
-"allows for the fun colorful footer at the bottom of the vim
-Plug 'vim-airline/vim-airline'
-
-"need to look up
-Plug 'mbbill/undotree'
-
-"need to look up
-Plug 'leafgarland/typescript-vim'
-
-"need to look up
-Plug 'vim-utils/vim-man'
-
-"autocomplete for python
-Plug 'davidhalter/jedi-vim'
-
-"I believe this is a dependency for vim plugins
-Plug 'tpope/vim-sensible'
-
-"need to look up
-Plug 'nathanaelkane/vim-indent-guides'
-
-"coloring theme
-Plug 'altercation/vim-colors-solarized'
-
-"Allows for multiple cursor editing
-Plug 'terryma/vim-multiple-cursors'
-
-"creates file managing tree to the left of vim
-Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
-
-"creates error messages and general error handling
-Plug 'dense-analysis/ale'
-
-"Fuzzy finder for vim
-Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+"------------------------------------------------------------------------------
+" § Searching
+"------------------------------------------------------------------------------
+set incsearch               " Show search results as you type.
+set hlsearch                " Highlight all search matches.
+set ignorecase              " Ignore case when searching...
+set smartcase               " ...unless the query contains an uppercase letter.
 
 
+"==============================================================================
+" 3. UI CONFIGURATION
+"==============================================================================
+syntax on                   " Enable syntax highlighting.
+set number                  " Show line numbers.
+set relativenumber          " Show relative line numbers for easier navigation.
+set cursorline              " Highlight the current line.
+set ruler                   " Show cursor position (line, column) in the status line.
+set showcmd                 " Display incomplete commands in the status line.
+set showmatch               " Briefly jump to matching brackets.
+set wildmenu                " Visual autocomplete for command menu.
+set visualbell              " Use a visual bell instead of a beep.
+set nowrap                  " Do not wrap long lines.
 
-call plug#end()
-"---------------------------------------------End Of Plugins--------------------------------------------
-
-
-
-"_______________________________________________________________________________________________________
-""                                               Settings
-""______________________________________________________________________________________________________
-
-"------------------------------------------------Colors-------------------------------------------------
-syntax on
-syntax enable		    " enable syntax processing
-set tabstop=4		    " number of visual spaces per TAB
-set softtabstop=4	    " number of spaces in tab when editing
-set expandtab		    " tabs are spaces
-set smartindent		    " vim's best attempt to know when to indent
-set nowrap		        " characters will go off the screen instead of wrapping over to next line
-set noswapfile		    " vim wont make an excess amount of temporary files
-set smartcase		    " case sensitive searches
-set incsearch		    " get searches as you type incremently 
+" Set the main colorscheme
+colorscheme spacecamp
 
 
-"-----------------------------------------------UI Config-----------------------------------------------
-set number              " show line numbers
-set showcmd             " show command in bottom bar
-set cursorline          " highlight current line
-filetype indent on      " load filetype-specific indent files
-set wildmenu            " visual autocomplete for command menu
-set showmatch           " highlight matching [{()}]
-set ruler		        " Shows the line number, column number and cursor postion
-set visualbell		    " Blink cursor on error instead of beeping (grr)
-set encoding=utf-8	    " Encoding
+"==============================================================================
+" 4. KEY MAPPINGS
+"==============================================================================
+let mapleader = " "         " Set the leader key to Space.
 
-
-"-----------------------------------------------Searching-----------------------------------------------
-set incsearch           " search as characters are entered
-set hlsearch            " highlight matches
-
-"_______________________________________________________________________________________________________
-"                                              Key Bindings
-"_______________________________________________________________________________________________________
-                                              
-"------------------------------------------------Colors-------------------------------------------------
+"------------------------------------------------------------------------------
+" § Navigation
+"------------------------------------------------------------------------------
+" Move between visual lines, not logical lines (useful for wrapped text)
 nnoremap j gj
 nnoremap k gk
 
+" Clear search highlight with <leader>c
+nnoremap <leader>c :nohlsearch<CR>
 
-"----------------------------------------------Color Schemes--------------------------------------------
-colorscheme spacecamp
+"------------------------------------------------------------------------------
+" § Plugin Mappings
+"------------------------------------------------------------------------------
+" NERDTree: Toggle file explorer with <leader>n
+nnoremap <leader>n :NERDTreeToggle<CR>
+
+" Undotree: Toggle undo history viewer with <leader>u
+nnoremap <leader>u :UndotreeToggle<CR>
+
+" FZF: Fuzzy find files with <leader>f
+nnoremap <leader>f :FZF<CR>
+
+" Ripgrep: Project-wide search with <leader>rg
+nnoremap <leader>rg :Rg<CR>
+
+
+"==============================================================================
+" 5. PLUGIN CONFIGURATIONS
+"==============================================================================
+
+"------------------------------------------------------------------------------
+" § ALE (Asynchronous Linting Engine)
+"------------------------------------------------------------------------------
+" Set linters and fixers. Example for JavaScript/TypeScript:
+let g:ale_linters = {
+\   'javascript': ['eslint'],
+\   'typescript': ['eslint'],
+\}
+let g:ale_fixers = {
+\   'javascript': ['eslint'],
+\   'typescript': ['eslint'],
+\   '*': ['remove_trailing_lines', 'trim_whitespace'],
+\}
+let g:ale_fix_on_save = 1 " Automatically fix files on save.
+
+"------------------------------------------------------------------------------
+" § vim-indent-guides
+"------------------------------------------------------------------------------
+let g:indent_guides_enable_on_vim_startup = 1 " Enable indent guides on startup.
+
+"------------------------------------------------------------------------------
+" § vim-lsp
+"------------------------------------------------------------------------------
+" Python LSP (requires 'python-lsp-server' installed via pip)
+augroup LspPython
+    autocmd!
+    autocmd FileType python call lsp#register_server({
+        \ 'name': 'pylsp',
+        \ 'cmd': ['pylsp'],
+        \ 'root_uri': lsp#utils#get_root_uri(),
+        \ 'initialization_options': {},
+        \ 'allowlist': ['python'],
+        \ 'config': {
+        \     'pylsp': {
+        \         'plugins': {
+        \             'pycodestyle': {'enabled': v:true},
+        \             'pylint': {'enabled': v:false}, " Disable pylint if you prefer flake8/pycodestyle
+        \             'flake8': {'enabled': v:true},
+        \             'yapf': {'enabled': v:false}, " Disable yapf if you prefer black
+        \             'black': {'enabled': v:true},
+        \         }
+        \     }
+        \ }
+        \})
+augroup END
+
+" TypeScript/JavaScript LSP (requires 'typescript-language-server' installed via npm)
+augroup LspTypeScript
+    autocmd!
+    autocmd FileType typescript,typescriptreact,javascript,javascriptreact call lsp#register_server({
+        \ 'name': 'typescript-language-server',
+        \ 'cmd': ['typescript-language-server', '--stdio'],
+        \ 'root_uri': lsp#utils#get_root_uri(),
+        \ 'initialization_options': {},
+        \ 'allowlist': ['typescript', 'typescriptreact', 'javascript', 'javascriptreact'],
+        \})
+augroup END
+
+" General LSP settings (optional)
+let g:lsp_diagnostics_enabled = 1
+let g:lsp_diagnostics_delay = 200
+let g:lsp_diagnostics_signs_enabled = 1
+let g:lsp_diagnostics_virtual_text_enabled = 0 " Set to 1 for inline diagnostics
+
+" Keybindings for LSP (example)
+nnoremap <silent> gd <plug>(lsp-definition)
+nnoremap <silent> gr <plug>(lsp-references)
+nnoremap <silent> gh <plug>(lsp-hover)
+nnoremap <silent> gD <plug>(lsp-declaration)
+nnoremap <silent> gi <plug>(lsp-implementation)
+nnoremap <silent> gs <plug>(lsp-document-symbol)
+nnoremap <silent> gw <plug>(lsp-workspace-symbol)
+nnoremap <silent> <leader>rn <plug>(lsp-rename)
+nnoremap <silent> <leader>f <plug>(lsp-format-buffer)
+command! LspFormatBuffer call lsp#format()
