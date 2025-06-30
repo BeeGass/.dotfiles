@@ -6,7 +6,7 @@
 bindkey -v
 
 # Better vi-mode search
-bindkey '^R' history-incremental-search-backward
+# Removed ^R binding - let fzf handle it for better history search
 bindkey '^S' history-incremental-search-forward
 
 # History substring search
