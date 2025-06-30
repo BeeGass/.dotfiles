@@ -77,6 +77,9 @@ check "~/.gitconfig → ~/.dotfiles/git/gitconfig" \
 check "~/.vimrc → ~/.dotfiles/vim/vimrc" \
     "[ -L '$HOME/.vimrc' ] && [ -e '$HOME/.vimrc' ] && [ -e '$HOME/.dotfiles/vim/vimrc' ]"
 
+check "~/.tmux.conf → ~/.dotfiles/tmux/tmux.conf" \
+    "[ -L '$HOME/.tmux.conf' ] && [ -e '$HOME/.tmux.conf' ] && [ -e '$HOME/.dotfiles/tmux/tmux.conf' ]"
+
 check "~/.config/wezterm/wezterm.lua → ~/.dotfiles/wezterm/wezterm.lua" \
     "[ -L '$HOME/.config/wezterm/wezterm.lua' ] && [ -e '$HOME/.config/wezterm/wezterm.lua' ] && [ -e '$HOME/.dotfiles/wezterm/wezterm.lua' ]"
 
@@ -120,6 +123,9 @@ warn_check "uv (Python) installed" "command -v uv &> /dev/null" \
 
 warn_check "WezTerm installed" "command -v wezterm &> /dev/null" \
     "Install via package manager (see install.sh for details)"
+
+warn_check "tmux installed" "command -v tmux &> /dev/null" \
+    "Install with: sudo apt install tmux (or brew install tmux on macOS)"
 
 echo ""
 echo "3. Checking PATH Configuration"

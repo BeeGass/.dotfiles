@@ -74,6 +74,9 @@ create_symlink "$HOME/.dotfiles/git/gitconfig" "$HOME/.gitconfig"
 # Vim configuration
 create_symlink "$HOME/.dotfiles/vim/vimrc" "$HOME/.vimrc"
 
+# Tmux configuration
+create_symlink "$HOME/.dotfiles/tmux/tmux.conf" "$HOME/.tmux.conf"
+
 # WezTerm configuration
 mkdir -p "$HOME/.config/wezterm"
 create_symlink "$HOME/.dotfiles/wezterm/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua"
@@ -117,7 +120,7 @@ if [[ "$OS_TYPE" == "macOS" ]]; then
     fi
     
     echo "  Installing tools via Homebrew..."
-    brew install fzf eza bat ripgrep git-delta wezterm
+    brew install fzf eza bat ripgrep git-delta wezterm tmux
     brew install jandedobbeleer/oh-my-posh/oh-my-posh
     brew install zsh-syntax-highlighting zsh-autosuggestions
     
@@ -143,6 +146,7 @@ elif [[ "$OS_TYPE" == "Linux" ]]; then
         echo "        zsh-autosuggestions"
         echo "        zsh-history-substring-search"
         echo "        wezterm"
+        echo "        tmux"
         echo "      ];"
         echo ""
         echo "    Then run: sudo nixos-rebuild switch"
@@ -150,7 +154,7 @@ elif [[ "$OS_TYPE" == "Linux" ]]; then
         # Ubuntu/Debian instructions
         echo "  For Ubuntu/Debian:"
         echo "    sudo apt update"
-        echo "    sudo apt install -y fzf bat ripgrep zsh-syntax-highlighting zsh-autosuggestions"
+        echo "    sudo apt install -y fzf bat ripgrep zsh-syntax-highlighting zsh-autosuggestions tmux"
         echo "    # Optional: For history substring search"
         echo "    sudo apt install -y zsh-history-substring-search"
         echo ""

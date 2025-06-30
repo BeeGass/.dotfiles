@@ -13,6 +13,7 @@ Personal dotfiles configuration for macOS and Linux, featuring oh-my-posh, enhan
 - 🎨 **Google Sans Mono** - Clean typography with Nerd Font fallback for icons
 - 📜 **Custom Scripts** - Utility scripts automatically installed to ~/.local/bin
 - 💻 **WezTerm** - GPU-accelerated terminal with custom configuration
+- 🖥️ **Tmux** - Terminal multiplexer with vim-style keybindings and mouse support
 
 ## Quick Install
 
@@ -51,7 +52,7 @@ cd ~/.dotfiles
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Install required tools
-brew install fzf eza bat ripgrep git-delta wezterm
+brew install fzf eza bat ripgrep git-delta wezterm tmux
 brew install jandedobbeleer/oh-my-posh/oh-my-posh
 brew install zsh-syntax-highlighting zsh-autosuggestions
 
@@ -75,7 +76,7 @@ cp Google-Sans-Mono/*.ttf ~/Library/Fonts/
 ```bash
 # Install most tools
 sudo apt update
-sudo apt install -y fzf bat ripgrep zsh-syntax-highlighting zsh-autosuggestions
+sudo apt install -y fzf bat ripgrep zsh-syntax-highlighting zsh-autosuggestions tmux
 
 # Install eza (requires adding repository)
 sudo apt install -y gpg
@@ -125,6 +126,7 @@ environment.systemPackages = with pkgs; [
   zsh-syntax-highlighting
   zsh-autosuggestions
   zsh-history-substring-search
+  tmux
 ];
 ```
 
@@ -160,6 +162,9 @@ cd ~/.dotfiles && ./install.sh
 │   └── gitconfig.local    # Local overrides (git ignored)
 ├── vim/                   # Vim configuration
 │   └── vimrc              # Vim settings (symlinked to ~/.vimrc)
+├── tmux/                  # Tmux configuration
+│   ├── tmux.conf          # Tmux settings (symlinked to ~/.tmux.conf)
+│   └── README.md          # Comprehensive tmux documentation
 ├── wezterm/               # WezTerm terminal configuration
 │   └── wezterm.lua        # WezTerm config (symlinked to ~/.config/wezterm/wezterm.lua)
 ├── ssh/                   # SSH configuration
@@ -197,6 +202,21 @@ Key shortcuts:
 - `Ctrl+A` then `h/j/k/l` = navigate panes
 - `Ctrl+A` then `c` = new tab
 - `Ctrl+A` then `r` = reload config
+
+### Tmux
+
+Tmux is configured with vim-style keybindings and full mouse support. The prefix key is `Ctrl+a`.
+
+Quick reference:
+- `tmux` = start new session
+- `tmux attach` = attach to existing session
+- `Ctrl+a c` = new window
+- `Ctrl+a |` = split vertically
+- `Ctrl+a -` = split horizontally
+- `Ctrl+a h/j/k/l` = navigate panes
+- `Ctrl+a d` = detach from session
+
+See the [full tmux documentation](tmux/README.md) for complete keybinding reference.
 
 ### Directory Bookmarks
 
