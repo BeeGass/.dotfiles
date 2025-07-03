@@ -127,8 +127,22 @@ warn_check "WezTerm installed" "command -v wezterm &> /dev/null" \
 warn_check "tmux installed" "command -v tmux &> /dev/null" \
     "Install with: sudo apt install tmux (or brew install tmux on macOS)"
 
+# AI CLI tools
 echo ""
-echo "3. Checking PATH Configuration"
+echo "Checking AI CLI Tools..."
+check "claude-code installed" "command -v claude &> /dev/null"
+check "gemini-cli installed" "command -v gemini &> /dev/null"
+
+echo ""
+echo "3. Checking AI CLI Configuration"
+echo "--------------------------------"
+
+# Check AI CLI configs
+check "Claude config directory exists" "[ -d '$HOME/.config/claude' ]"
+check "Gemini config directory exists" "[ -d '$HOME/.config/gemini' ]"
+
+echo ""
+echo "4. Checking PATH Configuration"
 echo "-----------------------------"
 
 check "~/.local/bin in PATH" "[[ ':$PATH:' == *':$HOME/.local/bin:'* ]]"
@@ -139,7 +153,7 @@ if [[ "$OS_TYPE" == "macOS" ]]; then
 fi
 
 echo ""
-echo "4. Checking Git Configuration"
+echo "5. Checking Git Configuration"
 echo "----------------------------"
 
 check "Git user.name configured" "git config --global user.name &> /dev/null"
@@ -152,7 +166,7 @@ if git config --global commit.gpgsign &> /dev/null && [ "$(git config --global c
 fi
 
 echo ""
-echo "5. Checking ZSH Plugin Dependencies"
+echo "6. Checking ZSH Plugin Dependencies"
 echo "----------------------------------"
 
 if [[ "$OS_TYPE" == "macOS" ]]; then
@@ -167,7 +181,7 @@ else
 fi
 
 echo ""
-echo "6. Checking Font Installation"
+echo "7. Checking Font Installation"
 echo "----------------------------"
 
 if [[ "$OS_TYPE" == "macOS" ]]; then
@@ -181,7 +195,7 @@ else
 fi
 
 echo ""
-echo "7. Checking Directory Structure"
+echo "8. Checking Directory Structure"
 echo "------------------------------"
 
 check "~/.local/bin exists" "[ -d '$HOME/.local/bin' ]"
@@ -193,7 +207,7 @@ warn_check "Local ZSH overrides file" "[ -f '$HOME/.dotfiles/zsh/90-local.zsh' ]
     "Create ~/.dotfiles/zsh/90-local.zsh for machine-specific settings"
 
 echo ""
-echo "8. Checking Oh-My-Posh Theme"
+echo "9. Checking Oh-My-Posh Theme"
 echo "---------------------------"
 
 check "Oh-My-Posh config exists" "[ -f '$HOME/.dotfiles/oh-my-posh/config.json' ]"

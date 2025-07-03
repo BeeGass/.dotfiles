@@ -102,6 +102,22 @@ if [ -d "$HOME/.dotfiles/scripts" ]; then
     done
 fi
 
+# Claude configuration
+echo ""
+echo "Setting up Claude configuration..."
+mkdir -p "$HOME/.config/claude"
+if [ -f "$HOME/.dotfiles/claude/CLAUDE.md" ]; then
+    create_symlink "$HOME/.dotfiles/claude/CLAUDE.md" "$HOME/.config/claude/CLAUDE.md"
+fi
+
+# Gemini configuration
+echo ""
+echo "Setting up Gemini configuration..."
+mkdir -p "$HOME/.config/gemini"
+if [ -f "$HOME/.dotfiles/gemini/GEMINI.md" ]; then
+    create_symlink "$HOME/.dotfiles/gemini/GEMINI.md" "$HOME/.config/gemini/GEMINI.md"
+fi
+
 # Ensure ~/.local/bin is in PATH
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
     echo ""
@@ -127,8 +143,44 @@ if [[ "$OS_TYPE" == "macOS" ]]; then
     # Install FZF key bindings
     $(brew --prefix)/opt/fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish
     
+    # Claude and Gemini CLI installation
+    echo ""
+    echo "  Installing AI CLIs..."
+    if ! command -v claude &> /dev/null; then
+        echo "    Installing Claude CLI..."
+        npm install -g @anthropic-ai/claude-code
+    else
+        echo "    ✓ Claude CLI already installed"
+    fi
+    
+    if ! command -v gemini &> /dev/null; then
+        echo "    Installing Gemini CLI..."
+        npm install -g @google/gemini-cli
+    else
+        echo "    ✓ Gemini CLI already installed"
+    fi
+    
 elif [[ "$OS_TYPE" == "Linux" ]]; then
     echo "  On Linux, please install the following packages:"
+    echo ""
+    
+    # Claude and Gemini CLI installation
+    echo "  Installing AI CLIs..."
+    if ! command -v claude &> /dev/null; then
+        echo "    Installing Claude CLI..."
+        echo "    npm install -g @anthropic-ai/claude-code"
+        echo "    # Or using the official installer:"
+        echo "    # curl -fsSL https://storage.googleapis.com/claude-cli/install.sh | sh"
+    else
+        echo "    ✓ Claude CLI already installed"
+    fi
+    
+    if ! command -v gemini &> /dev/null; then
+        echo "    Installing Gemini CLI..."
+        echo "    npm install -g @google/gemini-cli"
+    else
+        echo "    ✓ Gemini CLI already installed"
+    fi
     echo ""
     
     # Check if running on NixOS
