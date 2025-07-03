@@ -151,6 +151,8 @@ if [[ "$OS_TYPE" == "macOS" ]]; then
         npm install -g @anthropic-ai/claude-code
     else
         echo "    ✓ Claude CLI already installed"
+        echo "    Updating Claude CLI..."
+        claude update
     fi
     
     if ! command -v gemini &> /dev/null; then
@@ -158,6 +160,8 @@ if [[ "$OS_TYPE" == "macOS" ]]; then
         npm install -g @google/gemini-cli
     else
         echo "    ✓ Gemini CLI already installed"
+        echo "    Updating Gemini CLI..."
+        gemini update
     fi
     
 elif [[ "$OS_TYPE" == "Linux" ]]; then
@@ -173,6 +177,8 @@ elif [[ "$OS_TYPE" == "Linux" ]]; then
         echo "    # curl -fsSL https://storage.googleapis.com/claude-cli/install.sh | sh"
     else
         echo "    ✓ Claude CLI already installed"
+        echo "    Updating Claude CLI..."
+        claude update
     fi
     
     if ! command -v gemini &> /dev/null; then
@@ -180,6 +186,8 @@ elif [[ "$OS_TYPE" == "Linux" ]]; then
         echo "    npm install -g @google/gemini-cli"
     else
         echo "    ✓ Gemini CLI already installed"
+        echo "    Updating Gemini CLI..."
+        gemini update
     fi
     echo ""
     

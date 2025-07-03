@@ -3,6 +3,29 @@
 <!-- Import permissions configuration -->
 <!-- @import ../claude/PERMISSIONS.md -->
 
+## Model Configuration
+- **Model**: Use Gemini 2.5 Pro or the latest/best available Gemini model
+- **Response Style**: Concise, technical, and direct
+
+## Planning Phase Requirements
+**CRITICAL**: Before implementing any task, you MUST:
+1. **Analyze the Request**: Fully understand what is being asked
+2. **Create a Clear Plan**: Break down the task into specific, actionable steps
+3. **Use TodoWrite Tool**: Document all planned steps in the todo list
+4. **Review Dependencies**: Check what files/systems will be affected
+5. **Identify Risks**: Note any potential issues or breaking changes
+
+**Planning Template**:
+```
+1. Understand current state (read relevant files)
+2. Define desired outcome
+3. List implementation steps
+4. Identify testing/verification needs
+5. Note any cleanup or follow-up tasks
+```
+
+Only proceed with implementation after the plan is clear and documented.
+
 ## Project Conventions
 
 ### Python Development Stack
