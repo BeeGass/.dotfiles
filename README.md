@@ -33,6 +33,15 @@ Using curl:
 bash <(curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/install.sh) -- --remote
 ````
 
+```bash
+bash -lc 'set -e
+D="$HOME/.dotfiles"
+if ! command -v git >/dev/null 2>&1; then pkg install -y git curl tar >/dev/null; fi
+if [ -d "$D/.git" ]; then git -C "$D" pull --ff-only; else git clone --depth=1 https://github.com/BeeGass/.dotfiles "$D"; fi
+exec bash "$D/install/install.sh" --remote
+'
+```
+
 Using wget:
 
 ```bash
