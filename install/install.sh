@@ -306,7 +306,7 @@ install_developer_tools() {
     echo "3) Installing developer tools..."
 
     # Tailscale VPN
-    if ! command -v tailscale >/dev/null 2>&1 && [[ "$os_type" == "Linux" || "$os_type" == "macOS" || "$os_type" == "Darwin"]]; then
+    if ! command -v tailscale >/dev/null 2>&1 && [[ "$os_type" == "Linux" || "$os_type" == "macOS" ]]; then
         echo "Installing Tailscale VPN..."
         # The official installer script handles OS detection (Linux, macOS)
         curl -fsSL https://tailscale.com/install.sh | sh
