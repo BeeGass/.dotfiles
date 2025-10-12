@@ -8,17 +8,13 @@ Host Tensor Matrix Vector
     ServerAliveCountMax 3
     IdentitiesOnly no
     IdentityAgent SSH_AUTH_SOCK
-    # Optional: pin which key to use for these boxes
-    # IdentityFile ~/.ssh/id_ed25519
 
-# GitHub uses your agent so pushes work
 Host github.com github
     HostName github.com
     User git
     IdentitiesOnly no
     IdentityAgent SSH_AUTH_SOCK
 
-# Locked-down host with GPG socket forwards
 Host mcopp
     HostName mcopp.com
     User beegass
@@ -55,4 +51,4 @@ Host 192.251.140.*
     IdentityFile ~/.ssh/sfcompute_ed25519
     IdentitiesOnly yes
     ForwardAgent yes
-    StrictHostKeyChecking no   # ⚠️ risky; OK if these are ephemeral. Remove if possible.
+    StrictHostKeyChecking no
