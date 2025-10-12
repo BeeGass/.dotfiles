@@ -306,7 +306,7 @@ install_developer_tools() {
     echo "3) Installing developer tools..."
 
     # Tailscale VPN
-    if ! command -v tailscale >/dev/null 2>&1; then
+    if ! command -v tailscale || [[ "$os_type" != "Termux" ]]; then
         echo "Installing Tailscale VPN..."
         curl -fsSL https://tailscale.com/install.sh | sh
     fi
