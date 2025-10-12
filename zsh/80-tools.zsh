@@ -5,7 +5,7 @@
 # UV (Python package manager)
 if command -v uv &> /dev/null; then
     eval "$(uv generate-shell-completion zsh)"
-    
+
     # Fix completions for uv run
     _uv_run_mod() {
         if [[ "$words[2]" == "run" && "$words[CURRENT]" != -* ]]; then
@@ -20,12 +20,6 @@ fi
 # NVM
 # [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 # [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-
-# GPG Agent for SSH
-if command -v gpgconf &> /dev/null; then
-    export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
-    gpgconf --launch gpg-agent
-fi
 
 # Cargo/Rust
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
@@ -44,10 +38,10 @@ if command -v fzf &> /dev/null; then
         [ -f /usr/share/doc/fzf/examples/key-bindings.zsh ] && source /usr/share/doc/fzf/examples/key-bindings.zsh
         [ -f /usr/share/doc/fzf/examples/completion.zsh ] && source /usr/share/doc/fzf/examples/completion.zsh
     fi
-    
+
     # Set default options
     export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
-    
+
     # Use ripgrep for better file searching
     if command -v rg &> /dev/null; then
         export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --glob "!.git/*"'

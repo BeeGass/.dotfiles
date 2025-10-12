@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(uvupgrade:*)",
+      "Bash(uv run:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(uv run -m pytest tests/ -v)",
+      "Bash(ls:*)",
+      "Bash(do echo \"=== $file ===\")",
+      "WebFetch(domain:claudelog.com)",
+      "Bash(done)"
+    ],
+    "deny": []
+  }
+}

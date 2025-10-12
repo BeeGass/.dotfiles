@@ -33,14 +33,14 @@ switch-theme() {
         fi
         return 1
     fi
-    
+
     local theme_path
     if command -v brew &> /dev/null; then
         theme_path="$(brew --prefix oh-my-posh)/themes/${theme}.omp.json"
     else
         theme_path="/usr/share/oh-my-posh/themes/${theme}.omp.json"
     fi
-    
+
     if [ -f "$theme_path" ]; then
         export OH_MY_POSH_CONFIG="$theme_path"
         reload-omp

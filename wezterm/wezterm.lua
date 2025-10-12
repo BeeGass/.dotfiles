@@ -24,8 +24,26 @@ config.window_padding = {
 }
 
 -- Font
-config.font = wezterm.font('Google Sans Mono')
+config.font = wezterm.font_with_fallback({
+  'Google Sans Mono',
+  'JetBrains Mono',
+  'SF Mono',
+  'Symbols Nerd Font Mono',
+})
 config.font_size = 10.0
+
+local function has_nvidia()
+  local f = io.popen("command -v nvidia-smi >/dev/null 2>&1 && echo yes || echo no")
+  local out = f and f:read("*l") or "no"
+  if f then f:close() end
+  return out == "yes"
+end
+
+local BEEGASS_GPU_ENABLED = has_nvidia()
+config.set_environment_variables = config.set_environment_variables or {}
+if BEEGASS_GPU_ENABLED then
+  config.set_environment_variables.BEEGASS_GPU_ENABLED = '1'
+end
 
 -- Cursor
 config.default_cursor_style = 'BlinkingBar'
@@ -56,9 +74,9 @@ config.mouse_bindings = {
 -- Minimal key bindings
 config.keys = {
   -- Toggle window decorations with F11
-  { 
-    key = 'F11', 
-    mods = '', 
+  {
+    key = 'F11',
+    mods = '',
     action = wezterm.action_callback(function(window, pane)
       local overrides = window:get_config_overrides() or {}
       if not overrides.window_decorations or overrides.window_decorations == "RESIZE" then
@@ -67,7 +85,7 @@ config.keys = {
         overrides.window_decorations = "RESIZE"
       end
       window:set_config_overrides(overrides)
-    end) 
+    end)
   },
 }
 

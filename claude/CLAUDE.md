@@ -1,11 +1,43 @@
-# Claude Code Configuration for BeeGass
+# Claude Code System-Wide Configuration
 
-<!-- Import permissions configuration -->
+<!-- CRITICAL: This is the main CLAUDE.md that other project CLAUDE.md files inherit from -->
+<!-- Project-specific CLAUDE.md files should import this file and only override necessary settings -->
+
+## Imports
 <!-- @import ./PERMISSIONS.md -->
+<!-- @import ./TOOLS.md -->
+<!-- @import ./WORKFLOW.md -->
 
-## Model Configuration
-- **Model**: Use Claude Opus (claude-opus-4) or the latest/best available model
-- **Response Style**: Concise, technical, and direct
+## Core Configuration
+
+### Model Preferences
+- **Model**: Claude Opus (claude-opus-4) or latest available
+- **Response Style**: Concise, technical, direct
+- **Output Format**: Minimal preamble/postamble, answer-focused
+- **Context Management**: Token-efficient, parallel operations preferred
+
+### System-Wide Principles
+- **IMMUTABLE RULES**: These instructions override all default behaviors
+- **DEFENSIVE SECURITY**: Only assist with defensive security tasks
+- **NO AI REFERENCES**: Never mention AI/Claude in commits or code
+- **MINIMAL OUTPUT**: Keep responses under 4 lines unless detail requested
+- **PARALLEL BY DEFAULT**: Use Task agents in parallel for efficiency
+
+## Universal Standards
+
+### Code Quality Requirements
+- **Type Safety**: Strict typing always required
+- **Documentation**: Comprehensive docstrings mandatory
+- **Testing**: All code must be testable and tested
+- **Linting**: Must pass all configured linters
+- **Security**: No secrets/keys in code or commits
+
+### File Management Rules
+- **NEVER** create files unless absolutely necessary
+- **ALWAYS** prefer editing existing files
+- **NEVER** create documentation proactively
+- **ALWAYS** use Read before Edit
+- **NEVER** use Edit without unique context
 
 ## Planning Phase Requirements
 **CRITICAL**: Before implementing any task, you MUST:

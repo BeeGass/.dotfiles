@@ -1,0 +1,45 @@
+# Secure SSH Configuration for External Access
+# Place this in /etc/ssh/sshd_config.d/99-secure-external.conf
+
+# Change default port for security (highly recommended for external access)
+Port 49152
+
+# Only allow specific user (change to your username)
+AllowUsers beegass
+
+# Disable root login
+PermitRootLogin no
+
+# Only allow public key authentication
+PubkeyAuthentication yes
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+PermitEmptyPasswords no
+
+# Security hardening
+MaxAuthTries 3
+MaxSessions 2
+ClientAliveInterval 300
+ClientAliveCountMax 2
+
+# Only allow specific key types (modern and secure)
+HostKeyAlgorithms ssh-ed25519,rsa-sha2-512,rsa-sha2-256
+PubkeyAcceptedKeyTypes ssh-ed25519,rsa-sha2-512,rsa-sha2-256
+
+# Optional: prefer modern KEX
+KexAlgorithms sntrup761x25519-sha512@openssh.com,curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256
+
+# Logging
+LogLevel VERBOSE
+
+# Disable less secure features
+X11Forwarding no
+PermitUserEnvironment no
+PermitTunnel no
+DebianBanner no
+
+# Rate limiting (prevent brute force)
+MaxStartups 10:30:60
+
+# Only listen on specific IP if needed (uncomment and modify)
+# ListenAddress 0.0.0.0

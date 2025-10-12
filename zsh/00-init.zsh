@@ -9,6 +9,26 @@ elif [[ -f "/usr/local/bin/brew" ]]; then
     eval "$(/usr/local/bin/brew shellenv)"
 fi
 
+# Simple banner for interactive shells (Termux or not)
+if [[ $- == *i* && -z "$TMUX" ]]; then
+    if command -v pfetch >/dev/null 2>&1; then
+        "$HOME/.dotfiles/pfetch/runner.sh"
+    elif command -v neofetch >/dev/null 2>&1; then
+        if [[ -f "$HOME/.dotfiles/scripts/neofetch_random.sh" ]]; then
+            source "$HOME/.dotfiles/scripts/neofetch_random.sh"
+            neofetch_random
+        else
+            neofetch
+        fi
+    else
+        print -P "%F{cyan}%n@%m%f  %D{%a %b %d, %I:%M %p}  %~"
+    fi
+fi
+
+if [[ -n "$TERMUX_VERSION" && -z "$TMUX" && $- == *i* ]] && command -v tmux >/dev/null 2>&1; then
+  exec tmux new-session -A -s main
+fi
+
 # Initialize completion system early (required by oh-my-posh)
 autoload -Uz compinit
 # Check if dump exists and is less than a day old

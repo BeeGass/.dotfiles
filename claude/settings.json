@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "model": "sonnet[1m]",
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline-script.sh"
+  },
+  "enabledPlugins": {
+    "pr-review-toolkit@claude-code-plugins": true,
+    "commit-commands@claude-code-plugins": true,
+    "feature-dev@claude-code-plugins": true,
+    "security-guidance@claude-code-plugins": true,
+    "claude-code-essentials@claude-code-workflows": true,
+    "full-stack-development@claude-code-workflows": true,
+    "api-development-kit@claude-code-workflows": true,
+    "testing-quality-suite@claude-code-workflows": true,
+    "infrastructure-devops@claude-code-workflows": true,
+    "development-utilities@claude-code-workflows": true,
+    "data-ml-pipeline@claude-code-workflows": true,
+    "code-quality-review@claude-code-workflows": true,
+    "multi-platform-apps@claude-code-workflows": true,
+    "cicd-automation@claude-code-workflows": true,
+    "agent-optimization@claude-code-workflows": true,
+    "documentation-generation@claude-code-workflows": true
+  },
+  "alwaysThinkingEnabled": true,
+  "feedbackSurveyState": {
+    "lastShownTime": 1754013382617
+  }
+}

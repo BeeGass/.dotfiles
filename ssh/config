@@ -1,38 +1,41 @@
-Host github
-        User git
-        HostName github.com
-        IdentitiesOnly yes
-        IdentityFile ~/.ssh/id_rsa_yubikey.pub
-Host beegassdesk
-        User beegass
-        HostName hostnetwork.beegass.dev
-        IdentityFile ~/.ssh/id_rsa_yubikey.pub
-        Port 4296
-Host mydesktop
-        user beegass
-        #user BeeGass-Desktop
-        HostName 130.44.135.194
-        ServerAliveInterval 60
-        ServerAliveCountMax 3
-        #HostName 192.168.1.97
-        #HostName 192.168.1.20
-        # IdentityFile ~/.ssh/id_rsa_yubikey.pub
-        #IdentityFile ~/.ssh/a_pubkey.pub
-        Port 7569
+Host Tensor Matrix Vector
+    CanonicalizeHostname yes
+    CanonicalDomains %h.tailf7d439.ts.net
+    User beegass
+    Port 40822
+    ForwardAgent yes
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    IdentitiesOnly yes
+    IdentityAgent SSH_AUTH_SOCK
+
+Host *
+    CanonicalizeHostname no
+
+Host github.com github
+    HostName github.com
+    User git
+    IdentitiesOnly yes
+    IdentityAgent SSH_AUTH_SOCK
+
 Host mcopp
-        user beegass
-        HostName mcopp.com
-        ServerAliveInterval 60
-        ServerAliveCountMax 3
-        Port 12211
-        StreamLocalBindUnlink yes
-        ForwardAgent yes
-        RequestTTY yes
+    HostName mcopp.com
+    User beegass
+    Port 12211
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    StreamLocalBindUnlink yes
+    ForwardAgent yes
+    RequestTTY yes
+    IdentitiesOnly yes
+    IdentityAgent SSH_AUTH_SOCK
 
+# You (client) on Linux → local sockets in /run/...
 Match host mcopp exec "uname -s | grep -q Linux"
-        RemoteForward /run/user/1001/gnupg/S.gpg-agent /run/user/1000/gnupg/S.gpg-agent.extra
-        RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh /run/user/1000/gnupg/S.gpg-agent.ssh
+    RemoteForward /run/user/1001/gnupg/S.gpg-agent       /run/user/1000/gnupg/S.gpg-agent.extra
+    RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh   /run/user/1000/gnupg/S.gpg-agent.ssh
 
+# You (client) on macOS → local sockets in ~/.gnupg/...
 Match host mcopp exec "uname -s | grep -q Darwin"
-        RemoteForward /run/user/1001/gnupg/S.gpg-agent /Users/beegass/.gnupg/S.gpg-agent.extra
-        RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh /Users/beegass/.gnupg/S.gpg-agent.ssh
+    RemoteForward /run/user/1001/gnupg/S.gpg-agent       /Users/beegass/.gnupg/S.gpg-agent.extra
+    RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh   /Users/beegass/.gnupg/S.gpg-agent.ssh
