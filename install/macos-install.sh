@@ -12,27 +12,39 @@ main() {
 
 # --- Helper functions ---
 
-# Install Homebrew if not already installed
+# Install Homebrew if not already installed, and expose it as $BREW
 install_homebrew() {
     if ! command -v brew >/dev/null 2>&1; then
         echo "Installing Homebrew..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
-    # Ensure brew is in the PATH for this script's execution
-    eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || true
-    eval "$(/usr/local/bin/brew shellenv)" 2>/dev/null || true
+
+    # Resolve brew path (Apple Silicon: /opt/homebrew; Intel: /usr/local)
+    BREW="$(command -v brew || true)"
+    if [[ -z "${BREW:-}" ]]; then
+        for p in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+            [[ -x "$p" ]] && BREW="$p" && break
+        done
+    fi
+    if [[ -z "${BREW:-}" ]]; then
+        echo "[macOS] ERROR: Homebrew not found after install." >&2
+        exit 1
+    fi
+
+    # Put brew on PATH for this shell
+    eval "$("$BREW" shellenv)"
+    export BREW
 }
 
 # Install packages and casks from a Brewfile-like heredoc
 install_homebrew_packages() {
-    echo "[macOS] Installing packages via Homebrew..."
-    brew update
-    brew bundle --no-lock --file=/dev/stdin <<EOF
-# Taps
-tap "jandedobbeleer/oh-my-posh/oh-my-posh"
-tap "homebrew/cask-fonts"
+  echo "[macOS] Installing packages via Homebrew..."
+  brew update
 
-# Formulae
+  # No cask-fonts tap — it's deprecated.
+  brew bundle --file=/dev/stdin <<'EOF'
+tap "jandedobbeleer/oh-my-posh"
+
 brew "bat"
 brew "chafa"
 brew "curl"
@@ -48,7 +60,7 @@ brew "lsd"
 brew "neofetch"
 brew "neovim"
 brew "oh-my-posh"
-brew "pfetch"  # Optional; skipped in install script
+brew "pfetch"
 brew "pinentry-mac"
 brew "pre-commit"
 brew "ripgrep"
@@ -64,13 +76,11 @@ brew "zsh-autosuggestions"
 brew "zsh-history-substring-search"
 brew "zsh-syntax-highlighting"
 
-# Casks
 cask "font-jetbrains-mono-nerd-font"
-cask "git-credential-manager"
 EOF
 
-    # Install fzf keybindings and completions
-    "$(brew --prefix)"/opt/fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish
+  # fzf bindings/completions
+  "$(brew --prefix)"/opt/fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish
 }
 
 # Set up configuration files and symlinks

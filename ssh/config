@@ -3,6 +3,7 @@ Host Tensor Matrix Vector
     HostName %h.tailf7d439.ts.net
     User beegass
     Port 40822            # make sure sshd on each device actually listens here (or change to 22)
+    PreferredAuthentications publickey
     ForwardAgent yes
     ServerAliveInterval 60
     ServerAliveCountMax 3
