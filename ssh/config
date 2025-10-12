@@ -14,7 +14,7 @@ Host *
 Host github.com github
     HostName github.com
     User git
-    IdentitiesOnly yes
+    IdentitiesOnly no
     IdentityAgent SSH_AUTH_SOCK
 
 Host mcopp
@@ -28,13 +28,3 @@ Host mcopp
     RequestTTY yes
     IdentitiesOnly yes
     IdentityAgent SSH_AUTH_SOCK
-
-# You (client) on Linux → local sockets in /run/...
-Match host mcopp exec "uname -s | grep -q Linux"
-    RemoteForward /run/user/1001/gnupg/S.gpg-agent       /run/user/1000/gnupg/S.gpg-agent.extra
-    RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh   /run/user/1000/gnupg/S.gpg-agent.ssh
-
-# You (client) on macOS → local sockets in ~/.gnupg/...
-Match host mcopp exec "uname -s | grep -q Darwin"
-    RemoteForward /run/user/1001/gnupg/S.gpg-agent       /Users/beegass/.gnupg/S.gpg-agent.extra
-    RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh   /Users/beegass/.gnupg/S.gpg-agent.ssh
