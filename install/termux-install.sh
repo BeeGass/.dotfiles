@@ -24,6 +24,7 @@ install_pkgs() {
         chafa
         coreutils
         curl
+        delta
         eza
         fd
         file
@@ -31,15 +32,13 @@ install_pkgs() {
         fzf
         gh
         git
-        git-delta
         gnupg
         grep
         jq
         lsd
         neofetch
-        openssh-client
         openssl
-        pinentry-curses
+        pinentry
         ripgrep
         sed
         shellcheck
