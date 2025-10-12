@@ -6,6 +6,7 @@ main() {
     echo "[Termux] Starting installation..."
     install_pkgs
     setup_configs
+    install_termux_zsh_plugins
     echo "[Termux] Complete."
 }
 
@@ -14,15 +15,37 @@ main() {
 # Install packages from Termux repository
 install_pkgs() {
     echo "[Termux] Updating and installing packages with pkg..."
-    pkg update -y
-    pkg upgrade -y
+    pkg update -y && pkg upgrade -y
+    pkg install x11-repo science-repo game-repo root-repo
 
     local pkgs=(
         awk bat chafa coreutils curl eza fd file findutils fzf gh git gnupg grep jq
         lsd neofetch openssh openssl pinentry-curses ripgrep sed shellcheck shfmt tar
         termux-api tmux tree unzip w3m wget which zsh
     )
-    pkg install -y "${pkgs[@]}"
+    for p in "${packages[@]}"; do
+        if apt-cache show "$p" >/dev/null 2>&1; then
+            pkg install -y "$p"
+        else
+            echo "  → skipping missing package: $p"
+        fi
+    done
+    pkg update -y && pkg upgrade -y
+}
+
+install_termux_zsh_plugins() {
+  mkdir -p ~/.zsh
+  if [[ ! -d ~/.zsh/zsh-autosuggestions ]]; then
+    git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions
+  fi
+  if [[ ! -d ~/.zsh/zsh-syntax-highlighting ]]; then
+    git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting ~/.zsh/zsh-syntax-highlighting
+  fi
+  # Source them (guarded) from your local zsh overrides
+  {
+    echo '[[ -r ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh'
+    echo '[[ -r ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && source ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh'
+  } >> "$HOME/.zshrc"
 }
 
 install_zsh_plugins_termux() {
