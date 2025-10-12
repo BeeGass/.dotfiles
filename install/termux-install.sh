@@ -17,45 +17,25 @@ install_pkgs() {
     pkg update -y
     pkg upgrade -y
 
-    local packages=(
-        # Sorted alphabetically
-        awk
-        bat
-        chafa
-        coreutils
-        curl
-        delta
-        eza
-        fd
-        file
-        findutils
-        fzf
-        gh
-        git
-        gnupg
-        grep
-        jq
-        lsd
-        neofetch
-        openssl
-        pinentry
-        ripgrep
-        sed
-        shellcheck
-        shfmt
-        tar
-        termux-api
-        tmux
-        tree
-        unzip
-        w3m
-        wget
-        which
-        zsh
-        zsh-autosuggestions
-        zsh-syntax-highlighting
+    local pkgs=(
+        awk bat chafa coreutils curl eza fd file findutils fzf gh git gnupg grep jq
+        lsd neofetch openssh openssl pinentry-curses ripgrep sed shellcheck shfmt tar
+        termux-api tmux tree unzip w3m wget which zsh
     )
-    pkg install -y "${packages[@]}"
+    pkg install -y "${pkgs[@]}"
+}
+
+install_zsh_plugins_termux() {
+  echo "[Termux] Installing Zsh plugins (git clones)..."
+  local plugdir="$HOME/.zsh/plugins"
+  mkdir -p "$plugdir"
+
+  if [[ ! -d "$plugdir/zsh-autosuggestions" ]]; then
+    git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions "$plugdir/zsh-autosuggestions"
+  fi
+  if [[ ! -d "$plugdir/zsh-syntax-highlighting" ]]; then
+    git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting "$plugdir/zsh-syntax-highlighting"
+  fi
 }
 
 # Set up configuration files and symlinks
@@ -80,6 +60,8 @@ setup_configs() {
         echo "Reloading Termux settings..."
         termux-reload-settings
     fi
+
+    install_zsh_plugins_termux
 }
 
 # --- Run the main function ---
