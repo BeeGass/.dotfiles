@@ -23,9 +23,14 @@ Personal dotfiles for macOS, Linux, and Termux. Modular ZSH, modern CLI tools, a
 
 ### One-liner (auto-detects OS and runs the right installer)
 
+On Termux, also install `bash`, `curl`, and `wget` first:
+```bash
+pkg install -y bash curl wget  # Termux only
+````
+
 Using curl:
 ```bash
-curl -sSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/install.sh | bash -s -- --remote
+bash <(curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/install.sh) -- --remote
 ````
 
 Using wget:
