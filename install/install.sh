@@ -1,10 +1,48 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# --- Early bootstrap for one-liner: curl … | bash -s -- --remote ---------------
+# Clone to ~/.dotfiles and re-exec from disk before we touch BASH_SOURCE.
+if [[ "${1-}" == "--remote" ]]; then
+  repo="${DOTFILES_DIR:-$HOME/.dotfiles}"
+  if ! command -v git >/dev/null 2>&1; then
+    # Termux convenience; harmless elsewhere
+    command -v pkg >/dev/null 2>&1 && pkg install -y git curl >/dev/null 2>&1 || true
+  fi
+  if [[ ! -d "$repo/.git" ]]; then
+    git clone --depth=1 https://github.com/BeeGass/.dotfiles "$repo"
+  else
+    git -C "$repo" pull --ff-only || true
+  fi
+  exec bash "$repo/install/install.sh"
+fi
+
+# --- Script Setup and Constants ------------------------------------------------
+# Resolve the repo root robustly (works for file, git checkout, or fallback)
+resolve_dotfiles_dir() {
+  # 1) Caller provided a path
+  if [[ -n "${DOTFILES_DIR:-}" && -d "${DOTFILES_DIR:-}" ]]; then
+    printf '%s\n' "$DOTFILES_DIR"; return
+  fi
+  # 2) Inside a git checkout?
+  if command -v git >/dev/null 2>&1; then
+    if top="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+      printf '%s\n' "$top"; return
+    fi
+  fi
+  # 3) Real script path (not /dev or /proc)?
+  case "${BASH_SOURCE[0]-}" in
+    ''|/dev/*|/proc/*) ;;  # unusable
+    *) ( cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd ); return ;;
+  esac
+  # 4) Fallback
+  printf '%s\n' "$HOME/.dotfiles"
+}
+
 # --- Script Setup and Constants ---
 # Resolve repo root regardless of where the script is invoked
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOTFILES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+DOTFILES_DIR="$(resolve_dotfiles_dir)"
+SCRIPT_DIR="$DOTFILES_DIR/install"
 LOCAL_BIN_DIR="$HOME/.local/bin"
 NEOFETCH_IMG_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/neofetch/pics"
 
@@ -12,11 +50,6 @@ NEOFETCH_IMG_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/neofetch/pics"
 main() {
     echo "🚀 Dotfiles Installation"
     echo "Repo: $DOTFILES_DIR"
-
-    # Optional one-liner remote bootstrap
-    if [[ "${1-}" == "--remote" ]] && [[ ! -d "$HOME/.dotfiles" ]]; then
-        bootstrap_remote
-    fi
 
     local os_type
     os_type=$(detect_os)

@@ -34,6 +34,10 @@ bash <(curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/insta
 ````
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/install.sh | bash -s -- --remote
+```
+
+```bash
 bash -lc 'set -e
 D="$HOME/.dotfiles"
 if ! command -v git >/dev/null 2>&1; then pkg install -y git curl tar >/dev/null; fi
