@@ -1,6 +1,5 @@
 Host Tensor Matrix Vector
-    CanonicalizeHostname yes
-    CanonicalDomains %h.tailf7d439.ts.net
+    HostName %h.tailf7d439.ts.net
     User beegass
     Port 40822
     ForwardAgent yes
