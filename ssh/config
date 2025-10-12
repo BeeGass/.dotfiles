@@ -28,3 +28,11 @@ Host mcopp
     RequestTTY yes
     IdentitiesOnly yes
     IdentityAgent SSH_AUTH_SOCK
+
+Match host mcopp exec "uname -s | grep -q Linux"
+    RemoteForward /run/user/1001/gnupg/S.gpg-agent     /run/user/1000/gnupg/S.gpg-agent.extra
+    RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh /run/user/1000/gnupg/S.gpg-agent.ssh
+
+Match host mcopp exec "uname -s | grep -q Darwin"
+    RemoteForward /run/user/1001/gnupg/S.gpg-agent     /Users/beegass/.gnupg/S.gpg-agent.extra
+    RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh /Users/beegass/.gnupg/S.gpg-agent.ssh
