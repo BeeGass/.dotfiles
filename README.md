@@ -1,307 +1,259 @@
-# Dotfiles
+# BeeGass Dotfiles
 
-Personal dotfiles for macOS, Linux, and Termux. Modular ZSH, modern CLI tools, a fast prompt, sane tmux defaults, and optional WezTerm integration.
-
-## Features
-
-- **Oh-My-Posh** prompt (powerlevel10k_modern-based), fast and minimal
-- **Modular ZSH**: clean layers for env, plugins, aliases, keybinds
-- **Modern CLI**: fzf, eza, bat, ripgrep, delta, plus handy scripts
-- **UV** for Python project/env management
-- **GPG/YubiKey**: SSH via gpg-agent and quick setup docs
-- **Smart cd** helpers & bookmarks
-- **Google Sans Mono** primary font + Nerd Font fallback for icons
-- **WezTerm** config (optional): GPU-accelerated, tmux-first workflow
-- **Tmux**: vim-style navigation, mouse support, tidy statusline
-- **Termux** support: sane defaults on Android, with Termux UI tweaks
-- **AI helpers**: ready-to-use Claude and Gemini workflows
-- **Docs**: SSH quick refs, external access, YubiKey setup
+Streamlined, idempotent setup for shells, editors, terminals, fonts, SSH/GPG, and daily CLI tooling across macOS · Ubuntu/Linux · NixOS · Termux. Uses clean symlinks, keeps backups, and stays out of your secrets.
 
 ---
 
-## Quick Install
+## TL;DR (Quickstart)
 
-### One-liner (auto-detects OS and runs the right installer)
-
-On Termux, also install `bash`, `curl`, and `wget` first:
-```bash
-pkg install -y bash curl wget  # Termux only
-````
-
-Using curl:
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/install.sh) -- --remote
-````
+**Remote one‑liner (safe, idempotent)**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/install.sh | bash -s -- --remote
+# Clones to ~/.dotfiles, then runs the installer
+curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/install.sh \
+  | bash -s -- --remote
 ```
 
-```bash
-bash -lc 'set -e
-D="$HOME/.dotfiles"
-if ! command -v git >/dev/null 2>&1; then pkg install -y git curl tar >/dev/null; fi
-if [ -d "$D/.git" ]; then git -C "$D" pull --ff-only; else git clone --depth=1 https://github.com/BeeGass/.dotfiles "$D"; fi
-exec bash "$D/install/install.sh" --remote
-'
-```
-
-Using wget:
-
-```bash
-wget -qO- https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/install.sh | bash -s -- --remote
-```
-
-### Per-platform installers
-
-* **macOS**
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/macos-install.sh)
-```
-* **Ubuntu/Debian**
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/ubuntu-install.sh)
-```
-* **NixOS**
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/nixos-install.sh)
-```
-* **Termux (Android)**
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/termux-install.sh)
-```
-
-### Manual (traditional)
+**Manual**
 
 ```bash
 git clone https://github.com/BeeGass/.dotfiles ~/.dotfiles
-cd ~/.dotfiles
-./install/install.sh
+~/.dotfiles/install/install.sh
 ```
 
----
-
-## Prerequisites
-
-* ZSH
-* Git
-* A terminal with 24-bit color (WezTerm, iTerm2, Alacritty, etc.)
-* Optional: WezTerm for GPU-accelerated rendering
+> Re-run the installer any time; it’s safe. Existing non-symlink files are timestamp‑backed up.
 
 ---
 
-## Directory Structure
+## Supported platforms
 
-```
-.
-├── claude
-│   ├── claude-functions.zsh
-│   ├── CLAUDE.md
-│   ├── commands
-│   │   ├── commit.md
-│   │   └── prime.md
-│   ├── PERMISSIONS.md
-│   ├── PROJECT_CLAUDE_TEMPLATE.md
-│   ├── settings.json
-│   ├── settings.local.json
-│   ├── TOOLS.md
-│   └── WORKFLOW.md
-├── docs
-│   ├── ssh-external-access.md
-│   ├── ssh-quick-reference.md
-│   └── ssh-yubikey-setup.md
-├── gemini
-│   └── GEMINI.md
-├── git
-│   ├── gitconfig
-│   └── gitconfig.local
-├── install
-│   ├── install.sh
-│   ├── macos-install.sh
-│   ├── nixos-install.sh
-│   ├── refresh.sh
-│   ├── termux-install.sh
-│   └── ubuntu-install.sh
-├── oh-my-posh
-│   ├── config.json
-│   └── README.md
-├── README.md
-├── scripts
-│   └── repo_to_text
-├── ssh
-│   ├── config
-│   └── sshd_config_secure
-├── termux
-│   ├── colors.properties
-│   └── termux.properties
-├── tmux
-│   ├── README.md
-│   └── tmux.conf
-├── vim
-│   ├── main.py
-│   ├── pyproject.toml
-│   ├── README.md
-│   └── vimrc
-├── wezterm
-│   └── wezterm.lua
-└── zsh
-    ├── 00-init.zsh
-    ├── 10-oh-my-posh.zsh
-    ├── 20-environment.zsh
-    ├── 30-plugins.zsh
-    ├── 40-aliases.zsh
-    ├── 50-functions.zsh
-    ├── 60-claude.zsh
-    ├── 60-completions.zsh
-    ├── 70-keybindings.zsh
-    ├── 80-tools.zsh
-    ├── 90-local.zsh
-    └── zshrc
-```
+* **macOS** (Homebrew-based)
+* **Ubuntu/Linux** (apt; Kitty + Ghostty when supported)
+* **NixOS** (snippet provided; minor manual steps)
+* **Termux (Android)** (pkg; ergonomic mobile defaults)
 
 ---
 
-## Fonts
+## What the installer does
 
-Install **Google Sans Mono** + a Nerd Font for icons.
+1. **Detects OS** → writes flags to `${XDG_STATE_HOME:-~/.local/state}/dotfiles/flags` and an OS snapshot to `${XDG_STATE_HOME:-~/.local/state}/dotfiles/os.env`.
 
-* **macOS**: copy `.ttf` files to `~/Library/Fonts/`
-* **Linux**: copy `.ttf` files to `~/.local/share/fonts/` and run `fc-cache -f -v`
+2. **Symlinks config**
 
----
+   * `~/.zshenv` (early), `~/.zshrc`, `~/.gitconfig`, Vim/Neovim, tmux, ssh, kitty/wezterm/ghostty.
+   * Binaries in `~/.dotfiles/scripts/*` → linked into `~/.local/bin` (both with and without `.sh`).
+   * Backs up any existing non-symlink targets as `*.backup.YYYYMMDD_HHMMSS`.
 
-## WezTerm (optional but recommended)
+3. **Installs platform packages**
 
-The repo ships a minimal WezTerm config tuned for tmux-first workflows:
+   * macOS: Homebrew + common CLIs, Kitty/Ghostty.
+   * Ubuntu: apt CLIs, Kitty, Ghostty (or Kitty fallback).
+   * NixOS: declarative snippet to add packages.
+   * Termux: pkg CLIs, Zsh plugins.
 
-* Color scheme: **Builtin Dark**
-* Background opacity: **0.80**
-* Decorations: **RESIZE** (toggle title bar with **F11**)
-* Font: **Google Sans Mono** with fallbacks, size 10.0
-* Performance: OpenGL front end, 120 FPS, large scrollback
-* Default program: auto-start `tmux` (`main` session)
+4. **Developer tooling**
 
----
+   * **oh-my-posh** prompt + theme at `~/.config/oh-my-posh/config.json`.
+   * **uv** (Python launcher/PM); installs CPython **3.11** and **3.12**; common Python tools (`ruff`, `mypy`, `pytest`, `pre-commit`, `python-lsp-server`).
+   * **Node** via `nvm` (latest LTS), plus `@anthropic-ai/claude-code`, `@google/gemini-cli`, TS + LSP.
+   * **Optional**: tailscale, SF Compute CLI if available.
 
-## Termux (Android)
+5. **Fonts & terminals**
 
-Termux gets sensible defaults:
+   * JetBrains Mono Nerd Font (platform-appropriate install).
+   * Optional Google Sans / Google Sans Mono (Ubuntu task installs via **SSH** cloning; see notes).
+   * Kitty, Ghostty, WezTerm configured; right‑click paste; tmux autostart; 80% opacity; F11 fullscreen.
 
-* Installs core CLI tools and ZSH
-* Applies `termux/termux.properties` and `termux/colors.properties`
+6. **GPG + SSH**
 
-To reapply properties:
+   * `scripts/setup_gpg_ssh.sh` links `gnupg/*` configs per‑OS, wires **gpg-agent as SSH agent**, exports SSH pubkey from your auth subkey, and drops a `~/.ssh/config.d/10-gpg-agent.conf` with `IdentityAgent`.
+   * Helpers: `yk-status` (diagnostics), `yk-lock` (clear pin caches), `sfssh`/`sftunnel` (SF Compute wrappers).
 
-```bash
-termux-reload-settings
-```
+7. **Quality of life**
 
----
-
-## Tmux
-
-Vim-style navigation, mouse support, and a compact statusline. Prefix is `Ctrl+a`.
-
-Quick reference:
-
-* `tmux` — start (or attach to) a session
-* `Ctrl+a c` — new window
-* `Ctrl+a |` — split vertically
-* `Ctrl+a -` — split horizontally
-* `Ctrl+a h/j/k/l` — move between panes
-* `Ctrl+a d` — detach
-
-## Shell Goodies
-
-### Directory Bookmarks
-
-* `cd ~pm` → `~/Documents/Coding/PM`
-* `cd ~ludo` → `~/Documents/Coding/Ludo`
-* `cd ~dots` → `~/.dotfiles`
-* `cd ~projects` → `~/Projects`
-* `cd ~downloads` → `~/Downloads`
-* `cd ~docs` → `~/Documents`
-
-### Scripts
-
-* `repo_to_text` — flatten a repository into a text snapshot
-* All `scripts/*` are symlinked to `~/.local/bin/`
-
-### Oh-My-Posh helpers
-
-* `edit-omp`, `reload-omp`, `switch-theme <name>`
-
-### Python/UV helpers
-
-* `uvnew <project> [version]`, `uvsetup`, `uvupgrade`, `mkuv`, `activateuv`
-
-### Git helpers
-
-* `allbranches` — track all remotes locally
-* `config` — manage dotfiles via a bare repo
+   * `scripts/doctor.sh` sanity checks.
+   * `scripts/neofetch_random.sh` aliasable to `nf` (random image, backend auto-pick); optional image pack fetched with `uvx gdown`.
+   * `systemd --user` picom service on X11 with app‑opacity rules.
 
 ---
 
-## Configuration Tips
+## Safety & design choices
 
-### iTerm2
-
-1. Preferences → **Profiles → Text**
-2. Font: **Google Sans Mono** (13–14pt)
-3. Non-ASCII Font: **Symbols Nerd Font Mono**
-
-### WezTerm shortcuts
-
-* `F11` — toggle title bar
-* tmux handles the rest of your splits/keys
+* **Idempotent**: re-running is fine; safe backups for pre-existing files.
+* **No secrets in repo**: machine-local, private overrides live in `zsh/90-local.zsh` (auto-created, `0600`).
+* **Credential helpers**: macOS→`osxkeychain`/`git-credential-manager`; Ubuntu→`libsecret`; Termux→`cache`.
+* **Termux ergonomics**: ESC/back mapping, extra keys, Nerd font, Zsh plugins.
 
 ---
 
-## Maintenance
+## Install, update, refresh
 
-Verify everything with:
+### First install
+
+Use the **one-liner** or clone + run `install/install.sh`. The script will:
+
+* write OS flags/env snapshot
+* symlink configs
+* install OS packages + core CLIs
+* set up dev tools (uv, node, prompt)
+* configure Git identity + credential helper
+* bootstrap GPG/SSH if `gpg` exists
+
+Open a new shell or `source ~/.zshrc`.
+
+### Refresh an existing machine
 
 ```bash
 ~/.dotfiles/install/refresh.sh
 ```
 
-Checks symlinks, PATH, required tools, fonts, ZSH plugins, and prompt/theme health with clear ✓/⚠/✗ output.
+* Ensures `~/.zshrc` loads repo config (no-op if symlinked)
+* (Re)installs/updates oh‑my‑posh, Zsh plugins, Node CLIs, `uv`, CPython 3.11/3.12
+* Scaffolds a minimal prompt config if missing
+
+### Health check
+
+```bash
+~/.dotfiles/scripts/doctor.sh
+```
 
 ---
 
-## Troubleshooting
+## GPG + SSH quickstart
 
-**Icons missing**
-Ensure a Nerd Font fallback is configured in your terminal.
+```bash
+# Regenerate imports and exports; wire gpg-agent → SSH; optional: set Git signing
+~/.dotfiles/scripts/setup_gpg_ssh.sh --regen --git
 
-**Command not found**
-Re-run the installer: `~/.dotfiles/install/install.sh`
+# Verify sockets, keys, and card
+yk-status
 
-**Performance**
-Disable git status for huge repos in your prompt, or enable a transient prompt.
+# Force a lock (clear caches)
+yk-lock
+```
+
+**Notes**
+
+* Per‑OS agent config is symlinked from `gnupg/*-gpg-agent.conf`.
+* Shell snippet appended to `zsh/90-local.zsh` ensures `GPG_TTY` + SSH agent wiring on login.
+* SSH config includes `Include ~/.ssh/config.d/*.conf` and ships a `10-gpg-agent.conf` drop‑in.
 
 ---
 
-## Security Notes
+## Fonts & Fontconfig
 
-* `gitconfig` avoids storing secrets; use credential helpers
-* GPG signing enabled by default
-* Private/local overrides are git-ignored
+* **JetBrains Mono Nerd**: installed per-platform for glyphs used by the prompt.
+* **Google Sans / Google Sans Mono**: optional, **installed via SSH cloning** on Ubuntu:
+
+  * `git@github.com:mehant-kr/Google-Sans-Mono.git`
+  * `git@github.com:hprobotic/Google-Sans-Font.git`
+  * If you don’t have GitHub SSH access on that machine, the step is skipped.
+* `fontconfig/30-google-sans-mono-mono.conf` sets `spacing=100` to force mono metrics for Google Sans Mono.
+
+---
+
+## Terminals
+
+### Kitty (Linux/macOS)
+
+* 80% opacity; right‑click paste; `shell tmux -u new-session -A -s main` autostart.
+* Fonts respect Fontconfig fallbacks: Google Sans Mono → JetBrains Mono → SF Mono → Symbols Nerd Mono.
+* Key: `F11` toggles fullscreen.
+
+### Ghostty
+
+* Same theme: `background=000000`, `foreground=ffffff`, `background-opacity=0.80`.
+* Titlebar hidden on macOS; client decorations on Linux; tmux autostart; `F11` fullscreen.
+
+### WezTerm
+
+* Config present; shares the same font and opacity design.
+
+---
+
+## tmux (prefix = **Ctrl+Space**)
+
+| Action                      | Keys                                                    |       |
+| --------------------------- | ------------------------------------------------------- | ----- |
+| Split vertical / horizontal | `Ctrl+Space` `                                          | `/`-` |
+| Navigate panes              | `Ctrl+Space` + arrows (or `Alt` + arrows **no prefix**) |       |
+| Resize panes                | `Ctrl+Space` + `Shift` + arrows                         |       |
+| Copy mode                   | `Ctrl+Space` `[` → `v` to select, `y` to copy           |       |
+| Zoom pane                   | `Ctrl+Space` `z` (or `Alt` `z`)                         |       |
+| New window / switch         | `Ctrl+Space` `c` / `n` `p` `0..9`                       |       |
+| Reload config               | `Ctrl+Space` `r`                                        |       |
+
+Plugins via TPM are declared at the bottom; first-run will auto-install TPM.
+
+---
+
+## Scripts (selected)
+
+| Script                              | What it does                                                                                      |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `install/install.sh`                | Main installer; supports `--remote` when piped from curl.                                         |
+| `install/macos-install.sh`          | Homebrew packages; Kitty CLI wiring; macOS applet “Open Here in Kitty”.                           |
+| `install/ubuntu-install.sh`         | apt packages; Kitty install + desktop entries; Ghostty (or Kitty fallback); fonts; picom service. |
+| `install/termux-install.sh`         | pkg packages; Zsh plugins; Nerd font; Termux ergonomics.                                          |
+| `install/nixos-install.sh`          | NixOS snippet; guidance.                                                                          |
+| `install/refresh.sh`                | Idempotent refresh of prompt/CLIs and local overrides.                                            |
+| `scripts/setup_gpg_ssh.sh`          | Wire gpg-agent→SSH; per‑OS agent conf; export SSH pub; login snippet; optional git signing.       |
+| `scripts/yk-status.sh`              | Inspect sockets, keys, sshcontrol, and optional remote test.                                      |
+| `scripts/yk-lock.sh`                | Clear agent caches; restart scdaemon/gpg-agent.                                                   |
+| `scripts/neofetch_random.sh`        | Smart backend choice; draws random image alongside neofetch.                                      |
+| `scripts/doctor.sh`                 | Health checks for PATH, nvim, prompt, git helper, tmux, SF CLI.                                   |
+| `scripts/repo_to_text`              | Emit a text snapshot of repo structure/files with a globby ignore.                                |
+| `scripts/sfssh`, `scripts/sftunnel` | Convenience wrappers around SF Compute CLI.                                                       |
+
+> All scripts are linked into `~/.local/bin` (both with and without `.sh`).
+
+---
+
+## Picom (Linux/X11)
+
+* Config at `picom/picom.conf` enforces app‑specific opacity (kitty/wezterm at 80%).
+* `systemd --user` unit `systemd/user/picom.service` is linked and **ExecCondition**-gated to X11.
+
+---
+
+## Directory layout (abridged)
+
+```
+.dotfiles/
+  fontconfig/30-google-sans-mono-mono.conf
+  ghostty/config         kitty/kitty.conf      wezterm/wezterm.lua
+  git/gitconfig          ssh/{config,sshd_config_secure}
+  gnupg/*.conf           systemd/user/picom.service
+  install/*.sh           scripts/*             tmux/tmux.conf
+  neofetch/*.conf        oh-my-posh/config.json
+  termux/*               vim/{vimrc,pyproject.toml}
+  zsh/*                  .pre-commit-config.yaml
+```
+
+---
+
+## Uninstall / rollback
+
+This is a pure‑symlink setup:
+
+* Remove symlinks you don’t want under `~`, or delete `~/.dotfiles` + hand‑pick from the timestamped backups.
+* Remove OS flags at `${XDG_STATE_HOME:-~/.local/state}/dotfiles/` if you want a clean slate.
+
+---
+
+## FAQ / Notes
+
+* **Where do machine‑local secrets go?** `zsh/90-local.zsh` (auto-created; `0600`).
+* **Why Google Sans?** Optional aesthetics; Fontconfig rule ensures mono spacing for terminals.
+* **Can I skip fonts?** Yes—Ubuntu task will skip Google Sans if SSH cloning fails.
+* **What does `doctor.sh` warn about?** It checks presence of core tools and advises on credential helpers and Nerd Fonts.
 
 ---
 
 ## License
 
-MIT. Fork, remix, enjoy.
+No license declared yet. Add one if you plan to share/reuse widely.
 
 ---
 
-## Acknowledgments
-
-* [Oh-My-Posh](https://ohmyposh.dev/)
-* [Powerlevel10k](https://github.com/romkatv/powerlevel10k)
-* The open-source tool authors who make terminals fun
+*Last updated: {{DATE}}*
