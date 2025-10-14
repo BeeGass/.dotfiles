@@ -10,8 +10,7 @@ Streamlined, idempotent setup for shells, editors, terminals, fonts, SSH/GPG, an
 
 ```bash
 # Clones to ~/.dotfiles, then runs the installer
-curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/install.sh \
-  | bash -s -- --remote
+curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/install.sh | bash -s -- --remote
 ```
 
 **Manual**
