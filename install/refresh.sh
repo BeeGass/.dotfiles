@@ -1,47 +1,101 @@
-# --- refresh.sh (replace your current file with this full script) -------------
 #!/usr/bin/env bash
-# refresh.sh — idempotent refresh for shell env + CLIs (no pipx)
+# ~/.dotfiles/install/refresh.sh
+# Fast, idempotent environment refresh for macOS/Ubuntu/Termux.
+# - Updates: PATH stubs, local overrides, Oh-My-Posh, Zsh plugins, uv+Python tools, Node LTS+globals, tmux plugins
+# - Controls: --fast, --dry-run, --only <section>, --no-{python,node,omp}, -v
+# - Safe: never overwrites symlinks/files unless explicitly a managed link
+
 set -euo pipefail
 
-log() { printf "\n[refresh] %s\n" "$*"; }
-backup_file() { local f="$1"; [[ -f "$f" && ! -L "$f" ]] && cp -a "$f" "${f}.backup.$(date +%Y%m%d_%H%M%S)"; }
-have() { command -v "$1" >/dev/null 2>&1; }
-
-# --- 0) Ensure ~/.zshrc loader stub, but don't touch if it's a symlink --------
-STUB_START="# >>> BeeGass dotfiles >>>"
-STUB_END="# <<< BeeGass dotfiles <<<"
-STUB_CONTENT=$(cat <<'EOF'
-# >>> BeeGass dotfiles >>>
-if [ -f "$HOME/.dotfiles/zsh/zshrc" ]; then
-  source "$HOME/.dotfiles/zsh/zshrc"
-fi
-# <<< BeeGass dotfiles <<<
+# ----------------------------- CLI/flags ---------------------------------------
+DRYRUN=0; FAST=0; VERBOSE=0
+DO_PY=1; DO_NODE=1; DO_OMP=1; ONLY=""
+while (( $# )); do
+  case "${1}" in
+    --dry-run) DRYRUN=1 ;;
+    --fast) FAST=1 ;;
+    --only) shift; ONLY="${1:-}";;
+    --no-python) DO_PY=0 ;;
+    --no-node) DO_NODE=0 ;;
+    --no-omp) DO_OMP=0 ;;
+    -v|--verbose) VERBOSE=$((VERBOSE+1)) ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: refresh.sh [--fast] [--dry-run] [--only SECTION] [--no-python] [--no-node] [--no-omp] [-v]
+Sections: path, local, omp, zsh, python, node, tmux, doctor, all
 EOF
-)
+      exit 0
+      ;;
+  esac; shift
+done
+[[ -z "${ONLY}" ]] && ONLY="all"
 
-touch "$HOME/.zshrc"
-
-# If .zshrc is a symlink (e.g., to your repo zshrc), don't append a stub
-if [[ -L "$HOME/.zshrc" ]]; then
-  log "~/.zshrc is a symlink; skipping loader stub"
+# ----------------------------- logging -----------------------------------------
+_use_color=1; [[ ! -t 1 || -n "${NO_COLOR:-}" ]] && _use_color=0
+if [[ $_use_color -eq 1 ]] && command -v tput >/dev/null 2>&1 && tput colors >/dev/null 2>&1; then
+  BOLD=$(tput bold); RESET=$(tput sgr0); DIM=$(tput dim)
+  GRN=$(tput setaf 2); YEL=$(tput setaf 3); RED=$(tput setaf 1); BLU=$(tput setaf 4); CYA=$(tput setaf 6)
 else
-  if ! grep -Fq "$STUB_START" "$HOME/.zshrc"; then
-    log "Adding dotfiles loader to ~/.zshrc"
-    backup_file "$HOME/.zshrc"
-    printf "\n%s\n" "$STUB_CONTENT" >> "$HOME/.zshrc"
-  else
-    log "~/.zshrc loader already present"
-  fi
+  BOLD=$'\033[1m'; RESET=$'\033[0m'; DIM=$'\033[2m'
+  GRN=$'\033[32m'; YEL=$'\033[33m'; RED=$'\033[31m'; BLU=$'\033[34m'; CYA=$'\033[36m'
 fi
+section(){ printf "%s==>%s %s%s%s\n" "${CYA}${BOLD}" "${RESET}" "${BOLD}" "$*" "${RESET}"; }
+note(){ [[ $VERBOSE -gt 0 ]] && printf "  %s%s%s\n" "${DIM}" "$*" "${RESET}" || true; }
+ok(){ printf "  %s[ok]%s %s\n" "${GRN}${BOLD}" "${RESET}" "$*"; }
+warn(){ printf "  %s[warn]%s %s\n" "${YEL}${BOLD}" "${RESET}" "$*"; }
+err(){ printf "  %s[err ]%s %s\n" "${RED}${BOLD}" "${RESET}" "$*"; }
 
+run(){ if (( DRYRUN )); then printf "  %s[dry]%s %s\n" "${BLU}${BOLD}" "${RESET}" "$*"; else eval "$@"; fi; }
+have(){ command -v "$1" >/dev/null 2>&1; }
 
-# --- 1) Ensure 90-local.zsh exists (never overwrite) --------------------------
-LOCAL_OVR="$HOME/.dotfiles/zsh/90-local.zsh"
-install -d "$(dirname "$LOCAL_OVR")"
-if [[ ! -f "$LOCAL_OVR" ]]; then
-  log "Creating $LOCAL_OVR (machine-local overrides)"
-  umask 077
-  cat > "$LOCAL_OVR" <<'EOF'
+# ----------------------------- env/context -------------------------------------
+DOT="${DOTFILES_DIR:-$HOME/.dotfiles}"
+LOCAL_BIN="$HOME/.local/bin"
+ZDOT_LOCAL="$DOT/zsh/90-local.zsh"
+OS(){
+  if [[ -n "${TERMUX_VERSION-}" || "${PREFIX-}" == *"com.termux"* ]]; then echo "Termux"; return; fi
+  case "$(uname -s)" in Darwin) echo "macOS";; Linux) echo "Linux";; *) echo "Unknown";; esac
+}
+OS_NAME="$(OS)"
+
+# ----------------------------- helpers -----------------------------------------
+backup_file(){ local f="$1"; [[ -f "$f" && ! -L "$f" ]] && cp -a "$f" "${f}.backup.$(date +%Y%m%d_%H%M%S)"; }
+append_once(){ local file="$1" line="$2"; grep -Fqx "$line" "$file" 2>/dev/null || printf "%s\n" "$line" >> "$file"; }
+
+in_scope(){ [[ "$ONLY" == "all" || "$ONLY" == "$1" ]]; }
+
+# ----------------------------- sections ----------------------------------------
+
+section_path(){
+  section "PATH & loader stubs"
+  mkdir -p "$LOCAL_BIN"
+  if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
+    export PATH="$LOCAL_BIN:$PATH"; ok "Temporarily added $LOCAL_BIN to PATH"
+  else
+    note "PATH already includes $LOCAL_BIN"
+  fi
+  # Ensure .zshrc loader stub unless ~/.zshrc is a symlink
+  touch "$HOME/.zshrc"
+  if [[ -L "$HOME/.zshrc" ]]; then
+    note "~/.zshrc is a symlink; not touching"
+  else
+    local START="# >>> BeeGass dotfiles >>>"
+    local END="# <<< BeeGass dotfiles <<<"
+    if ! grep -Fq "$START" "$HOME/.zshrc"; then
+      backup_file "$HOME/.zshrc"
+      run "printf '\n%s\n%s\n%s\n' '$START' 'if [ -f \"$DOT/zsh/zshrc\" ]; then source \"$DOT/zsh/zshrc\"; fi' '$END' >> \"$HOME/.zshrc\""
+      ok "Appended loader stub to ~/.zshrc"
+    else
+      note "Loader stub already present"
+    fi
+  fi
+}
+
+section_local(){
+  section "Machine-local overrides (~/.dotfiles/zsh/90-local.zsh)"
+  mkdir -p "$(dirname "$ZDOT_LOCAL")"
+  if [[ ! -f "$ZDOT_LOCAL" ]]; then
+    run "umask 077; cat > \"$ZDOT_LOCAL\" <<'EOF'
 # Local Machine Settings
 
 # ==============================================================================
@@ -204,100 +258,156 @@ export HF_HUB_DISABLE_TELEMETRY=0
 # OAUTH_CLIENT_ID: OAuth client ID when OAuth is enabled
 # OAUTH_CLIENT_SECRET: OAuth client secret when OAuth is enabled
 # OAUTH_SCOPES: OAuth scopes (default: "openid profile")
-EOF
-  chmod 600 "$LOCAL_OVR"
-else
-  log "$LOCAL_OVR already exists (left unchanged)"
-fi
-
-# --- 2) Ensure OpenCode installed (and PATH will pick it up next shell) -------
-log "Installing/updating OpenCode CLI"
-curl -fsSL https://opencode.ai/install | bash || true
-
-# --- 3) Update oh-my-posh + zsh plugins --------------------------------------
-if have brew; then
-  log "Brew update/upgrade core bits"
-  brew update
-  brew upgrade jandedobbeleer/oh-my-posh/oh-my-posh || true
-  brew upgrade zsh-autosuggestions zsh-syntax-highlighting || true
-elif have apt; then
-  log "Refreshing oh-my-posh via official installer (Debian/Ubuntu)"
-  curl -s https://ohmyposh.dev/install.sh | bash -s -- -d "$HOME/.local/bin" || true
-  log "Installing zsh plugins via apt"
-  sudo apt update -y
-  sudo apt install -y zsh-autosuggestions zsh-syntax-highlighting || true
-else
-  log "Unknown package manager; skipping oh-my-posh/plugin upgrades"
-fi
-
-# --- 3b) Ensure an oh-my-posh config exists (repo-managed) --------------------
-OMP_DIR="$HOME/.dotfiles/oh-my-posh"
-OMP_CFG="$OMP_DIR/config.json"
-install -d "$OMP_DIR"
-
-if [[ ! -e "$OMP_CFG" ]]; then
-  log "Scaffolding oh-my-posh config in repo"
-  cat > "$OMP_CFG" <<'JSON'
-{
-  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
-  "final_space": true,
-  "blocks": [
-    {
-      "type": "prompt",
-      "alignment": "left",
-      "segments": [
-        { "type": "path",   "style": "powerline" },
-        { "type": "git",    "style": "powerline" },
-        { "type": "python", "style": "powerline" }
-      ]
-    }
-  ]
-}
-JSON
-  log "Wrote minimal OMP config at $OMP_CFG"
-fi
-
-# Optional: also expose it under XDG so other tools discover it
-XDG_OMP="$HOME/.config/oh-my-posh/config.json"
-install -d "$(dirname "$XDG_OMP")"
-ln -sfn "$OMP_CFG" "$XDG_OMP"
-
-
-# --- 4) Update Claude Code + Gemini CLI (Node toolchains only) ----------------
-update_node_globals() {
-  if have npm; then
-    log "npm: installing/updating globals: $*"
-    npm install -g "$@" || true
-  elif have pnpm; then
-    log "pnpm: installing/updating globals: $*"
-    pnpm add -g "$@" || true
-  elif have yarn; then
-    log "yarn: installing/updating globals: $*"
-    yarn global add "$@" || true
+EOF"
+    run "chmod 600 \"$ZDOT_LOCAL\""
+    ok "Created $ZDOT_LOCAL"
   else
-    log "No Node package manager detected; skipping: $*"
+    note "Local overrides already exist (left unchanged)"
   fi
 }
-update_node_globals @anthropic-ai/claude-code @google/gemini-cli
 
-# --- 5) uv install/update + ensure Pythons 3.11/3.12 --------------------------
-log "Installing/updating uv"
-curl -LsSf https://astral.sh/uv/install.sh | sh
+section_omp(){
+  [[ $DO_OMP -eq 1 ]] || { note "OMP disabled via flag"; return; }
+  section "Oh-My-Posh + config"
+  if [[ "$OS_NAME" == "macOS" ]] && have brew; then
+    run "brew update"
+    run "brew upgrade jandedobbeleer/oh-my-posh/oh-my-posh || brew upgrade oh-my-posh || true"
+  elif have apt; then
+    run "curl -s https://ohmyposh.dev/install.sh | bash -s -- -d \"$LOCAL_BIN\""
+  else
+    run "curl -s https://ohmyposh.dev/install.sh | bash -s -- -d \"$LOCAL_BIN\""
+  fi
+  # Link config if repo has it
+  if [[ -f "$DOT/oh-my-posh/config.json" ]]; then
+    run "mkdir -p \"$HOME/.config/oh-my-posh\""
+    run "ln -sfn \"$DOT/oh-my-posh/config.json\" \"$HOME/.config/oh-my-posh/config.json\""
+    ok "Linked OMP config"
+  else
+    warn "No repo OMP config found; skipping link"
+  fi
+}
 
-# Locate uv (prefer PATH; fall back to ~/.local/bin/uv)
-UV_BIN="$(command -v uv || true)"
-[[ -z "$UV_BIN" && -x "$HOME/.local/bin/uv" ]] && UV_BIN="$HOME/.local/bin/uv"
+section_zsh(){
+  section "Zsh plugins"
+  # Prefer package manager upgrades where available
+  if [[ "$OS_NAME" == "macOS" ]] && have brew; then
+    run "brew upgrade zsh-autosuggestions zsh-syntax-highlighting || true"
+  elif have apt; then
+    run "sudo apt update -y || true"
+    run "sudo apt install -y zsh-autosuggestions zsh-syntax-highlighting || true"
+  fi
+  # Ensure git-based clones exist (covers Termux/others)
+  local plugroot="$HOME/.zsh/plugins"
+  run "mkdir -p \"$plugroot\""
+  [[ -d "$plugroot/zsh-autosuggestions" ]] || run "git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions \"$plugroot/zsh-autosuggestions\""
+  [[ -d "$plugroot/zsh-syntax-highlighting" ]] || run "git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting \"$plugroot/zsh-syntax-highlighting\""
+  # Ensure sourcing lines in ~/.zshrc (harmless if already present)
+  append_once "$HOME/.zshrc" "[[ -r ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && source ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+  append_once "$HOME/.zshrc" "[[ -r ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && source ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+  ok "Zsh plugins ready"
+}
 
-if [[ -n "$UV_BIN" ]]; then
-  log "Using uv at $UV_BIN"
-  "$UV_BIN" --version || true
-  log "Installing CPython 3.11 and 3.12 via uv"
-  "$UV_BIN" python install 3.11 3.12
-  log "Regenerating zsh completions for uv"
-  eval "$("$UV_BIN" generate-shell-completion zsh)" >/dev/null 2>&1 || true
-else
-  log "uv not found after install; ensure ~/.local/bin is in PATH, then rerun."
-fi
+section_python(){
+  [[ $DO_PY -eq 1 ]] || { note "Python disabled via flag"; return; }
+  section "uv + Python toolchain"
+  # Install/update uv
+  if ! have uv; then run "curl -Ls https://astral.sh/uv/install.sh | sh"; fi
+  # Re-resolve uv bin after install
+  local UV="$(command -v uv || true)"
+  [[ -z "$UV" && -x "$HOME/.local/bin/uv" ]] && UV="$HOME/.local/bin/uv"
+  if [[ -z "$UV" ]]; then warn "uv not found after install"; return; fi
+  run "\"$UV\" self update || true"
+  if (( FAST )); then
+    note "FAST: skipping CPython re-installs"
+  else
+    run "\"$UV\" python install 3.11 3.12 || true"
+  fi
+  # CLI tools via uv tool (idempotent)
+  run "\"$UV\" tool install 'python-lsp-server[all]' || true"
+  run "\"$UV\" tool install ruff || true"
+  run "\"$UV\" tool install mypy || true"
+  run "\"$UV\" tool install pytest || true"
+  run "\"$UV\" tool install pre-commit || true"
+  # Optional: auto-bootstrap pre-commit in this repo (commented)
+  # if [[ -f \"$DOT/.pre-commit-config.yaml\" ]]; then (cd \"$DOT\" && run \"pre-commit install\"); fi
+  # Shell completions (no-op if not supported)
+  run "\"$UV\" generate-shell-completion zsh >/dev/null 2>&1 || true"
+  ok "uv + Python tools refreshed"
+}
 
-# --- 6) Final notes -----------------------------------------------------------
-log "Refresh complete. Open a new terminal or run: source ~/.zshrc"
+section_node(){
+  [[ $DO_NODE -eq 1 ]] || { note "Node disabled via flag"; return; }
+  section "Node LTS + globals"
+  export NVM_DIR="$HOME/.nvm"
+  if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
+    run "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"
+  fi
+  # shellcheck source=/dev/null
+  [[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"
+  if have nvm; then
+    run "nvm install --lts"
+    run "nvm alias default 'lts/*'"
+    run "nvm use default >/dev/null || true"
+    # Globals (customize via NPM_GLOBALS env)
+    local GLOBALS="${NPM_GLOBALS:-@google/gemini-cli @anthropic-ai/claude-code typescript typescript-language-server}"
+    run "npm install -g ${GLOBALS} || true"
+    ok "Node $(node -v 2>/dev/null || echo '-')"
+  else
+    warn "nvm not available after install; skipping Node section"
+  fi
+}
+
+section_tmux(){
+  section "tmux plugins (TPM)"
+  local TPM="$HOME/.tmux/plugins/tpm"
+  if [[ -d "$TPM" ]]; then
+    run "\"$TPM/bin/install_plugins\" || true"
+    (( FAST )) || run "\"$TPM/bin/update_plugins\" all || true"
+    ok "TPM plugins refreshed"
+  else
+    note "TPM not found; skipping"
+  fi
+}
+
+section_doctor(){
+  section "Doctor"
+  local DOC="$DOT/scripts/doctor.sh"
+  if [[ -x "$DOC" ]]; then
+    if (( DRYRUN )); then
+      printf "  %s[dry]%s would run: %s\n" "${BLU}${BOLD}" "${RESET}" "$DOC"
+    else
+      "$DOC" || true
+    fi
+  else
+    note "No doctor script at $DOC"
+  fi
+}
+
+# ----------------------------- dispatch ----------------------------------------
+case "$ONLY" in
+  all|path)     section_path;     [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
+  all|local)    section_local;    [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
+  all|omp)      section_omp;      [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
+  all|zsh)      section_zsh;      [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
+  all|python)   section_python;   [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
+  all|node)     section_node;     [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
+  all|tmux)     section_tmux;     [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
+  all|doctor)   section_doctor;   [[ "$ONLY" != "all" ]] || true ;;
+esac
+
+section "Done"
+note "Open a new shell or: source ~/.zshrc"
