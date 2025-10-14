@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# sftunnel — Open a local port tunnel to an SF Compute VM via CLI.
+# Examples:
+#   sftunnel root@vm-1234 8888                    # local 8888 -> remote 127.0.0.1:8888
+#   sftunnel root@vm-1234 9000:7001               # local 9000 -> remote 127.0.0.1:7001
+#   sftunnel root@vm-1234 0.0.0.0:8080:8080       # bind on all interfaces
+set -euo pipefail
+if [[ $# -lt 2 ]]; then
+  echo "Usage: sftunnel <user@vm_id> <LPORT[:RPORT] | [LADDR:]LPORT:RPORT>" >&2
+  exit 2
+fi
+target="$1"; shift
+spec="$1";   shift || true
+
+# Normalize to [LADDR:]LPORT:RPORT (default LADDR=127.0.0.1, RADDR=127.0.0.1)
+laddr="127.0.0.1"; lport=""; raddr="127.0.0.1"; rport=""
+case "$spec" in
+  *:*:*)            laddr="${spec%%:*}"; rest="${spec#*:}"; lport="${rest%%:*}"; rport="${rest##*:}" ;;
+  *:*)              lport="${spec%%:*}"; rport="${spec##*:}" ;;
+  *)                lport="$spec"; rport="$spec" ;;
+esac
+[[ -n "$lport" && -n "$rport" ]] || { echo "Bad port spec: $spec" >&2; exit 2; }
+
+if ! command -v sf >/dev/null 2>&1; then
+  printf "sf CLI not found. Install the SF Compute CLI, then retry.\n" >&2
+  exit 127
+fi
+
+# -N: no command; -L: local forward; -A: agent forwarding if you also need nested hops
+exec sf vms ssh -A -N -L "${laddr}:${lport}:${raddr}:${rport}" "$target"

@@ -1,4 +1,6 @@
-export PF_INFO="title os host kernel uptime pkgs memory shell palette"
+# ~/.config/pfetch/presets/kiss_like.sh
+# Clean, label/value column, no ASCII logo.
+export PF_INFO="title os cpu gpu kernel wm shell pkgs palette"
 
 unset PF_ASCII             # hide logo entirely
 export PF_ALIGN=12         # column width for labels (tweak 10–14 to taste)

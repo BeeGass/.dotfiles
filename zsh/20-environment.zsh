@@ -2,13 +2,16 @@
 # Environment Variables
 # ============================================================================
 
+: "${XDG_STATE_HOME:=$HOME/.local/state}"
+: "${DOTFILES_FLAGS_DIR:=$XDG_STATE_HOME/dotfiles/flags}"
+is_termux() { [[ -e "$DOTFILES_FLAGS_DIR/IS_TERMUX" ]]; }
+
 # GPU env (portable: NVIDIA, AMD, Termux/Android Adreno)
 if command -v nvidia-smi >/dev/null 2>&1; then
   export BEEGASS_GPU_ENABLED=1 GPU_VENDOR=nvidia
 elif command -v rocm-smi >/dev/null 2>&1; then
   export BEEGASS_GPU_ENABLED=1 GPU_VENDOR=amd
-elif [[ -n "${TERMUX_VERSION-}" || "${PREFIX-}" == *"com.termux"* ]]; then
-  # Adreno usually exposes /dev/kgsl-3d0; Vulkan prop hints GPU availability
+elif is_termux; then
   if [[ -c /dev/kgsl-3d0 ]] || getprop ro.hardware.vulkan >/dev/null 2>&1; then
     export BEEGASS_GPU_ENABLED=1 GPU_VENDOR=adreno
   else
@@ -16,36 +19,36 @@ elif [[ -n "${TERMUX_VERSION-}" || "${PREFIX-}" == *"com.termux"* ]]; then
   fi
 fi
 
-# GPG/GPG-Agent Configuration
-if command -v gpgconf &> /dev/null; then
-    export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
-    export GPG_TTY=$(tty)
-    gpgconf --launch gpg-agent >/dev/null 2>&1 || true
+# GPG/SSH agent (interactive shells only)
+if [[ -o interactive ]] && command -v gpgconf >/dev/null 2>&1; then
+  export GPG_TTY="$(tty 2>/dev/null || true)"
+  gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1 || true
+  export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
+  gpgconf --launch gpg-agent >/dev/null 2>&1 || true
 fi
+
+# Key IDs
 export KEYID=0xA34200D828A7BB26
 export S_KEYID=0xACC3640C138D96A2
 export E_KEYID=0x21691AE75B0463CC
 export A_KEYID=0x27D667E55F655FD2
 
-# Node Version Manager
+# Node Version Manager (single place)
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+[[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"
+[[ -s "$NVM_DIR/bash_completion" ]] && . "$NVM_DIR/bash_completion"
 
 # Path Configuration
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
-if [ -d "$HOME/.opencode/bin" ]; then
+if [[ -d "$HOME/.opencode/bin" ]]; then
   export PATH="$HOME/.opencode/bin:$PATH"
 fi
-
-# OS-specific paths
+# OS-specific Julia path
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS specific paths
-    export PATH="/Users/beegass/.julia/juliaup/bin:$PATH"
+  export PATH="$HOME/.julia/juliaup/bin:$PATH"
 else
-    # Linux specific paths
-    export PATH="$HOME/.julia/juliaup/bin:$PATH"
+  export PATH="$HOME/.julia/juliaup/bin:$PATH"
 fi
 
 # Editor

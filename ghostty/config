@@ -1,0 +1,56 @@
+# === Appearance ===
+background = 000000
+foreground = ffffff
+# Global transparency like WezTerm's window_background_opacity
+background-opacity = 0.80
+# Make apps that repaint the background (tmux, nvim) honor opacity
+background-opacity-cells = true
+
+# === Window ===
+# Hide titlebar but keep window frame/resize
+# macOS: hide titlebar; Linux: use client-side decorations
+macos-titlebar-style = hidden
+window-decoration = client
+# Padding (roughly equivalent to wezterm.window_padding)
+window-padding-x = 10
+window-padding-y = 10
+window-padding-balance = true
+# Hide tab bar (you’re using tmux)
+window-show-tab-bar = never   # Linux/GTK only
+
+# === Font ===
+# Fallback order like wezterm.font_with_fallback
+font-family = Google Sans Mono
+font-family = JetBrains Mono
+font-family = SF Mono
+font-family = Symbols Nerd Font Mono
+font-size = 10
+
+# === Cursor ===
+cursor-style = bar
+cursor-style-blink = true
+
+# === Behavior ===
+# Right-click paste (wezterm mouse binding)
+right-click-action = paste
+
+# Scrollback: WezTerm set 10000 lines; Ghostty uses bytes.
+# 16 MiB ~= plenty for ~10k lines at typical widths.
+scrollback-limit = 16 MiB
+
+# === Performance / Rendering ===
+# Vsync defaults to on for macOS (safer); leave as default.
+# (No explicit max_fps in Ghostty; it’s GPU-driven.)
+
+# === Shell / Autostart tmux ===
+# Equivalent to default_prog = { 'tmux', 'new-session', '-A', '-s', 'main' }
+command = shell:tmux new-session -A -s main
+
+# === Keys ===
+# WezTerm F11 toggled decorations. In Ghostty:
+# - Linux: can toggle decorations; also keep a fullscreen toggle everywhere.
+keybind = f11=toggle_fullscreen
+keybind = ctrl+f11=toggle_window_decorations  # Linux-only action
+
+# Optional: copy on select (default true on Linux/macOS); uncomment if you want to pin it.
+# copy-on-select = true

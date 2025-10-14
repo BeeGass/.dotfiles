@@ -33,4 +33,11 @@ pass "Git helper set (check warnings above)"
 command -v tmux >/dev/null || fail "tmux missing"
 tmux -V >/dev/null || fail "tmux not runnable"; pass "tmux ok"
 
+# 6) SF Compute CLI
+if ! command -v sf >/dev/null 2>&1; then
+  echo "! sf CLI missing; install SF Compute CLI to use sfssh/sftunnel"
+else
+  pass "SF Compute CLI present"
+fi
+
 echo "All checks completed."

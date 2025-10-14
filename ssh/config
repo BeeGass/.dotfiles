@@ -1,55 +1,47 @@
+# Use the gpg-agent SSH socket drop-in created by setup_gpg_ssh.sh:
+# ~/.ssh/config.d/10-gpg-agent.conf sets: IdentityAgent /run/.../S.gpg-agent.ssh
+Include ~/.ssh/config.d/*.conf
+
+Host *
+    PreferredAuthentications publickey
+    PubkeyAuthentication yes
+    ForwardAgent no
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    IdentitiesOnly no
+
 # Tailscale short names → MagicDNS
 Host Tensor Matrix Vector
     HostName %h.tailf7d439.ts.net
     User beegass
     Port 40822            # make sure sshd on each device actually listens here (or change to 22)
-    PreferredAuthentications publickey
-    ForwardAgent yes
-    ServerAliveInterval 60
-    ServerAliveCountMax 3
-    IdentitiesOnly no
-    IdentityAgent SSH_AUTH_SOCK
+    ForwardAgent no
+
+# ─────────────────────────────────────────────────────────────────────────────
 
 Host github.com github
     HostName github.com
     User git
-    IdentitiesOnly no
-    IdentityAgent SSH_AUTH_SOCK
+    ForwardAgent no
 
+# ─────────────────────────────────────────────────────────────────────────────
+
+# mcopp with gpg-agent socket forwards
 Host mcopp
     HostName mcopp.com
     User beegass
     Port 12211
-    ServerAliveInterval 60
-    ServerAliveCountMax 3
+    RequestTTY yes
     StreamLocalBindUnlink yes
     ForwardAgent yes
-    RequestTTY yes
-    IdentitiesOnly yes
-    IdentityAgent SSH_AUTH_SOCK
+    IdentitiesOnly no
 
-# You (client) on Linux → remote forwards land under /run/...
+# You (client) on Linux → remote sockets under /run/...
 Match host mcopp exec "uname -s | grep -q Linux"
     RemoteForward /run/user/1001/gnupg/S.gpg-agent     /run/user/1000/gnupg/S.gpg-agent.extra
     RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh /run/user/1000/gnupg/S.gpg-agent.ssh
 
-# You (client) on macOS → remote forwards land under ~/.gnupg/...
+# You (client) on macOS → remote sockets under ~/.gnupg/...
 Match host mcopp exec "uname -s | grep -q Darwin"
     RemoteForward /run/user/1001/gnupg/S.gpg-agent     /Users/beegass/.gnupg/S.gpg-agent.extra
     RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh /Users/beegass/.gnupg/S.gpg-agent.ssh
-
-# SF Compute VMs by name
-Host *.vms.sfcompute.dev
-    User root
-    IdentityFile ~/.ssh/sfcompute_ed25519
-    IdentitiesOnly yes
-    ForwardAgent yes
-
-# SF Compute VMs by IP
-Host 192.251.140.*
-    User root
-    Port 2222
-    IdentityFile ~/.ssh/sfcompute_ed25519
-    IdentitiesOnly yes
-    ForwardAgent yes
-    StrictHostKeyChecking no

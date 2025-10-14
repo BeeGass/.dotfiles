@@ -2,7 +2,6 @@
 # ZSH Configuration - Main Entry Point
 # ============================================================================
 
-# Source individual configuration files
 source ~/.dotfiles/zsh/00-init.zsh
 source ~/.dotfiles/zsh/10-oh-my-posh.zsh
 source ~/.dotfiles/zsh/20-environment.zsh
@@ -14,9 +13,4 @@ source ~/.dotfiles/zsh/70-keybindings.zsh
 source ~/.dotfiles/zsh/80-tools.zsh
 source ~/.dotfiles/zsh/90-local.zsh 2>/dev/null  # Local overrides (not in git)
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-# opencode
-export PATH=/Users/beegass/.opencode/bin:$PATH
+export PATH="$HOME/.local/bin:$PATH"

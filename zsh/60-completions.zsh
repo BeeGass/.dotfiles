@@ -4,7 +4,15 @@
 
 # Configure completion menu highlighting
 zstyle ':completion:*' menu select
-zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+
+# Safe LS_COLORS → list-colors
+local _ls_colors="${LS_COLORS-}"
+if [[ -z "$_ls_colors" ]] && command -v dircolors >/dev/null 2>&1; then
+  eval "$(dircolors -b 2>/dev/null)" || true
+  _ls_colors="${LS_COLORS-}"
+fi
+[[ -n "$_ls_colors" ]] && zstyle ':completion:*' list-colors ${(s.:.)_ls_colors}
+
 zstyle ':completion:*:*:*:*:*' menu select
 zstyle ':completion:*:matches' group 'yes'
 zstyle ':completion:*:options' description 'yes'

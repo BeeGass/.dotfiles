@@ -47,16 +47,23 @@ if [[ ! -f "$LOCAL_OVR" ]]; then
 # ==============================================================================
 # GPG Agent for SSH
 # ==============================================================================
+# Example: gpg-agent as SSH agent
 if command -v gpgconf &> /dev/null; then
-    export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
-    export GPG_TTY=$(tty)
-    gpgconf --launch gpg-agent >/dev/null 2>&1 || true
+  export GPG_TTY=$(tty)
+  gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1
+  export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
+  gpgconf --launch gpg-agent >/dev/null 2>&1 || true
 fi
 
 # ==============================================================================
 # API KEYS
 # ==============================================================================
-# ...
+# export GEMINI_API_KEY="__SET_ME_SECURELY__"
+
+# HF_TOKEN: User Access Token for HuggingFace Hub authentication
+# Default: None
+# Usage: Set to your personal access token from https://huggingface.co/settings/tokens
+# export HF_TOKEN="__SET_ME_SECURELY__"
 
 # ==============================================================================
 # ENVIRONMENT Variables - Local Overrides
@@ -71,7 +78,7 @@ export PYPEX_CACHE_DIR="$HOME/.cache/ludo/pypex"
 # ==============================================================================
 # OpenCode CLI (machine-local)
 if [ -d "$HOME/.opencode/bin" ]; then
-  export PATH="$HOME/.opencode/bin:$PATH"
+    export PATH="$HOME/.opencode/bin:$PATH"
 fi
 
 # ==============================================================================

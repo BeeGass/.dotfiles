@@ -1,4 +1,4 @@
--- Minimal WezTerm Configuration
+-- Minimal WezTerm Configuration (env handled in shell)
 local wezterm = require 'wezterm'
 local config = {}
 
@@ -31,19 +31,6 @@ config.font = wezterm.font_with_fallback({
   'Symbols Nerd Font Mono',
 })
 config.font_size = 10.0
-
-local function has_nvidia()
-  local f = io.popen("command -v nvidia-smi >/dev/null 2>&1 && echo yes || echo no")
-  local out = f and f:read("*l") or "no"
-  if f then f:close() end
-  return out == "yes"
-end
-
-local BEEGASS_GPU_ENABLED = has_nvidia()
-config.set_environment_variables = config.set_environment_variables or {}
-if BEEGASS_GPU_ENABLED then
-  config.set_environment_variables.BEEGASS_GPU_ENABLED = '1'
-end
 
 -- Cursor
 config.default_cursor_style = 'BlinkingBar'

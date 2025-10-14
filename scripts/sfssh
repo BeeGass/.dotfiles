@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# sfssh — SSH into an SF Compute VM via CLI, with agent forwarding.
+# Usage: sfssh root@<vm_id> [-- <extra-ssh-args>]
+set -euo pipefail
+if ! command -v sf >/dev/null 2>&1; then
+  printf "sf CLI not found. Install the SF Compute CLI, then retry.\n" >&2
+  exit 127
+fi
+
+# Pass everything straight through; -A ensures your agent (gpg-agent) is usable on the VM.
+exec sf vms ssh -A "$@"

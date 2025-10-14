@@ -1,0 +1,17 @@
+[Unit]
+Description=Picom compositor (user)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+# Gate: only in GUI + X11, and don’t start if one is already running
+ExecCondition=/bin/sh -c '[ -n "${DISPLAY:-}" ]'
+ExecCondition=/bin/sh -c '[ "${XDG_SESSION_TYPE:-}" = x11 ]'
+ExecCondition=/bin/sh -c '! pgrep -x picom >/dev/null'
+ExecStart=/usr/bin/picom --config %h/.config/picom/picom.conf
+Restart=on-failure
+RestartSec=2s
+
+[Install]
+WantedBy=graphical-session.target
