@@ -29,30 +29,9 @@ setup_apt() {
     sudo apt update
     sudo apt install -y --no-install-recommends software-properties-common ca-certificates gnupg
 
-    local codename arch ms_keyring ms_sourcelist
-    codename="$(lsb_release -cs)"
-    arch="$(dpkg --print-architecture)"
-    ms_keyring="/etc/apt/trusted.gpg.d/microsoft.gpg"
-    ms_sourcelist="/etc/apt/sources.list.d/microsoft-prod.list"
-
-    if [ ! -f "$ms_keyring" ]; then
-        step "Adding Microsoft GPG key"
-        curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o "$ms_keyring"
-        ok "Wrote $ms_keyring"
-    else
-        note "Microsoft key already present"
-    fi
-    if [ ! -f "$ms_sourcelist" ]; then
-        step "Adding Microsoft repo for ${codename} (${arch})"
-        echo "deb [arch=${arch}] https://packages.microsoft.com/repos/microsoft-ubuntu-${codename}-prod ${codename} main" | sudo tee "$ms_sourcelist" >/dev/null
-        ok "Wrote $ms_sourcelist"
-    else
-        note "Microsoft repo already configured"
-    fi
-
     step "Updating package lists"
     sudo apt update
-    ok "APT ready"
+    ok "APT ready (no Microsoft repo)"
 }
 
 install_apt_packages() {
@@ -124,6 +103,22 @@ setup_snap() {
         else
             warn "Failed to install VS Code"
         fi
+    fi
+}
+
+install_claude_code() {
+    section "[Ubuntu] Install Claude Code"
+
+    if command -v claude >/dev/null 2>&1; then
+        note "Claude Code already installed"
+        return 0
+    fi
+
+    step "Installing Claude Code via official installer"
+    if curl -fsSL https://claude.ai/install.sh | bash; then
+        ok "Installed Claude Code"
+    else
+        warn "Failed to install Claude Code"
     fi
 }
 
@@ -417,6 +412,7 @@ main() {
     setup_apt
     install_apt_packages
     setup_snap
+    install_claude_code
     setup_flatpak
     install_kitty
     setup_kitty_desktop_integration

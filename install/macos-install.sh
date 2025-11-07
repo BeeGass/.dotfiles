@@ -101,6 +101,7 @@ cask "font-jetbrains-mono-nerd-font"
 cask "ghostty"
 cask "iterm2"
 cask "kitty"
+cask "claude-code"
 EOF
 
   "$(brew --prefix)"/opt/fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish

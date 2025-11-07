@@ -442,7 +442,6 @@ install_clis() {
   if command -v npm >/dev/null 2>&1; then
     npm install -g \
       @google/gemini-cli@latest \
-      @anthropic-ai/claude-code \
       typescript \
       typescript-language-server || true
   fi

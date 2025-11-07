@@ -22,7 +22,7 @@ while (( $# )); do
     -h|--help)
       cat <<'EOF'
 Usage: refresh.sh [--fast] [--dry-run] [--only SECTION] [--no-python] [--no-node] [--no-omp] [-v]
-Sections: path, local, omp, zsh, python, node, tmux, snap, flatpak, doctor, all
+Sections: path, local, cleanup, omp, zsh, python, node, tmux, snap, claude, gemini, opencode, flatpak, doctor, all
 EOF
       exit 0
       ;;
@@ -88,6 +88,41 @@ section_path(){
     else
       note "Loader stub already present"
     fi
+  fi
+}
+
+section_cleanup(){
+  section "Legacy cleanup"
+
+  # Clean up Microsoft repo if it exists (no longer needed)
+  if [[ "$OS_NAME" == "Linux" ]]; then
+    local ms_keyring="/etc/apt/trusted.gpg.d/microsoft.gpg"
+    local ms_sourcelist="/etc/apt/sources.list.d/microsoft-prod.list"
+    local removed=0
+
+    if [[ -f "$ms_keyring" ]]; then
+      note "Removing Microsoft GPG key"
+      run "sudo rm -f \"$ms_keyring\""
+      ok "Removed $ms_keyring"
+      removed=1
+    fi
+
+    if [[ -f "$ms_sourcelist" ]]; then
+      note "Removing Microsoft sources list"
+      run "sudo rm -f \"$ms_sourcelist\""
+      ok "Removed $ms_sourcelist"
+      removed=1
+    fi
+
+    if [[ $removed -eq 1 ]]; then
+      note "Refreshing package lists after cleanup"
+      run "sudo apt update"
+      ok "Microsoft repo cleanup complete"
+    else
+      note "No legacy Microsoft repo files found"
+    fi
+  else
+    note "Cleanup only applies to Linux systems"
   fi
 }
 
@@ -385,6 +420,64 @@ section_snap(){
   fi
 }
 
+section_claude_code(){
+  section "Claude Code"
+
+  if have claude; then
+    note "Claude Code installed"
+    local version
+    version=$(claude --version 2>/dev/null || echo "unknown")
+    ok "Claude Code present: $version"
+  else
+    warn "Claude Code not found"
+    if [[ "$OS_NAME" == "macOS" ]]; then
+      if have brew; then
+        note "Install with: brew install --cask claude-code"
+      else
+        warn "Homebrew not found; cannot install Claude Code"
+      fi
+    elif [[ "$OS_NAME" == "Linux" ]]; then
+      note "Install with: curl -fsSL https://claude.ai/install.sh | bash"
+    fi
+  fi
+}
+
+section_gemini_cli(){
+  section "Gemini CLI"
+
+  if have gemini; then
+    note "Gemini CLI installed"
+    local version
+    version=$(gemini --version 2>/dev/null || echo "unknown")
+    ok "Gemini CLI present: $version"
+  else
+    warn "Gemini CLI not found"
+    if have npm; then
+      note "Install with: npm install -g @google/gemini-cli@latest"
+    else
+      warn "npm not found; cannot install Gemini CLI"
+    fi
+  fi
+}
+
+section_opencode(){
+  section "OpenCode CLI"
+
+  if [[ -d "$HOME/.opencode" ]] || have opencode; then
+    note "OpenCode CLI installed"
+    if have opencode; then
+      local version
+      version=$(opencode --version 2>/dev/null || echo "unknown")
+      ok "OpenCode CLI present: $version"
+    else
+      ok "OpenCode CLI present (in ~/.opencode)"
+    fi
+  else
+    warn "OpenCode CLI not found"
+    note "Install with: curl -fsSL https://opencode.ai/install | bash"
+  fi
+}
+
 section_flatpak(){
   section "Flatpak apps"
   if ! have flatpak; then
@@ -463,6 +556,9 @@ case "$ONLY" in
   all|local)    section_local;    [[ "$ONLY" != "all" ]] || true ;;
 esac
 case "$ONLY" in
+  all|cleanup)  section_cleanup;  [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
   all|omp)      section_omp;      [[ "$ONLY" != "all" ]] || true ;;
 esac
 case "$ONLY" in
@@ -479,6 +575,15 @@ case "$ONLY" in
 esac
 case "$ONLY" in
   all|snap)     section_snap;     [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
+  all|claude)   section_claude_code; [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
+  all|gemini)   section_gemini_cli; [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
+  all|opencode) section_opencode; [[ "$ONLY" != "all" ]] || true ;;
 esac
 case "$ONLY" in
   all|flatpak)  section_flatpak;  [[ "$ONLY" != "all" ]] || true ;;
