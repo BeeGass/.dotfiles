@@ -22,7 +22,7 @@ while (( $# )); do
     -h|--help)
       cat <<'EOF'
 Usage: refresh.sh [--fast] [--dry-run] [--only SECTION] [--no-python] [--no-node] [--no-omp] [-v]
-Sections: path, local, omp, zsh, python, node, tmux, doctor, all
+Sections: path, local, omp, zsh, python, node, tmux, snap, flatpak, doctor, all
 EOF
       exit 0
       ;;
@@ -369,6 +369,78 @@ section_tmux(){
   fi
 }
 
+section_snap(){
+  section "Snap apps"
+  if ! have snap; then
+    note "Snap not installed; skipping"
+    return
+  fi
+
+  # Verify VS Code is installed
+  if snap list 2>/dev/null | grep -q "^code "; then
+    note "VS Code installed"
+    ok "Snap: VS Code present"
+  else
+    warn "VS Code not found (run ubuntu-install.sh to install)"
+  fi
+}
+
+section_flatpak(){
+  section "Flatpak apps"
+  if ! have flatpak; then
+    note "Flatpak not installed; skipping"
+    return
+  fi
+
+  # Ensure Flathub is configured
+  if ! flatpak remote-list | grep -q flathub; then
+    run "sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo"
+    ok "Added Flathub repository"
+  else
+    note "Flathub already configured"
+  fi
+
+  # Update all Flatpak apps
+  if (( FAST )); then
+    note "FAST: skipping Flatpak update"
+  else
+    run "sudo flatpak update -y || true"
+    ok "Flatpak apps updated"
+  fi
+
+  # Verify expected apps are installed
+  local expected_apps=(
+    "md.obsidian.Obsidian:Obsidian"
+    "com.discordapp.Discord:Discord"
+    "com.valvesoftware.Steam:Steam"
+    "com.google.Chrome:Google Chrome"
+    "org.telegram.desktop:Telegram"
+    "com.spotify.Client:Spotify"
+    "com.slack.Slack:Slack"
+  )
+
+  local installed_count=0
+  local missing_count=0
+  for app in "${expected_apps[@]}"; do
+    local app_id="${app%%:*}"
+    local app_name="${app#*:}"
+    if flatpak list --app | grep -q "$app_id"; then
+      note "$app_name installed"
+      installed_count=$((installed_count + 1))
+    else
+      if (( VERBOSE > 0 )); then
+        warn "$app_name not found"
+      fi
+      missing_count=$((missing_count + 1))
+    fi
+  done
+
+  if (( missing_count > 0 )); then
+    warn "$missing_count apps missing (run ubuntu-install.sh to install)"
+  fi
+  ok "Flatpak: $installed_count/${#expected_apps[@]} apps present"
+}
+
 section_doctor(){
   section "Doctor"
   local DOC="$DOT/scripts/doctor.sh"
@@ -404,6 +476,12 @@ case "$ONLY" in
 esac
 case "$ONLY" in
   all|tmux)     section_tmux;     [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
+  all|snap)     section_snap;     [[ "$ONLY" != "all" ]] || true ;;
+esac
+case "$ONLY" in
+  all|flatpak)  section_flatpak;  [[ "$ONLY" != "all" ]] || true ;;
 esac
 case "$ONLY" in
   all|doctor)   section_doctor;   [[ "$ONLY" != "all" ]] || true ;;

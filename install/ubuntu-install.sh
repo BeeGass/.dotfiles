@@ -66,6 +66,7 @@ install_apt_packages() {
         desktop-file-utils
         fd-find
         file
+        flatpak
         fonts-jetbrains-mono
         fzf
         gh
@@ -86,6 +87,7 @@ install_apt_packages() {
         ripgrep
         shellcheck
         shfmt
+        snapd
         tmux
         tree
         unzip
@@ -103,6 +105,80 @@ install_apt_packages() {
     step "Running community Ghostty installer (best-effort)"
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)" || \
       warn "Community Ghostty installer exited non-zero (this can be normal on 22.04)"
+}
+
+setup_snap() {
+    section "[Ubuntu] Setup Snap and install VS Code"
+
+    if ! command -v snap >/dev/null 2>&1; then
+        err "Snap not found; ensure apt packages installed first"
+        return 1
+    fi
+
+    step "Installing VS Code via snap"
+    if snap list 2>/dev/null | grep -q "^code "; then
+        note "VS Code already installed"
+    else
+        if sudo snap install code --classic; then
+            ok "Installed VS Code"
+        else
+            warn "Failed to install VS Code"
+        fi
+    fi
+}
+
+setup_flatpak() {
+    section "[Ubuntu] Setup Flatpak and install applications"
+
+    if ! command -v flatpak >/dev/null 2>&1; then
+        err "Flatpak not found; ensure apt packages installed first"
+        return 1
+    fi
+
+    step "Adding Flathub repository"
+    if flatpak remote-list | grep -q flathub; then
+        note "Flathub already configured"
+    else
+        sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        ok "Added Flathub repository"
+    fi
+
+    step "Updating Flatpak repositories"
+    sudo flatpak update -y || warn "Flatpak update had warnings"
+
+    section "[Ubuntu] Installing Flatpak applications"
+    local apps=(
+        "md.obsidian.Obsidian:Obsidian"
+        "com.discordapp.Discord:Discord"
+        "com.valvesoftware.Steam:Steam"
+        "com.google.Chrome:Google Chrome"
+        "org.telegram.desktop:Telegram"
+        "com.spotify.Client:Spotify"
+        "com.slack.Slack:Slack"
+    )
+
+    local installed=0
+    local failed=0
+    for app in "${apps[@]}"; do
+        local app_id="${app%%:*}"
+        local app_name="${app#*:}"
+
+        step "Installing $app_name ($app_id)"
+        if flatpak list --app | grep -q "$app_id"; then
+            note "$app_name already installed"
+            installed=$((installed + 1))
+        else
+            if sudo flatpak install -y flathub "$app_id"; then
+                ok "Installed $app_name"
+                installed=$((installed + 1))
+            else
+                warn "Failed to install $app_name"
+                failed=$((failed + 1))
+            fi
+        fi
+    done
+
+    ok "Flatpak setup complete: $installed apps ready, $failed failed"
 }
 
 install_kitty() {
@@ -340,6 +416,8 @@ main() {
     section "[Ubuntu] Start"
     setup_apt
     install_apt_packages
+    setup_snap
+    setup_flatpak
     install_kitty
     setup_kitty_desktop_integration
     install_ghostty_or_fallback
