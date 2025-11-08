@@ -57,12 +57,15 @@ install_apt_packages() {
         libsecret-1-0
         libsecret-1-dev
         neofetch
+        neovim
         openssh-client
         openssl
+        pcscd
         pinentry-curses
         pinentry-gnome3
         picom
         pkg-config
+        scdaemon
         ripgrep
         shellcheck
         shfmt
