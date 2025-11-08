@@ -385,6 +385,9 @@ install_platform_packages() {
     Linux)
       if [[ -f /etc/NIXOS ]]; then
         bash "$SCRIPT_DIR/nixos-install.sh"
+      elif [[ -f /proc/device-tree/model ]] && grep -qi "raspberry pi" /proc/device-tree/model 2>/dev/null; then
+        note "Detected Raspberry Pi (headless server)"
+        bash "$SCRIPT_DIR/rpi-install.sh"
       else
         bash "$SCRIPT_DIR/ubuntu-install.sh"
       fi
