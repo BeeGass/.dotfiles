@@ -406,6 +406,38 @@ setup_picom_user_service() {
     systemctl --user enable --now picom.service || warn "Could not start picom (likely non-X11 session); it will start when conditions match"
 }
 
+setup_directories() {
+    section "[Ubuntu] User directories & bookmarks"
+
+    # Create standard directories
+    step "Creating user directories"
+    mkdir -p "$HOME/Projects" "$HOME/Papers"
+    ok "Ensured Projects and Papers directories exist"
+
+    # Add to GTK bookmarks (for GNOME Files/Nautilus sidebar)
+    local bookmarks_file="$HOME/.config/gtk-3.0/bookmarks"
+    mkdir -p "$(dirname "$bookmarks_file")"
+    touch "$bookmarks_file"
+
+    local projects_bookmark="file://$HOME/Projects Projects"
+    local papers_bookmark="file://$HOME/Papers Papers"
+
+    step "Adding directories to file manager sidebar"
+    if ! grep -Fxq "$projects_bookmark" "$bookmarks_file" 2>/dev/null; then
+        echo "$projects_bookmark" >> "$bookmarks_file"
+        ok "Added Projects bookmark"
+    else
+        note "Projects bookmark already present"
+    fi
+
+    if ! grep -Fxq "$papers_bookmark" "$bookmarks_file" 2>/dev/null; then
+        echo "$papers_bookmark" >> "$bookmarks_file"
+        ok "Added Papers bookmark"
+    else
+        note "Papers bookmark already present"
+    fi
+}
+
 # --- Main ---------------------------------------------------------------------
 main() {
     section "[Ubuntu] Start"
@@ -418,6 +450,7 @@ main() {
     setup_kitty_desktop_integration
     install_ghostty_or_fallback
     setup_symlinks
+    setup_directories
     install_google_sans_fonts
     setup_picom_user_service
     section "[Ubuntu] Complete"

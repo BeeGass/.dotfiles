@@ -312,7 +312,7 @@ setup_symlinks() {
   local os_type="$1"
   section "1) Creating symlinks"
 
-  mkdir -p "$HOME/Projects"
+  mkdir -p "$HOME/Projects" "$HOME/Papers"
 
   # 0) Link minimal .zshenv first so future shells see flags/env immediately
   if [[ -f "$DOTFILES_DIR/zsh/zshenv" ]]; then
@@ -353,6 +353,15 @@ setup_symlinks() {
 
   if [[ -x "$DOTFILES_DIR/scripts/neofetch_random.sh" ]]; then
     create_symlink "$DOTFILES_DIR/scripts/neofetch_random.sh" "$LOCAL_BIN_DIR/nf"
+  fi
+
+  # Link install scripts globally
+  step "Linking dotfiles install scripts"
+  if [[ -f "$DOTFILES_DIR/install/install.sh" ]]; then
+    create_symlink "$DOTFILES_DIR/install/install.sh" "$LOCAL_BIN_DIR/dots-install"
+  fi
+  if [[ -f "$DOTFILES_DIR/install/refresh.sh" ]]; then
+    create_symlink "$DOTFILES_DIR/install/refresh.sh" "$LOCAL_BIN_DIR/dots-refresh"
   fi
 
   if [[ "$os_type" == "Termux" ]]; then

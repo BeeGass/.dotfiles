@@ -8,12 +8,13 @@
 set -euo pipefail
 
 # ----------------------------- CLI/flags ---------------------------------------
-DRYRUN=0; FAST=0; VERBOSE=0
+DRYRUN=0; FAST=0; VERBOSE=0; CLEAN_BACKUPS=0
 DO_PY=1; DO_NODE=1; DO_OMP=1; ONLY=""
 while (( $# )); do
   case "${1}" in
     --dry-run) DRYRUN=1 ;;
     --fast) FAST=1 ;;
+    --clean-backups) CLEAN_BACKUPS=1 ;;
     --only) shift; ONLY="${1:-}";;
     --no-python) DO_PY=0 ;;
     --no-node) DO_NODE=0 ;;
@@ -21,8 +22,24 @@ while (( $# )); do
     -v|--verbose) VERBOSE=$((VERBOSE+1)) ;;
     -h|--help)
       cat <<'EOF'
-Usage: refresh.sh [--fast] [--dry-run] [--only SECTION] [--no-python] [--no-node] [--no-omp] [-v]
-Sections: path, local, cleanup, omp, zsh, python, node, tmux, snap, claude, gemini, opencode, flatpak, doctor, all
+Usage: refresh.sh [OPTIONS]
+
+Options:
+  --fast              Skip time-consuming updates (Python installs, Flatpak/tmux updates)
+  --dry-run           Show what would be done without making changes
+  --clean-backups     Remove all *.backup.* files found in home and dotfiles
+  --only SECTION      Run only the specified section
+  --no-python         Skip Python/uv toolchain section
+  --no-node           Skip Node.js/npm section
+  --no-omp            Skip Oh-My-Posh updates
+  -v, --verbose       Increase verbosity (can be repeated)
+
+Sections:
+  Core:     path, local, directories, cleanup, backups
+  Tools:    omp, zsh, python, node, tmux
+  Apps:     snap, claude, gemini, opencode, flatpak
+  System:   tailscale, sf, doctor
+  Special:  all (runs all sections)
 EOF
       exit 0
       ;;
@@ -34,10 +51,10 @@ done
 _use_color=1; [[ ! -t 1 || -n "${NO_COLOR:-}" ]] && _use_color=0
 if [[ $_use_color -eq 1 ]] && command -v tput >/dev/null 2>&1 && tput colors >/dev/null 2>&1; then
   BOLD=$(tput bold); RESET=$(tput sgr0); DIM=$(tput dim)
-  GRN=$(tput setaf 2); YEL=$(tput setaf 3); RED=$(tput setaf 1); BLU=$(tput setaf 4); CYA=$(tput setaf 6)
+  GRN=$(tput setaf 2); YEL=$(tput setaf 3); RED=$(tput setaf 1); BLU=$(tput setaf 4); CYA=$(tput setaf 6); MAG=$(tput setaf 5)
 else
   BOLD=$'\033[1m'; RESET=$'\033[0m'; DIM=$'\033[2m'
-  GRN=$'\033[32m'; YEL=$'\033[33m'; RED=$'\033[31m'; BLU=$'\033[34m'; CYA=$'\033[36m'
+  GRN=$'\033[32m'; YEL=$'\033[33m'; RED=$'\033[31m'; BLU=$'\033[34m'; CYA=$'\033[36m'; MAG=$'\033[35m'
 fi
 section(){ printf "%s==>%s %s%s%s\n" "${CYA}${BOLD}" "${RESET}" "${BOLD}" "$*" "${RESET}"; }
 note(){ [[ $VERBOSE -gt 0 ]] && printf "  %s%s%s\n" "${DIM}" "$*" "${RESET}" || true; }
@@ -64,6 +81,9 @@ append_once(){ local file="$1" line="$2"; grep -Fqx "$line" "$file" 2>/dev/null 
 
 in_scope(){ [[ "$ONLY" == "all" || "$ONLY" == "$1" ]]; }
 
+# Helper: apt presence (Ubuntu/Debian-ish)
+have_apt(){ have apt-get || have apt; }
+
 # ----------------------------- sections ----------------------------------------
 
 section_path(){
@@ -74,6 +94,17 @@ section_path(){
   else
     note "PATH already includes $LOCAL_BIN"
   fi
+
+  # Link dotfiles scripts to PATH
+  if [[ -f "$DOT/install/install.sh" ]]; then
+    run "ln -sf \"$DOT/install/install.sh\" \"$LOCAL_BIN/dots-install\""
+    ok "Linked dots-install"
+  fi
+  if [[ -f "$DOT/install/refresh.sh" ]]; then
+    run "ln -sf \"$DOT/install/refresh.sh\" \"$LOCAL_BIN/dots-refresh\""
+    ok "Linked dots-refresh"
+  fi
+
   # Ensure .zshrc loader stub unless ~/.zshrc is a symlink
   touch "$HOME/.zshrc"
   if [[ -L "$HOME/.zshrc" ]]; then
@@ -95,7 +126,7 @@ section_cleanup(){
   section "Legacy cleanup"
 
   # Clean up Microsoft repo if it exists (no longer needed)
-  if [[ "$OS_NAME" == "Linux" ]]; then
+  if [[ "$OS_NAME" == "Linux" ]] && have_apt; then
     local ms_keyring="/etc/apt/trusted.gpg.d/microsoft.gpg"
     local ms_sourcelist="/etc/apt/sources.list.d/microsoft-prod.list"
     local removed=0
@@ -114,15 +145,27 @@ section_cleanup(){
       removed=1
     fi
 
-    if [[ $removed -eq 1 ]]; then
+    # Nuke any stray packages.microsoft.com lines
+    local ms_hits
+    ms_hits="$(grep -R "packages.microsoft.com" /etc/apt/sources.list /etc/apt/sources.list.d 2>/dev/null || true)"
+    if [[ -n "$ms_hits" ]]; then
+      note "Stripping packages.microsoft.com from apt sources"
+      while IFS= read -r f; do
+        [[ -f "$f" ]] || continue
+        run "sudo sed -i '/packages.microsoft.com/d' \"$f\""
+        removed=1
+      done < <(grep -Rl "packages.microsoft.com" /etc/apt/sources.list /etc/apt/sources.list.d 2>/dev/null || true)
+    fi
+
+    if (( removed )); then
       note "Refreshing package lists after cleanup"
-      run "sudo apt update"
+      run "sudo apt-get update -y || sudo apt update -y"
       ok "Microsoft repo cleanup complete"
     else
-      note "No legacy Microsoft repo files found"
+      note "No legacy Microsoft repo configuration found"
     fi
   else
-    note "Cleanup only applies to Linux systems"
+    note "No apt-based cleanup needed on this platform"
   fi
 }
 
@@ -301,6 +344,141 @@ EOF"
   fi
 }
 
+section_directories(){
+  section "User directories & bookmarks"
+
+  # Create standard directories
+  local dirs=("$HOME/Projects" "$HOME/Papers")
+  for dir in "${dirs[@]}"; do
+    if [[ ! -d "$dir" ]]; then
+      run "mkdir -p \"$dir\""
+      ok "Created $(basename "$dir") directory"
+    else
+      note "$(basename "$dir") directory already exists"
+    fi
+  done
+
+  # Add to GTK bookmarks (for GNOME Files/Nautilus sidebar)
+  if [[ "$OS_NAME" == "Linux" ]]; then
+    local bookmarks_file="$HOME/.config/gtk-3.0/bookmarks"
+    mkdir -p "$(dirname "$bookmarks_file")"
+
+    # Ensure bookmarks file exists
+    [[ ! -f "$bookmarks_file" ]] && touch "$bookmarks_file"
+
+    # Add bookmarks if not already present
+    local projects_bookmark="file://$HOME/Projects Projects"
+    local papers_bookmark="file://$HOME/Papers Papers"
+
+    if ! grep -Fxq "$projects_bookmark" "$bookmarks_file" 2>/dev/null; then
+      echo "$projects_bookmark" >> "$bookmarks_file"
+      ok "Added Projects to file manager sidebar"
+    else
+      note "Projects bookmark already present"
+    fi
+
+    if ! grep -Fxq "$papers_bookmark" "$bookmarks_file" 2>/dev/null; then
+      echo "$papers_bookmark" >> "$bookmarks_file"
+      ok "Added Papers to file manager sidebar"
+    else
+      note "Papers bookmark already present"
+    fi
+  else
+    note "GTK bookmarks only apply to Linux desktop environments"
+  fi
+}
+
+section_clean_backups(){
+  section "Backup file cleanup"
+
+  # Search ALL locations where backups are created by install/refresh scripts
+  # Covers: symlink destinations, modified configs, and dotfiles repo itself
+  local backup_files=()
+  local search_paths=(
+    # Root level dotfiles
+    "$HOME"                           # .zshrc, .zshenv, .vimrc, .gitconfig, .tmux.conf (maxdepth 1)
+
+    # XDG and standard config directories
+    "$HOME/.config"                   # nvim, kitty, wezterm, ghostty, claude, gemini, oh-my-posh, picom, neofetch, gtk-3.0, fontconfig, systemd
+    "$HOME/.local"                    # bin, share, state
+
+    # Tool-specific directories
+    "$HOME/.ssh"                      # config, config.d/
+    "$HOME/.gnupg"                    # gpg-agent.conf, gpg.conf, dirmngr.conf
+    "$HOME/.tmux"                     # plugins/tpm
+    "$HOME/.nvm"                      # Node Version Manager
+    "$HOME/.zsh"                      # plugins (autosuggestions, syntax-highlighting)
+    "$HOME/.termux"                   # Termux configs (Android only)
+    "$HOME/.opencode"                 # OpenCode CLI installation
+
+    # Dotfiles repo and all subdirectories
+    "$DOT"                            # All dotfiles source files
+  )
+
+  for search_path in "${search_paths[@]}"; do
+    [[ ! -d "$search_path" ]] && continue
+
+    local depth_limit="-maxdepth 1"
+    # Search recursively everywhere except $HOME root (to avoid Documents, Downloads, etc.)
+    [[ "$search_path" != "$HOME" ]] && depth_limit=""
+
+    # Exclude snap directories (managed by snap system, includes trash)
+    while IFS= read -r -d '' file; do
+      [[ "$file" == "$HOME/snap/"* ]] && continue
+      backup_files+=("$file")
+    done < <(find "$search_path" $depth_limit -type f -name "*.backup.*" -print0 2>/dev/null)
+  done
+
+  if (( ${#backup_files[@]} == 0 )); then
+    note "No backup files found"
+    return
+  fi
+
+  # Group by location for better reporting
+  local by_location=()
+  for file in "${backup_files[@]}"; do
+    local loc="other"
+    [[ "$file" == "$HOME/.config/"* ]] && loc=".config"
+    [[ "$file" == "$HOME/.local/"* ]] && loc=".local"
+    [[ "$file" == "$HOME/.ssh/"* ]] && loc=".ssh"
+    [[ "$file" == "$HOME/.gnupg/"* ]] && loc=".gnupg"
+    [[ "$file" == "$HOME/.tmux/"* ]] && loc=".tmux"
+    [[ "$file" == "$HOME/.nvm/"* ]] && loc=".nvm"
+    [[ "$file" == "$HOME/.zsh/"* ]] && loc=".zsh"
+    [[ "$file" == "$HOME/.termux/"* ]] && loc=".termux"
+    [[ "$file" == "$HOME/.opencode/"* ]] && loc=".opencode"
+    [[ "$file" == "$DOT/"* ]] && loc="dotfiles"
+    [[ "$file" == "$HOME/"* && "$file" != "$HOME/"*"/"* ]] && loc="home"
+    by_location+=("$loc:$file")
+  done
+
+  if [[ $CLEAN_BACKUPS -eq 0 ]]; then
+    warn "Found ${#backup_files[@]} backup file(s) (use --clean-backups to remove)"
+    if (( VERBOSE > 0 )); then
+      printf "  ${DIM}Search locations: home, .config, .local, .ssh, .gnupg, .tmux, .nvm, .zsh, .termux, .opencode, dotfiles${RESET}\n"
+      for item in "${by_location[@]}"; do
+        note "  - ${item#*:}"
+      done
+    fi
+    return
+  fi
+
+  step "Removing ${#backup_files[@]} backup file(s)"
+  local removed=0
+  for file in "${backup_files[@]}"; do
+    if (( VERBOSE > 0 )); then
+      note "Removing: $file"
+    fi
+    if (( DRYRUN )); then
+      printf "  %s[dry]%s would remove: %s\n" "${BLU}${BOLD}" "${RESET}" "$file"
+    else
+      rm -f "$file" && removed=$((removed + 1)) || warn "Failed to remove: $file"
+    fi
+  done
+
+  ok "Removed $removed backup file(s)"
+}
+
 section_omp(){
   [[ $DO_OMP -eq 1 ]] || { note "OMP disabled via flag"; return; }
   section "Oh-My-Posh + config"
@@ -384,7 +562,7 @@ section_node(){
     run "nvm alias default 'lts/*'"
     run "nvm use default >/dev/null || true"
     # Globals (customize via NPM_GLOBALS env)
-    local GLOBALS="${NPM_GLOBALS:-@google/gemini-cli @anthropic-ai/claude-code typescript typescript-language-server}"
+    local GLOBALS="${NPM_GLOBALS:-@google/gemini-cli typescript typescript-language-server}"
     run "npm install -g ${GLOBALS} || true"
     ok "Node $(node -v 2>/dev/null || echo '-')"
   else
@@ -534,6 +712,60 @@ section_flatpak(){
   ok "Flatpak: $installed_count/${#expected_apps[@]} apps present"
 }
 
+section_tailscale(){
+  section "Tailscale"
+  if [[ "$OS_NAME" != "Linux" ]] || ! have_apt; then
+    note "Non-Ubuntu/apt system; skipping Tailscale enforcement"
+    return
+  fi
+
+  if have tailscale; then
+    ok "Tailscale already installed"
+    return
+  fi
+
+  # Best-effort mirror of installer; safe to run multiple times
+  local codename
+  codename="$(. /etc/os-release 2>/dev/null; echo "${VERSION_CODENAME:-}")"
+
+  note "Tailscale missing; configuring repo for $codename (best-effort)"
+  run "sudo mkdir -p /usr/share/keyrings"
+  run "curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/${codename}.noarmor.gpg | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null"
+  run "curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/${codename}.tailscale-keyring.list | sudo tee /etc/apt/sources.list.d/tailscale.list >/dev/null"
+  run "sudo chmod 0644 /usr/share/keyrings/tailscale-archive-keyring.gpg /etc/apt/sources.list.d/tailscale.list || true"
+  run "sudo apt-get update -y || true"
+  run "sudo apt-get install -y tailscale tailscale-archive-keyring || true"
+
+  if have tailscale; then
+    ok "Tailscale installed"
+  else
+    warn "Tailscale install failed (check logs)"
+  fi
+}
+
+section_sf(){
+  section "SF Compute CLI"
+  if have sf; then
+    ok "sf CLI present"
+    return
+  fi
+
+  local tmp
+  tmp="$(mktemp -d)"
+  note "Installing sf CLI to $LOCAL_BIN"
+  run "mkdir -p \"$LOCAL_BIN\""
+  if run "curl -fsSL -o \"$tmp/sf.zip\" https://github.com/sfcompute/cli/releases/latest/download/sf-x86_64-unknown-linux-gnu.zip" &&
+     run "unzip -o \"$tmp/sf.zip\" -d \"$tmp/dist\" >/dev/null 2>&1" &&
+     [[ -f "$tmp/dist/sf-x86_64-unknown-linux-gnu" ]]; then
+    run "mv \"$tmp/dist/sf-x86_64-unknown-linux-gnu\" \"$LOCAL_BIN/sf\""
+    run "chmod +x \"$LOCAL_BIN/sf\""
+    ok "Installed sf CLI"
+  else
+    warn "Failed to install sf CLI"
+  fi
+  run "rm -rf \"$tmp\""
+}
+
 section_doctor(){
   section "Doctor"
   local DOC="$DOT/scripts/doctor.sh"
@@ -549,48 +781,25 @@ section_doctor(){
 }
 
 # ----------------------------- dispatch ----------------------------------------
-case "$ONLY" in
-  all|path)     section_path;     [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|local)    section_local;    [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|cleanup)  section_cleanup;  [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|omp)      section_omp;      [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|zsh)      section_zsh;      [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|python)   section_python;   [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|node)     section_node;     [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|tmux)     section_tmux;     [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|snap)     section_snap;     [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|claude)   section_claude_code; [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|gemini)   section_gemini_cli; [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|opencode) section_opencode; [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|flatpak)  section_flatpak;  [[ "$ONLY" != "all" ]] || true ;;
-esac
-case "$ONLY" in
-  all|doctor)   section_doctor;   [[ "$ONLY" != "all" ]] || true ;;
-esac
+
+in_scope path       && section_path
+in_scope local      && section_local
+in_scope directories && section_directories
+in_scope cleanup    && section_cleanup
+in_scope backups    && section_clean_backups
+in_scope omp        && section_omp
+in_scope zsh        && section_zsh
+in_scope python     && section_python
+in_scope node       && section_node
+in_scope tmux       && section_tmux
+in_scope snap       && section_snap
+in_scope claude     && section_claude_code
+in_scope gemini     && section_gemini_cli
+in_scope opencode   && section_opencode
+in_scope flatpak    && section_flatpak
+in_scope tailscale  && section_tailscale
+in_scope sf         && section_sf
+in_scope doctor     && section_doctor
 
 section "Done"
 note "Open a new shell or: source ~/.zshrc"
