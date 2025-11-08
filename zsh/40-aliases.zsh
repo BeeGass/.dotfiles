@@ -127,9 +127,4 @@ if _is_macos; then
   # Tailscale CLI inside app bundle
   [[ -x "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]] && \
     alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
-
-  # Brew without pyenv shims (prevents odd interactions)
-  if command -v brew >/dev/null 2>&1; then
-    alias brew='env PATH="${PATH//$(pyenv root 2>/dev/null)\/shims:/}" brew'
-  fi
 fi

@@ -57,6 +57,7 @@ else
   GRN=$'\033[32m'; YEL=$'\033[33m'; RED=$'\033[31m'; BLU=$'\033[34m'; CYA=$'\033[36m'; MAG=$'\033[35m'
 fi
 section(){ printf "%s==>%s %s%s%s\n" "${CYA}${BOLD}" "${RESET}" "${BOLD}" "$*" "${RESET}"; }
+step(){ printf "  %s\n" "$*"; }
 note(){ [[ $VERBOSE -gt 0 ]] && printf "  %s%s%s\n" "${DIM}" "$*" "${RESET}" || true; }
 ok(){ printf "  %s[ok]%s %s\n" "${GRN}${BOLD}" "${RESET}" "$*"; }
 warn(){ printf "  %s[warn]%s %s\n" "${YEL}${BOLD}" "${RESET}" "$*"; }
