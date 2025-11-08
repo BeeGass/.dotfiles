@@ -11,7 +11,7 @@ Host *
     IdentitiesOnly no
 
 # Tailscale short names → MagicDNS
-Host Tensor Matrix Vector Manifold
+Host Tensor Matrix Vector Manifold Jacobian Hessian
     HostName %h.tailf7d439.ts.net
     User beegass
     Port 40822            # make sure sshd on each device actually listens here (or change to 22)
