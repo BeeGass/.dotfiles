@@ -59,6 +59,7 @@ install_apt_packages() {
         neofetch
         neovim
         openssh-client
+        openssh-server
         openssl
         pcscd
         pinentry-curses
