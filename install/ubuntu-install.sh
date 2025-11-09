@@ -490,6 +490,41 @@ setup_ssh_server() {
     fi
 }
 
+setup_git_credential_helper() {
+    section "[Ubuntu] Configure Git credential helper"
+
+    step "Symlinking Linux Git config to ~/.gitconfig.local"
+    ln -sf "$HOME/.dotfiles/git/gitconfig.linux" "$HOME/.gitconfig.local"
+
+    # Try to use libsecret if available
+    if dpkg -l | grep -q libsecret-1-dev; then
+        local libsecret_path="/usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret"
+
+        if [[ -x "$libsecret_path" ]]; then
+            note "Updating credential helper to libsecret"
+            sed -i "s|helper = .*|helper = $libsecret_path|" "$HOME/.dotfiles/git/gitconfig.linux"
+            ok "Git credential helper configured: libsecret"
+        else
+            # Try to build it
+            local build_dir="/usr/share/doc/git/contrib/credential/libsecret"
+            if [[ -d "$build_dir" ]]; then
+                note "Building git-credential-libsecret"
+                (cd "$build_dir" && sudo make) || warn "Failed to build libsecret helper"
+                if [[ -x "$libsecret_path" ]]; then
+                    sed -i "s|helper = .*|helper = $libsecret_path|" "$HOME/.dotfiles/git/gitconfig.linux"
+                    ok "Git credential helper configured: libsecret (built)"
+                else
+                    ok "Git credential helper configured: store (libsecret build failed)"
+                fi
+            else
+                ok "Git credential helper configured: store"
+            fi
+        fi
+    else
+        ok "Git credential helper configured: store"
+    fi
+}
+
 # --- Main ---------------------------------------------------------------------
 main() {
     section "[Ubuntu] Start"
@@ -506,6 +541,7 @@ main() {
     install_google_sans_fonts
     setup_picom_user_service
     setup_ssh_server
+    setup_git_credential_helper
     section "[Ubuntu] Complete"
 }
 main

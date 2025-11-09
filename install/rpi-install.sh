@@ -170,6 +170,14 @@ setup_ssh_server() {
     fi
 }
 
+setup_git_credential_helper() {
+    section "[RaspberryPi] Configure Git credential helper"
+
+    step "Symlinking Linux Git config to ~/.gitconfig.local"
+    ln -sf "$HOME/.dotfiles/git/gitconfig.linux" "$HOME/.gitconfig.local"
+    ok "Git credential helper configured: store"
+}
+
 # --- Main ---------------------------------------------------------------------
 main() {
     section "[RaspberryPi] Start"
@@ -179,6 +187,7 @@ main() {
     setup_symlinks
     setup_directories
     setup_ssh_server
+    setup_git_credential_helper
     section "[RaspberryPi] Complete"
 }
 main

@@ -1,0 +1,4 @@
+# macOS-specific Git configuration
+
+[credential]
+    helper = osxkeychain

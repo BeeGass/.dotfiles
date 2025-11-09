@@ -37,7 +37,7 @@ Options:
 Sections:
   Core:     path, local, directories, cleanup, backups
   Tools:    omp, zsh, python, node, tmux
-  System:   ssh, tailscale, sf
+  System:   ssh, git, tailscale, sf
   Apps:     snap, claude, gemini, opencode, flatpak
   Doctor:   doctor
   Special:  all (runs all sections)
@@ -902,6 +902,37 @@ section_sf(){
   run "rm -rf \"$tmp\""
 }
 
+section_git_config(){
+  section "Git credential helper"
+
+  local current_helper
+  current_helper="$(git config --global credential.helper || echo "none")"
+
+  if [[ "$OS_NAME" == "macOS" ]]; then
+    if [[ "$current_helper" == "osxkeychain" ]]; then
+      ok "Git credential helper: osxkeychain (correct for macOS)"
+    else
+      warn "Git credential helper is '$current_helper', should be 'osxkeychain' for macOS"
+      note "Fix with: git config --global credential.helper osxkeychain"
+    fi
+  elif [[ "$OS_NAME" == "Linux" ]]; then
+    if [[ "$current_helper" == *"libsecret"* ]]; then
+      ok "Git credential helper: libsecret (secure)"
+    elif [[ "$current_helper" == "store" ]]; then
+      ok "Git credential helper: store (plaintext fallback)"
+      note "Consider using libsecret for encrypted storage"
+    elif [[ "$current_helper" == "osxkeychain" ]]; then
+      warn "Git credential helper is 'osxkeychain' (macOS only, will not work on Linux)"
+      note "Fix with: git config --global credential.helper store"
+    else
+      warn "Git credential helper is '$current_helper'"
+      note "Consider setting to 'store' or 'libsecret'"
+    fi
+  else
+    note "Unknown OS, credential helper: $current_helper"
+  fi
+}
+
 section_doctor(){
   section "Doctor"
   local DOC="$DOT/scripts/doctor.sh"
@@ -936,6 +967,7 @@ in_scope opencode   && section_opencode
 in_scope flatpak    && section_flatpak
 in_scope tailscale  && section_tailscale
 in_scope sf         && section_sf
+in_scope git        && section_git_config
 in_scope doctor     && section_doctor
 
 section "Done"

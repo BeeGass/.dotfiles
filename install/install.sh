@@ -355,6 +355,10 @@ setup_symlinks() {
     create_symlink "$DOTFILES_DIR/scripts/neofetch_random.sh" "$LOCAL_BIN_DIR/nf"
   fi
 
+  if [[ -x "$DOTFILES_DIR/scripts/yk-gpg-refresh.sh" ]]; then
+    create_symlink "$DOTFILES_DIR/scripts/yk-gpg-refresh.sh" "$LOCAL_BIN_DIR/yk-refresh"
+  fi
+
   # Link install scripts globally
   step "Linking dotfiles install scripts"
   if [[ -f "$DOTFILES_DIR/install/install.sh" ]]; then
