@@ -42,11 +42,19 @@ log()     { [[ "${QUIET}" = "1" ]] && return 0 || note "$*"; }
 # -------- utils ---------------------------------------------------------------
 have(){ command -v "$1" >/dev/null 2>&1; }
 
+is_raspberry_pi() {
+  [[ -f /proc/cpuinfo ]] && grep -qi "Raspberry Pi" /proc/cpuinfo && return 0
+  [[ -f /sys/firmware/devicetree/base/model ]] && grep -qi "Raspberry Pi" /sys/firmware/devicetree/base/model 2>/dev/null && return 0
+  return 1
+}
+
 detect_os() {
   if [[ -n "${TERMUX_VERSION-}" ]] || [[ "${PREFIX-}" == *"com.termux"* ]] || [[ "$(uname -o 2>/dev/null || true)" == "Android" ]]; then
     echo "Termux"
   elif [[ "$(uname -s 2>/dev/null)" == "Darwin" ]]; then
     echo "macOS"
+  elif is_raspberry_pi; then
+    echo "RaspberryPi"
   else
     echo "Linux"
   fi
@@ -56,9 +64,10 @@ require_bins() {
   local miss=(); for b in gpg gpgconf ssh awk sed; do have "$b" || miss+=("$b"); done
   if (( ${#miss[@]} )); then
     err "Missing tools: ${miss[*]}
-  Install on macOS : brew install gnupg pinentry-mac
-  Install on Ubuntu: sudo apt install -y gnupg pinentry-curses
-  Install on Termux: pkg install -y gnupg pinentry-curses"
+  Install on macOS     : brew install gnupg pinentry-mac
+  Install on Ubuntu    : sudo apt install -y gnupg pinentry-curses pinentry-gnome3
+  Install on RaspberryPi: sudo apt install -y gnupg pinentry-curses
+  Install on Termux    : pkg install -y gnupg pinentry-curses"
   fi
 }
 
@@ -97,9 +106,10 @@ link_configs() {
   local os="$1"
   local agent_src=""
   case "$os" in
-    macOS)  agent_src="$GNUPG_DOT/macos-gpg-agent.conf"  ;;
-    Termux) agent_src="$GNUPG_DOT/termux-gpg-agent.conf" ;;
-    Linux)  agent_src="$GNUPG_DOT/linux-gpg-agent.conf"  ;;
+    macOS)       agent_src="$GNUPG_DOT/macos-gpg-agent.conf"  ;;
+    Termux)      agent_src="$GNUPG_DOT/termux-gpg-agent.conf" ;;
+    RaspberryPi) agent_src="$GNUPG_DOT/rpi-gpg-agent.conf"    ;;
+    Linux)       agent_src="$GNUPG_DOT/linux-gpg-agent.conf"  ;;
   esac
 
   local linked_any=0
