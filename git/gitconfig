@@ -53,5 +53,11 @@
 
 [init]
     defaultBranch = main
+
 [credential]
 	helper = libsecret
+
+# Include machine-specific config (credential helper, etc.)
+# This file is created by install scripts and not tracked in git
+[include]
+    path = ~/.gitconfig.local

@@ -1,0 +1,5 @@
+# Linux-specific Git configuration
+
+[credential]
+    helper = store
+    # Note: Install scripts may update this to libsecret if available

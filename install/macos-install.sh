@@ -30,6 +30,7 @@ main() {
     create_open_here_in_kitty_app
     enable_kitty_autostart_tmux
     setup_configs
+    setup_git_credential_helper
     section "[macOS] Complete"
 }
 
@@ -209,6 +210,14 @@ setup_configs() {
     mkdir -p ~/.config/neofetch
     ln -sfn ~/.dotfiles/neofetch/desktop-neofetch.conf ~/.config/neofetch/config.conf
     ok "neofetch config linked"
+}
+
+setup_git_credential_helper() {
+    section "[macOS] Configure Git credential helper"
+
+    step "Symlinking macOS Git config to ~/.gitconfig.local"
+    ln -sf "$HOME/.dotfiles/git/gitconfig.macos" "$HOME/.gitconfig.local"
+    ok "Git credential helper configured for macOS"
 }
 
 main

@@ -37,8 +37,9 @@ Options:
 Sections:
   Core:     path, local, directories, cleanup, backups
   Tools:    omp, zsh, python, node, tmux
+  System:   ssh, git, tailscale, sf
   Apps:     snap, claude, gemini, opencode, flatpak
-  System:   tailscale, sf, doctor
+  Doctor:   doctor
   Special:  all (runs all sections)
 EOF
       exit 0
@@ -609,6 +610,114 @@ section_tmux(){
   fi
 }
 
+section_ssh_server(){
+  section "SSH server configuration"
+
+  # Check if openssh-server is installed
+  if ! have sshd && ! [[ -x /usr/sbin/sshd ]]; then
+    warn "openssh-server not installed"
+    if have_apt; then
+      note "Install with: sudo apt install -y openssh-server"
+    fi
+    return
+  fi
+
+  ok "openssh-server installed"
+
+  # Check if drop-in directory exists
+  if [[ ! -d /etc/ssh/sshd_config.d ]]; then
+    note "Creating /etc/ssh/sshd_config.d"
+    run "sudo mkdir -p /etc/ssh/sshd_config.d"
+  fi
+
+  # Check if source config exists
+  local ssh_config_source="$DOT/ssh/99-yubikey-only.conf"
+  local ssh_config_target="/etc/ssh/sshd_config.d/99-yubikey-only.conf"
+
+  if [[ ! -f "$ssh_config_source" ]]; then
+    warn "Source SSH config not found: $ssh_config_source"
+    return
+  fi
+
+  # Check if symlink exists and points to correct location
+  local needs_restart=0
+  if [[ -L "$ssh_config_target" ]]; then
+    local current_target
+    current_target="$(readlink -f "$ssh_config_target")"
+    local expected_target
+    expected_target="$(readlink -f "$ssh_config_source")"
+
+    if [[ "$current_target" == "$expected_target" ]]; then
+      note "SSH config symlink correct"
+    else
+      warn "SSH config symlink points to wrong location"
+      note "Current: $current_target"
+      note "Expected: $expected_target"
+      run "sudo ln -sf \"$ssh_config_source\" \"$ssh_config_target\""
+      ok "Fixed SSH config symlink"
+      needs_restart=1
+    fi
+  elif [[ -f "$ssh_config_target" ]]; then
+    warn "SSH config exists but is not a symlink (replacing)"
+    run "sudo rm -f \"$ssh_config_target\""
+    run "sudo ln -sf \"$ssh_config_source\" \"$ssh_config_target\""
+    ok "Created SSH config symlink"
+    needs_restart=1
+  else
+    note "Creating SSH config symlink"
+    run "sudo ln -sf \"$ssh_config_source\" \"$ssh_config_target\""
+    ok "Created SSH config symlink"
+    needs_restart=1
+  fi
+
+  # Check if main sshd_config has Include directive
+  if [[ -f /etc/ssh/sshd_config ]] && ! grep -q "^Include /etc/ssh/sshd_config.d/\*.conf" /etc/ssh/sshd_config; then
+    warn "Include directive not found in /etc/ssh/sshd_config"
+    note "Drop-in configs may not be loaded"
+  fi
+
+  # Check and disable SSH socket activation (conflicts with custom port)
+  if systemctl is-enabled ssh.socket >/dev/null 2>&1; then
+    warn "ssh.socket is enabled (conflicts with custom port config)"
+    note "Disabling socket activation"
+    run "sudo systemctl stop ssh.socket"
+    run "sudo systemctl disable ssh.socket"
+    ok "Disabled ssh.socket"
+    needs_restart=1
+  else
+    note "ssh.socket not enabled (good)"
+  fi
+
+  # Check if SSH service is enabled and running
+  if systemctl is-enabled ssh >/dev/null 2>&1 || systemctl is-enabled sshd >/dev/null 2>&1; then
+    note "SSH service enabled"
+  else
+    warn "SSH service not enabled"
+    run "sudo systemctl enable ssh || sudo systemctl enable sshd"
+    ok "Enabled SSH service"
+  fi
+
+  if systemctl is-active ssh >/dev/null 2>&1 || systemctl is-active sshd >/dev/null 2>&1; then
+    note "SSH service running"
+    if (( needs_restart )); then
+      note "Restarting SSH due to config changes"
+      run "sudo systemctl restart ssh || sudo systemctl restart sshd"
+      ok "Restarted SSH service"
+    fi
+  else
+    warn "SSH service not running"
+    run "sudo systemctl start ssh || sudo systemctl start sshd"
+    ok "Started SSH service"
+  fi
+
+  # Check if listening on port 40822
+  if sudo ss -tlnp 2>/dev/null | grep -q ":40822"; then
+    ok "SSH listening on port 40822"
+  else
+    warn "SSH not listening on port 40822 (check configuration)"
+  fi
+}
+
 section_snap(){
   section "Snap apps"
   if ! have snap; then
@@ -793,6 +902,37 @@ section_sf(){
   run "rm -rf \"$tmp\""
 }
 
+section_git_config(){
+  section "Git credential helper"
+
+  local current_helper
+  current_helper="$(git config --global credential.helper || echo "none")"
+
+  if [[ "$OS_NAME" == "macOS" ]]; then
+    if [[ "$current_helper" == "osxkeychain" ]]; then
+      ok "Git credential helper: osxkeychain (correct for macOS)"
+    else
+      warn "Git credential helper is '$current_helper', should be 'osxkeychain' for macOS"
+      note "Fix with: git config --global credential.helper osxkeychain"
+    fi
+  elif [[ "$OS_NAME" == "Linux" ]]; then
+    if [[ "$current_helper" == *"libsecret"* ]]; then
+      ok "Git credential helper: libsecret (secure)"
+    elif [[ "$current_helper" == "store" ]]; then
+      ok "Git credential helper: store (plaintext fallback)"
+      note "Consider using libsecret for encrypted storage"
+    elif [[ "$current_helper" == "osxkeychain" ]]; then
+      warn "Git credential helper is 'osxkeychain' (macOS only, will not work on Linux)"
+      note "Fix with: git config --global credential.helper store"
+    else
+      warn "Git credential helper is '$current_helper'"
+      note "Consider setting to 'store' or 'libsecret'"
+    fi
+  else
+    note "Unknown OS, credential helper: $current_helper"
+  fi
+}
+
 section_doctor(){
   section "Doctor"
   local DOC="$DOT/scripts/doctor.sh"
@@ -819,6 +959,7 @@ in_scope zsh        && section_zsh
 in_scope python     && section_python
 in_scope node       && section_node
 in_scope tmux       && section_tmux
+in_scope ssh        && section_ssh_server
 in_scope snap       && section_snap
 in_scope claude     && section_claude_code
 in_scope gemini     && section_gemini_cli
@@ -826,6 +967,7 @@ in_scope opencode   && section_opencode
 in_scope flatpak    && section_flatpak
 in_scope tailscale  && section_tailscale
 in_scope sf         && section_sf
+in_scope git        && section_git_config
 in_scope doctor     && section_doctor
 
 section "Done"
