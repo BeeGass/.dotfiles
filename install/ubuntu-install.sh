@@ -478,6 +478,21 @@ setup_ssh_server() {
         note "ssh.socket not enabled"
     fi
 
+    step "Adding YubiKey SSH public key to authorized_keys"
+    mkdir -p "$HOME/.ssh"
+    chmod 700 "$HOME/.ssh"
+    if [[ -f "$HOME/.ssh/id_gpg_yubikey.pub" ]]; then
+        if ! grep -qF "$(cat "$HOME/.ssh/id_gpg_yubikey.pub")" "$HOME/.ssh/authorized_keys" 2>/dev/null; then
+            cat "$HOME/.ssh/id_gpg_yubikey.pub" >> "$HOME/.ssh/authorized_keys"
+            chmod 600 "$HOME/.ssh/authorized_keys"
+            ok "Added YubiKey SSH public key to authorized_keys"
+        else
+            note "YubiKey SSH key already in authorized_keys"
+        fi
+    else
+        warn "YubiKey SSH public key not found; run GPG setup first"
+    fi
+
     step "Enabling and restarting SSH service"
     sudo systemctl enable ssh
     sudo systemctl restart ssh || sudo systemctl restart sshd
