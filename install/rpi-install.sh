@@ -53,6 +53,7 @@ install_apt_packages() {
         neofetch
         neovim
         openssh-client
+        openssh-server
         openssl
         pcscd
         pinentry-curses
@@ -121,6 +122,54 @@ setup_directories() {
     ok "Ensured Projects directory exists"
 }
 
+setup_ssh_server() {
+    section "[RaspberryPi] Configure SSH server"
+
+    if ! command -v sshd >/dev/null 2>&1; then
+        warn "sshd not found; ensure openssh-server is installed"
+        return 1
+    fi
+
+    step "Creating SSH config drop-in directory"
+    sudo mkdir -p /etc/ssh/sshd_config.d
+
+    step "Symlinking YubiKey SSH configuration"
+    if [[ -f "$HOME/.dotfiles/ssh/99-yubikey-only.conf" ]]; then
+        sudo ln -sf "$HOME/.dotfiles/ssh/99-yubikey-only.conf" /etc/ssh/sshd_config.d/99-yubikey-only.conf
+        ok "Symlinked SSH config to /etc/ssh/sshd_config.d/"
+    else
+        warn "~/.dotfiles/ssh/99-yubikey-only.conf not found; skipping"
+        return 0
+    fi
+
+    step "Verifying main sshd_config has Include directive"
+    if ! grep -q "^Include /etc/ssh/sshd_config.d/\*.conf" /etc/ssh/sshd_config; then
+        warn "Include directive not found in sshd_config; may need manual configuration"
+    else
+        ok "Include directive present"
+    fi
+
+    step "Disabling SSH socket activation (conflicts with custom port)"
+    if systemctl is-enabled ssh.socket >/dev/null 2>&1; then
+        sudo systemctl stop ssh.socket
+        sudo systemctl disable ssh.socket
+        ok "Disabled ssh.socket"
+    else
+        note "ssh.socket not enabled"
+    fi
+
+    step "Enabling and restarting SSH service"
+    sudo systemctl enable ssh
+    sudo systemctl restart ssh || sudo systemctl restart sshd
+
+    step "Verifying SSH is listening on port 40822"
+    if sudo ss -tlnp | grep -q ":40822"; then
+        ok "SSH server listening on port 40822"
+    else
+        warn "SSH may not be listening on port 40822; check configuration"
+    fi
+}
+
 # --- Main ---------------------------------------------------------------------
 main() {
     section "[RaspberryPi] Start"
@@ -129,6 +178,7 @@ main() {
     install_claude_code
     setup_symlinks
     setup_directories
+    setup_ssh_server
     section "[RaspberryPi] Complete"
 }
 main

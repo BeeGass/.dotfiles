@@ -14,3 +14,5 @@ source ~/.dotfiles/zsh/80-tools.zsh
 source ~/.dotfiles/zsh/90-local.zsh 2>/dev/null  # Local overrides (not in git)
 [[ -r ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && source ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 [[ -r ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && source ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+export PATH="$HOME/.local/bin:$PATH"
