@@ -28,6 +28,7 @@ Host Tensor Matrix Vector Manifold
 Host github.com github
     HostName github.com
     User git
+    Port 22
     ForwardAgent no
 
 # ─────────────────────────────────────────────────────────────────────────────
