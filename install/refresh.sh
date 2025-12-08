@@ -754,6 +754,96 @@ section_claude_code(){
       note "Install with: curl -fsSL https://claude.ai/install.sh | bash"
     fi
   fi
+
+  # Check and fix Claude config symlinks
+  local claude_dir="$HOME/.claude"
+  local dotfiles_claude="$DOT/claude"
+
+  if [[ ! -d "$dotfiles_claude" ]]; then
+    note "Claude dotfiles not found; skipping config check"
+    return
+  fi
+
+  step "Checking Claude config symlinks"
+
+  # Files to check (dotfiles name -> target name)
+  local -A files=(
+    ["CLAUDE.md"]="CLAUDE.md"
+    ["settings.json"]="settings.json"
+    [".mcp.json"]=".mcp.json"
+  )
+
+  # Directories to check
+  local dirs=("docs" "hooks" "statusline" "templates" "commands")
+
+  local needs_fix=0
+
+  # Check files
+  for src_name in "${!files[@]}"; do
+    local dst_name="${files[$src_name]}"
+    local src="$dotfiles_claude/$src_name"
+    local dst="$claude_dir/$dst_name"
+
+    [[ ! -e "$src" ]] && continue
+
+    if [[ -L "$dst" ]]; then
+      local current_target expected_target
+      current_target="$(readlink -f "$dst" 2>/dev/null || readlink "$dst")"
+      expected_target="$(readlink -f "$src" 2>/dev/null || echo "$src")"
+      if [[ "$current_target" != "$expected_target" ]]; then
+        warn "$dst_name symlink points to wrong location"
+        run "rm -f \"$dst\" && ln -s \"$src\" \"$dst\""
+        ok "Fixed $dst_name symlink"
+        needs_fix=1
+      else
+        note "$dst_name symlink correct"
+      fi
+    elif [[ -e "$dst" ]]; then
+      warn "$dst_name exists but is not a symlink"
+      run "mv \"$dst\" \"${dst}.backup.\$(date +%Y%m%d_%H%M%S)\" && ln -s \"$src\" \"$dst\""
+      ok "Replaced $dst_name with symlink (backed up original)"
+      needs_fix=1
+    else
+      run "mkdir -p \"$claude_dir\" && ln -s \"$src\" \"$dst\""
+      ok "Created $dst_name symlink"
+      needs_fix=1
+    fi
+  done
+
+  # Check directories
+  for dir in "${dirs[@]}"; do
+    local src="$dotfiles_claude/$dir"
+    local dst="$claude_dir/$dir"
+
+    [[ ! -d "$src" ]] && continue
+
+    if [[ -L "$dst" ]]; then
+      local current_target expected_target
+      current_target="$(readlink -f "$dst" 2>/dev/null || readlink "$dst")"
+      expected_target="$(readlink -f "$src" 2>/dev/null || echo "$src")"
+      if [[ "$current_target" != "$expected_target" ]]; then
+        warn "$dir/ symlink points to wrong location"
+        run "rm -f \"$dst\" && ln -s \"$src\" \"$dst\""
+        ok "Fixed $dir/ symlink"
+        needs_fix=1
+      else
+        note "$dir/ symlink correct"
+      fi
+    elif [[ -d "$dst" ]]; then
+      warn "$dir/ exists but is not a symlink"
+      run "mv \"$dst\" \"${dst}.backup.\$(date +%Y%m%d_%H%M%S)\" && ln -s \"$src\" \"$dst\""
+      ok "Replaced $dir/ with symlink (backed up original)"
+      needs_fix=1
+    else
+      run "mkdir -p \"$claude_dir\" && ln -s \"$src\" \"$dst\""
+      ok "Created $dir/ symlink"
+      needs_fix=1
+    fi
+  done
+
+  if (( needs_fix == 0 )); then
+    ok "All Claude config symlinks correct"
+  fi
 }
 
 section_gemini_cli(){

@@ -576,7 +576,19 @@ setup_claude() {
         fi
 
         if [[ -L "$dst" ]]; then
-            note "$dst_name already symlinked"
+            # Verify symlink points to correct location
+            local current_target
+            current_target="$(readlink -f "$dst")"
+            local expected_target
+            expected_target="$(readlink -f "$src")"
+            if [[ "$current_target" == "$expected_target" ]]; then
+                note "$dst_name already symlinked correctly"
+            else
+                warn "$dst_name symlink points to wrong location"
+                rm -f "$dst"
+                ln -s "$src" "$dst"
+                ok "Fixed $dst_name symlink"
+            fi
         elif [[ -e "$dst" ]]; then
             step "Backing up existing $dst_name"
             mv "$dst" "${dst}.backup.$(date +%Y%m%d_%H%M%S)"
@@ -599,7 +611,19 @@ setup_claude() {
         fi
 
         if [[ -L "$dst" ]]; then
-            note "$dir/ already symlinked"
+            # Verify symlink points to correct location
+            local current_target
+            current_target="$(readlink -f "$dst")"
+            local expected_target
+            expected_target="$(readlink -f "$src")"
+            if [[ "$current_target" == "$expected_target" ]]; then
+                note "$dir/ already symlinked correctly"
+            else
+                warn "$dir/ symlink points to wrong location"
+                rm -f "$dst"
+                ln -s "$src" "$dst"
+                ok "Fixed $dir/ symlink"
+            fi
         elif [[ -d "$dst" ]]; then
             step "Backing up existing $dir/"
             mv "$dst" "${dst}.backup.$(date +%Y%m%d_%H%M%S)"
