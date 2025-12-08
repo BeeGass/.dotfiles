@@ -766,30 +766,21 @@ section_claude_code(){
 
   step "Checking Claude config symlinks"
 
-  # Files to check (dotfiles name -> target name)
-  local -A files=(
-    ["CLAUDE.md"]="CLAUDE.md"
-    ["settings.json"]="settings.json"
-    [".mcp.json"]=".mcp.json"
-  )
-
-  # Directories to check
-  local dirs=("docs" "hooks" "statusline" "templates" "commands")
-
   local needs_fix=0
 
-  # Check files
-  for src_name in "${!files[@]}"; do
-    local dst_name="${files[$src_name]}"
+  # Helper to check/fix a file symlink
+  _check_claude_file() {
+    local src_name="$1"
+    local dst_name="$2"
     local src="$dotfiles_claude/$src_name"
     local dst="$claude_dir/$dst_name"
 
-    [[ ! -e "$src" ]] && continue
+    [[ ! -e "$src" ]] && return
 
     if [[ -L "$dst" ]]; then
       local current_target expected_target
-      current_target="$(readlink -f "$dst" 2>/dev/null || readlink "$dst")"
-      expected_target="$(readlink -f "$src" 2>/dev/null || echo "$src")"
+      current_target="$(readlink "$dst" 2>/dev/null)"
+      expected_target="$src"
       if [[ "$current_target" != "$expected_target" ]]; then
         warn "$dst_name symlink points to wrong location"
         run "rm -f \"$dst\" && ln -s \"$src\" \"$dst\""
@@ -808,19 +799,20 @@ section_claude_code(){
       ok "Created $dst_name symlink"
       needs_fix=1
     fi
-  done
+  }
 
-  # Check directories
-  for dir in "${dirs[@]}"; do
+  # Helper to check/fix a directory symlink
+  _check_claude_dir() {
+    local dir="$1"
     local src="$dotfiles_claude/$dir"
     local dst="$claude_dir/$dir"
 
-    [[ ! -d "$src" ]] && continue
+    [[ ! -d "$src" ]] && return
 
     if [[ -L "$dst" ]]; then
       local current_target expected_target
-      current_target="$(readlink -f "$dst" 2>/dev/null || readlink "$dst")"
-      expected_target="$(readlink -f "$src" 2>/dev/null || echo "$src")"
+      current_target="$(readlink "$dst" 2>/dev/null)"
+      expected_target="$src"
       if [[ "$current_target" != "$expected_target" ]]; then
         warn "$dir/ symlink points to wrong location"
         run "rm -f \"$dst\" && ln -s \"$src\" \"$dst\""
@@ -839,7 +831,19 @@ section_claude_code(){
       ok "Created $dir/ symlink"
       needs_fix=1
     fi
-  done
+  }
+
+  # Check files
+  _check_claude_file "CLAUDE.md" "CLAUDE.md"
+  _check_claude_file "settings.json" "settings.json"
+  _check_claude_file ".mcp.json" ".mcp.json"
+
+  # Check directories
+  _check_claude_dir "docs"
+  _check_claude_dir "hooks"
+  _check_claude_dir "statusline"
+  _check_claude_dir "templates"
+  _check_claude_dir "commands"
 
   if (( needs_fix == 0 )); then
     ok "All Claude config symlinks correct"

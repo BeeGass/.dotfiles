@@ -235,33 +235,23 @@ setup_claude() {
     step "Ensuring ~/.claude directory exists"
     mkdir -p "$claude_dir"
 
-    # Files to symlink (dotfiles name -> target name)
-    declare -A files=(
-        ["CLAUDE.md"]="CLAUDE.md"
-        ["settings.json"]="settings.json"
-        [".mcp.json"]=".mcp.json"
-    )
-
-    # Directories to symlink
-    local dirs=("docs" "hooks" "statusline" "templates" "commands")
-
-    step "Symlinking Claude configuration files"
-    for src_name in "${!files[@]}"; do
-        local dst_name="${files[$src_name]}"
+    # Helper function to symlink a file with verification
+    _symlink_claude_file() {
+        local src_name="$1"
+        local dst_name="$2"
         local src="$dotfiles_claude/$src_name"
         local dst="$claude_dir/$dst_name"
 
         if [[ ! -e "$src" ]]; then
             note "Source $src_name not found; skipping"
-            continue
+            return
         fi
 
         if [[ -L "$dst" ]]; then
             # Verify symlink points to correct location
-            local current_target
-            current_target="$(readlink -f "$dst" 2>/dev/null || readlink "$dst")"
-            local expected_target
-            expected_target="$(readlink -f "$src" 2>/dev/null || echo "$src")"
+            local current_target expected_target
+            current_target="$(readlink "$dst" 2>/dev/null)"
+            expected_target="$src"
             if [[ "$current_target" == "$expected_target" ]]; then
                 note "$dst_name already symlinked correctly"
             else
@@ -279,24 +269,24 @@ setup_claude() {
             ln -s "$src" "$dst"
             ok "Symlinked $dst_name"
         fi
-    done
+    }
 
-    step "Symlinking Claude directories"
-    for dir in "${dirs[@]}"; do
+    # Helper function to symlink a directory with verification
+    _symlink_claude_dir() {
+        local dir="$1"
         local src="$dotfiles_claude/$dir"
         local dst="$claude_dir/$dir"
 
         if [[ ! -d "$src" ]]; then
             note "Source directory $dir not found; skipping"
-            continue
+            return
         fi
 
         if [[ -L "$dst" ]]; then
             # Verify symlink points to correct location
-            local current_target
-            current_target="$(readlink -f "$dst" 2>/dev/null || readlink "$dst")"
-            local expected_target
-            expected_target="$(readlink -f "$src" 2>/dev/null || echo "$src")"
+            local current_target expected_target
+            current_target="$(readlink "$dst" 2>/dev/null)"
+            expected_target="$src"
             if [[ "$current_target" == "$expected_target" ]]; then
                 note "$dir/ already symlinked correctly"
             else
@@ -314,7 +304,20 @@ setup_claude() {
             ln -s "$src" "$dst"
             ok "Symlinked $dir/"
         fi
-    done
+    }
+
+    step "Symlinking Claude configuration files"
+    # Files: src_name -> dst_name (same name for all currently)
+    _symlink_claude_file "CLAUDE.md" "CLAUDE.md"
+    _symlink_claude_file "settings.json" "settings.json"
+    _symlink_claude_file ".mcp.json" ".mcp.json"
+
+    step "Symlinking Claude directories"
+    _symlink_claude_dir "docs"
+    _symlink_claude_dir "hooks"
+    _symlink_claude_dir "statusline"
+    _symlink_claude_dir "templates"
+    _symlink_claude_dir "commands"
 
     ok "Claude Code configuration complete"
 }
