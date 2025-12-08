@@ -31,6 +31,7 @@ main() {
     enable_kitty_autostart_tmux
     setup_configs
     setup_git_credential_helper
+    setup_claude
     section "[macOS] Complete"
 }
 
@@ -218,6 +219,80 @@ setup_git_credential_helper() {
     step "Symlinking macOS Git config to ~/.gitconfig.local"
     ln -sf "$HOME/.dotfiles/git/gitconfig.macos" "$HOME/.gitconfig.local"
     ok "Git credential helper configured for macOS"
+}
+
+setup_claude() {
+    section "[macOS] Configure Claude Code"
+
+    local claude_dir="$HOME/.claude"
+    local dotfiles_claude="$HOME/.dotfiles/claude"
+
+    if [[ ! -d "$dotfiles_claude" ]]; then
+        warn "Claude dotfiles not found at $dotfiles_claude; skipping"
+        return 0
+    fi
+
+    step "Ensuring ~/.claude directory exists"
+    mkdir -p "$claude_dir"
+
+    # Files to symlink (dotfiles name -> target name)
+    declare -A files=(
+        ["CLAUDE.md"]="CLAUDE.md"
+        ["settings.json"]="settings.json"
+        [".mcp.json"]=".mcp.json"
+    )
+
+    # Directories to symlink
+    local dirs=("docs" "hooks" "statusline" "templates" "commands")
+
+    step "Symlinking Claude configuration files"
+    for src_name in "${!files[@]}"; do
+        local dst_name="${files[$src_name]}"
+        local src="$dotfiles_claude/$src_name"
+        local dst="$claude_dir/$dst_name"
+
+        if [[ ! -e "$src" ]]; then
+            note "Source $src_name not found; skipping"
+            continue
+        fi
+
+        if [[ -L "$dst" ]]; then
+            note "$dst_name already symlinked"
+        elif [[ -e "$dst" ]]; then
+            step "Backing up existing $dst_name"
+            mv "$dst" "${dst}.backup.$(date +%Y%m%d_%H%M%S)"
+            ln -s "$src" "$dst"
+            ok "Symlinked $dst_name (backed up original)"
+        else
+            ln -s "$src" "$dst"
+            ok "Symlinked $dst_name"
+        fi
+    done
+
+    step "Symlinking Claude directories"
+    for dir in "${dirs[@]}"; do
+        local src="$dotfiles_claude/$dir"
+        local dst="$claude_dir/$dir"
+
+        if [[ ! -d "$src" ]]; then
+            note "Source directory $dir not found; skipping"
+            continue
+        fi
+
+        if [[ -L "$dst" ]]; then
+            note "$dir/ already symlinked"
+        elif [[ -d "$dst" ]]; then
+            step "Backing up existing $dir/"
+            mv "$dst" "${dst}.backup.$(date +%Y%m%d_%H%M%S)"
+            ln -s "$src" "$dst"
+            ok "Symlinked $dir/ (backed up original)"
+        else
+            ln -s "$src" "$dst"
+            ok "Symlinked $dir/"
+        fi
+    done
+
+    ok "Claude Code configuration complete"
 }
 
 main

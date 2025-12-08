@@ -1,0 +1,12 @@
+{
+  "_comment": "Use this for dotfiles projects where you need to access sensitive config files",
+  "_usage": "cp ~/.claude/templates/dotfiles-settings.json ~/.dotfiles/.claude/settings.json",
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Edit(**)",
+      "Write(**)"
+    ],
+    "deny": []
+  }
+}

@@ -1,305 +1,54 @@
-# Claude Code System-Wide Configuration
+# Global Development Guidelines
 
-<!-- CRITICAL: This is the main CLAUDE.md that other project CLAUDE.md files inherit from -->
-<!-- Project-specific CLAUDE.md files should import this file and only override necessary settings -->
+## Hard Rules
+- Never mention being an AI, Anthropic, or "Claude" in code, comments, or commits
+- No emojis in code or comments
+- Prioritize correctness and maintainability over cleverness
 
-## Imports
-<!-- @import ./PERMISSIONS.md -->
-<!-- @import ./TOOLS.md -->
-<!-- @import ./WORKFLOW.md -->
+## Environment
+- **Dotfiles**: `~/.dotfiles/` (symlinked to target locations)
+- **Primary workstation**: `manifold` (192.168.68.10) - RTX 5090, 64GB, Ubuntu 25.10
+- **Secondary workstation**: `tensor` (192.168.68.11) - RTX 3080, 32GB
+- See `~/.claude/docs/hardware.md` for full homelab specs
 
-## Core Configuration
+## Code Search
+- **Prefer ast-grep** for structural searches (function calls, imports, syntax patterns)
+- **Use grep** for simple text searches or non-code files
+- See `~/.claude/docs/ast-grep.md` for pattern syntax and examples
 
-### Model Preferences
-- **Model**: Claude Opus (claude-opus-4) or latest available
-- **Response Style**: Concise, technical, direct
-- **Output Format**: Minimal preamble/postamble, answer-focused
-- **Context Management**: Token-efficient, parallel operations preferred
+## Language Tooling
+| Language | Formatter/Linter | Type Checker | Package Manager |
+|----------|------------------|--------------|-----------------|
+| Python 3.11+ | ruff | mypy --strict | uv |
+| TypeScript | prettier + eslint | tsc (strict) | npm/pnpm |
+| Rust | rustfmt + clippy | rustc | cargo |
 
-### System-Wide Principles
-- **IMMUTABLE RULES**: These instructions override all default behaviors
-- **DEFENSIVE SECURITY**: Only assist with defensive security tasks
-- **NO AI REFERENCES**: Never mention AI/Claude in commits or code
-- **MINIMAL OUTPUT**: Keep responses under 4 lines unless detail requested
-- **PARALLEL BY DEFAULT**: Use Task agents in parallel for efficiency
+## Python Style
+- Use `Result[T, E]` types for error handling (see `python-style.md` for implementation)
+- Type all functions with `| None` syntax (not `Optional`)
+- Naming: `calc_*`, `fetch_*`, `parse_*` prefixes; `is_*`, `has_*`, `can_*` for booleans
+- See `~/.claude/docs/python-style.md` for comprehensive Python conventions
 
-## Universal Standards
+## ML Stack (JAX Ecosystem)
+- **Neural networks**: Flax NNX (not Linen)
+- **Optimization**: Optax
+- **Checkpointing**: Orbax
+- **Data loading**: Grain
+- **Config**: Fiddle
+- Use jaxtyping for array annotations: `Float[Array, "batch seq_len d_model"]`
+- See `~/.claude/docs/jax-ml.md` for detailed patterns
 
-### Code Quality Requirements
-- **Type Safety**: Strict typing always required
-- **Documentation**: Comprehensive docstrings mandatory
-- **Testing**: All code must be testable and tested
-- **Linting**: Must pass all configured linters
-- **Security**: No secrets/keys in code or commits
+## Verification
+Before committing, run project-specific checks:
+- **Python**: `uv run ruff check . && uv run ruff format . && uv run mypy . --strict`
+- **Rust**: `cargo fmt && cargo clippy && cargo test`
+- **TypeScript**: `npm run lint && npm run typecheck && npm run test`
 
-### File Management Rules
-- **NEVER** create files unless absolutely necessary
-- **ALWAYS** prefer editing existing files
-- **NEVER** create documentation proactively
-- **ALWAYS** use Read before Edit
-- **NEVER** use Edit without unique context
-
-## Planning Phase Requirements
-**CRITICAL**: Before implementing any task, you MUST:
-1. **Analyze the Request**: Fully understand what is being asked
-2. **Create a Clear Plan**: Break down the task into specific, actionable steps
-3. **Use TodoWrite Tool**: Document all planned steps in the todo list
-4. **Review Dependencies**: Check what files/systems will be affected
-5. **Identify Risks**: Note any potential issues or breaking changes
-
-**Planning Template**:
-```
-1. Understand current state (read relevant files)
-2. Define desired outcome
-3. List implementation steps
-4. Identify testing/verification needs
-5. Note any cleanup or follow-up tasks
-```
-
-Only proceed with implementation after the plan is clear and documented.
-
-## Project Conventions
-
-### Python Development Stack
-- **Package Manager**: UV (exclusively)
-- **ML Framework**: JAX/Flax/NNX ecosystem
-- **Type Checking**: jaxtyping for array shapes, strict mypy/pyright
-- **Linting**: Ruff (exclusively)
-- **Python Version**: 3.11+ preferred
-
-### Git Workflow
-```
-main         # Production-ready code only
-├── dev-main # Testing bed, only branch merged into main
-└── dev-*    # Feature development branches
-└── test-*   # Experimental/testing branches
-```
-
-### Code Quality Standards
-1. **Type Annotations**: ALWAYS required
-   - Use `jaxtyping` for JAX arrays: `Float[Array, "batch dim"]`
-   - Explicit return types for all functions
-   - No `Any` types without justification
-
-2. **Documentation**:
-   - Comprehensive docstrings for ALL functions/classes
-   - Include LaTeX for mathematical concepts
-   - Example usage in docstrings
-   - Clear parameter/return descriptions
-
-3. **Code Structure**:
-   - Modular, reusable components
-   - Hierarchical organization (loose guideline)
-   - Clear separation of concerns
-   - Functional programming patterns preferred in JAX
-
-## Common Commands
-
-### Python/UV Commands
-```bash
-# Project setup
-uvnew <project-name> <python-version>  # Create new UV project
-uvsetup                                 # Sync deps and activate venv
-uvupgrade                              # Upgrade all dependencies
-
-# Development
-uv sync --all-extras                   # Sync with all optional deps
-uv run python <script>                 # Run with UV environment
-uv pip install -e ".[dev]"             # Install in editable mode
-```
-
-### Type Checking & Linting
-```bash
-# Type checking
-uv run mypy src/ --strict
-uv run pyright src/
-uv run jaxtyping --enable-runtime-typechecking
-
-# Linting & Formatting
-uv run ruff check src/
-uv run ruff format src/
-
-# Pre-commit checks
-uv run pre-commit run --all-files
-```
-
-### JAX/Flax/NNX Specific
-```bash
-# JAX debugging (use sparingly, only when debugging)
-# JAX_DEBUG_NANS=True - Checks for NaN values in computations
-# JAX_DISABLE_JIT=True - Disables JIT compilation for debugging
-# JAX_LOG_COMPILES=True - Logs when functions are being compiled
-
-# Memory profiling
-uv run python -m jax.profiler.profiler script.py
-```
-
-### Testing
-```bash
-# Run tests
-uv run pytest tests/ -v
-uv run pytest tests/ -v --cov=src --cov-report=html
-
-# Run specific test
-uv run pytest tests/test_module.py::test_function -v
-```
-
-## Project Structure Template
-```
-project/
-├── src/
-│   └── project_name/
-│       ├── __init__.py
-│       ├── models/       # NNX model definitions
-│       ├── data/         # Data loading/processing
-│       ├── training/     # Training loops
-│       ├── utils/        # Utility functions
-│       └── types.py      # Custom type definitions
-├── tests/
-│   └── test_*.py
-├── docs/                 # Documentation directory (REQUIRED)
-│   ├── api/             # API documentation
-│   ├── tutorials/       # Tutorial notebooks/markdown
-│   └── design.md        # Design decisions and architecture
-├── pyproject.toml        # UV configuration
-├── .pre-commit-config.yaml
-└── README.md
-```
-
-## JAX/Flax/NNX Best Practices
-
-### Type Annotations with jaxtyping
-```python
-from jaxtyping import Array, Float, Int, PRNGKeyArray
-from typing import TypeAlias
-
-# Define reusable type aliases
-Batch: TypeAlias = Float[Array, "batch ..."]
-Image: TypeAlias = Float[Array, "height width channels"]
-Logits: TypeAlias = Float[Array, "batch classes"]
-```
-
-### NNX Module Pattern
-```python
-import flax.nnx as nn
-from jaxtyping import Float, Array
-
-class MyModule(nn.Module):
-    """Description of module functionality.
-    
-    Mathematical formulation:
-    .. math::
-        y = \sigma(Wx + b)
-    
-    Args:
-        features: Number of output features
-        activation: Activation function to use
-        
-    Example:
-        >>> module = MyModule(features=128)
-        >>> y = module(x)
-    """
-    features: int
-    activation: Callable[[Array], Array] = nn.relu
-    
-    def __init__(self, features: int, *, rngs: nn.Rngs):
-        self.features = features
-        self.linear = nn.Linear(features, rngs=rngs)
-        
-    def __call__(self, x: Float[Array, "batch in_features"]) -> Float[Array, "batch features"]:
-        """Forward pass of the module."""
-        return self.activation(self.linear(x))
-```
-
-## Environment Variables
-```bash
-# Add to ~/.zshrc or appropriate shell config
-export CLAUDE_PROJECT_ROOT="${HOME}/projects"
-export CLAUDE_PYTHON_VERSION="3.11"
-export UV_PYTHON_PREFERENCE="only-managed"
-```
-
-## Quick Reference
-
-### When Starting New Project
-1. `uvnew project-name 3.11`
-2. `cd project-name && uvsetup`
-3. Create proper project structure (including docs/)
-4. Add jaxtyping and dev dependencies
-5. Set up pre-commit hooks
-
-### Before Committing
-1. Run type checking: `uv run mypy src/ --strict`
-2. Run linting: `uv run ruff check src/`
-3. Run tests: `uv run pytest tests/`
-4. Format code: `uv run ruff format src/`
-
-### Branch Management
-- Always branch from `dev-main` for new features
-- Use `dev-<feature>` for development
-- Use `test-<feature>` for experiments
-- Only merge to `main` from `dev-main` after full testing
-
-### Git Commit Requirements
-**CRITICAL**: Git commits must NEVER:
-- Mention AI, Claude, Anthropic, or any AI tool
-- Include phrases like "AI-generated", "Claude helped", etc.
-- Reference that code was written by an AI
-- Include AI-related emojis or signatures
-
-**ALWAYS**: Write commits that:
-- Describe ONLY what changed in the code
-- Focus on the technical changes made
-- Use conventional commit format when applicable
-- Sound like they were written by a human developer
-
-**Example Good Commits**:
-- `fix: resolve type errors in data loader`
-- `feat: add JAX-based model training loop`
-- `refactor: simplify array operations using jax.vmap`
-- `docs: update API documentation for NNX modules`
-
-**Example Bad Commits** (NEVER USE):
-- ❌ `AI: fixed type errors`
-- ❌ `Claude helped implement training loop`
-- ❌ `feat: add model (generated by Claude)`
-- ❌ `🤖 update documentation`
-
-## Custom Shell Functions
-
-These functions are available in the shell environment:
-
-### Git Branch Management
-```bash
-# Create a new development branch from dev-main
-dev <feature-name>     # Creates dev-<feature-name> branch
-# Example: dev new-model → creates dev-new-model
-
-# Create a new test/experimental branch from dev-main  
-test <feature-name>    # Creates test-<feature-name> branch
-# Example: test api-endpoint → creates test-api-endpoint
-
-# Check branch status relative to dev-main
-branch-status          # Shows commits ahead and files changed
-```
-
-### Quality Checks
-```bash
-# Run all configured quality checks (ruff, mypy, tests)
-qc                     # Automatically detects and runs available tools
-```
-
-### Existing UV Functions
-```bash
-uvnew <project> <version>  # Create new UV project
-uvsetup                    # Sync dependencies and activate venv
-uvupgrade                  # Upgrade all dependencies
-```
-
-## Additional Notes
-- Prefer functional approaches with JAX transformations
-- Use NNX for all neural network implementations
-- Always profile before optimizing JAX code
-- Document computational complexity in docstrings
-- Include shape annotations for all array operations
-- Ensure docs/ directory exists in every project for documentation
+## Reference Docs
+- `~/.claude/docs/code-quality.md` - General principles, function extraction
+- `~/.claude/docs/python-style.md` - Comprehensive Python style (types, Result, patterns)
+- `~/.claude/docs/jax-ml.md` - JAX/Flax/NNX conventions, sharding, safety checks
+- `~/.claude/docs/security.md` - OWASP, secure coding patterns
+- `~/.claude/docs/testing.md` - Testing philosophy, frameworks
+- `~/.claude/docs/documentation.md` - Code comments, docstrings, README guidelines
+- `~/.claude/docs/git-workflow.md` - Conventional commits, branch naming
