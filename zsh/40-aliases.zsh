@@ -54,6 +54,10 @@ alias uvsync='uv sync'
 alias uvlock='uv lock'
 alias uvtool='uv tool'
 
+# --- Zen-NV Dashboard (Custom "riced" monitor) ---
+alias nvtop="uv run --project ~/.dotfiles/scripts/zen-nv zen-nv"
+alias zennv="nvtop" # Synonym
+
 # --- YubiKey helpers ---------------------------------------------------------
 alias yk='yk-status'
 alias yklock='yk-lock'

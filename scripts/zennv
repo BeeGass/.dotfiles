@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Wrapper to run the zen-nv dashboard
+# We need to ensure 'uv' is found even when running with sudo (which resets PATH)
+UV_BIN="/home/beegass/.local/bin/uv"
+if [[ ! -x "$UV_BIN" ]]; then
+    UV_BIN="$(command -v uv)"
+fi
+
+exec "$UV_BIN" run --project "$HOME/.dotfiles/scripts/zen-nv" python -m zen_nv.main "$@"

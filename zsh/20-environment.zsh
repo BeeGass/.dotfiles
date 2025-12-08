@@ -9,6 +9,7 @@ is_termux() { [[ -e "$DOTFILES_FLAGS_DIR/IS_TERMUX" ]]; }
 # GPU env (portable: NVIDIA, AMD, Termux/Android Adreno)
 if command -v nvidia-smi >/dev/null 2>&1; then
   export BEEGASS_GPU_ENABLED=1 GPU_VENDOR=nvidia
+  export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 elif command -v rocm-smi >/dev/null 2>&1; then
   export BEEGASS_GPU_ENABLED=1 GPU_VENDOR=amd
 elif is_termux; then
