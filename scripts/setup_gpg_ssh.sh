@@ -252,6 +252,34 @@ verify_agent_keys() {
   ok "Agent enumerated (may be empty if no keys yet)"
 }
 
+configure_macos_sshd_port() {
+  [[ "$1" != "macOS" ]] && return 0
+  section "Configuring macOS sshd port"
+
+  local services="/etc/services"
+  local target_port="40822"
+
+  # Check if already configured
+  if grep -qE "^ssh[[:space:]]+${target_port}/" "$services" 2>/dev/null; then
+    ok "sshd already configured for port $target_port"
+    return 0
+  fi
+
+  step "Patching $services to use port $target_port for ssh"
+  note "This requires sudo access"
+
+  if sudo sed -i '' "s/^ssh[[:space:]]*22\//ssh              ${target_port}\//" "$services"; then
+    ok "Updated ssh port in $services"
+
+    step "Reloading sshd to apply changes"
+    sudo launchctl unload /System/Library/LaunchDaemons/ssh.plist 2>/dev/null || true
+    sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist 2>/dev/null || true
+    ok "sshd reloaded on port $target_port"
+  else
+    warn "Failed to patch $services (may need manual intervention)"
+  fi
+}
+
 # -------- main ----------------------------------------------------------------
 main() {
   section "GPG + SSH bootstrap"
@@ -262,6 +290,7 @@ main() {
   launch_agent_env
   ensure_login_snippet
   ensure_ssh_identityagent
+  configure_macos_sshd_port "$os"
   import_from_github
   touch_smartcard
   local auth_fpr; auth_fpr="$(find_auth_fpr || true)"
