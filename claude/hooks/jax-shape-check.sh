@@ -2,7 +2,9 @@
 # PostToolUse hook to validate JAX/jaxtyping shape annotations
 # Checks for common shape-related issues in JAX code
 
-file="$1"
+# Read JSON from stdin (PostToolUse hooks receive JSON, not positional args)
+input=$(cat)
+file=$(echo "$input" | jq -r '.tool_input.file_path // empty')
 [ -z "$file" ] && exit 0
 [ ! -f "$file" ] && exit 0
 
@@ -18,7 +20,7 @@ if ! grep -qE "^(import jax|from jax|from flax|from jaxtyping)" "$file" 2>/dev/n
 fi
 
 # Run Python analysis
-python3 - "$file" << 'PYTHON' 2>/dev/null
+python3 - "$file" << 'PYTHON'
 import sys
 import ast
 import re

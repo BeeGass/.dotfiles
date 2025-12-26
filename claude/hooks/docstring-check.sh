@@ -2,7 +2,9 @@
 # PostToolUse hook to check for missing docstrings on public functions/classes
 # Enforces documentation standards
 
-file="$1"
+# Read JSON from stdin (PostToolUse hooks receive JSON, not positional args)
+input=$(cat)
+file=$(echo "$input" | jq -r '.tool_input.file_path // empty')
 [ -z "$file" ] && exit 0
 [ ! -f "$file" ] && exit 0
 
@@ -17,7 +19,7 @@ case "$file" in
   *test_*|*_test.py|*__init__.py|*conftest.py) exit 0 ;;
 esac
 
-python3 - "$file" << 'PYTHON' 2>/dev/null
+python3 - "$file" << 'PYTHON'
 import sys
 import ast
 from pathlib import Path

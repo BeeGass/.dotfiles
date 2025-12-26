@@ -2,7 +2,9 @@
 # Post-edit type checker for Python, TypeScript, and Rust
 # Provides immediate type error feedback to Claude
 
-file="$1"
+# Read JSON from stdin (PostToolUse hooks receive JSON, not positional args)
+input=$(cat)
+file=$(echo "$input" | jq -r '.tool_input.file_path // empty')
 [ -z "$file" ] && exit 0
 [ ! -f "$file" ] && exit 0
 
@@ -54,7 +56,7 @@ case "$file" in
     done
 
     if [ -n "$cargo_dir" ]; then
-      errors=$(cd "$cargo_dir" && cargo clippy --message-format=short 2>&1 | grep -E "^error" | head -10)
+      errors=$(cd "$cargo_dir" && cargo clippy --message-format=short 2>&1 | grep -E "error(\[E[0-9]+\]|:)" | head -10)
       if [ -n "$errors" ]; then
         echo "Clippy errors:" >&2
         echo "$errors" >&2

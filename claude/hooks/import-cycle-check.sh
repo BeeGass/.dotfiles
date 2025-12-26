@@ -2,7 +2,9 @@
 # PostToolUse hook to check for circular imports in Python
 # Runs after Python file edits
 
-file="$1"
+# Read JSON from stdin (PostToolUse hooks receive JSON, not positional args)
+input=$(cat)
+file=$(echo "$input" | jq -r '.tool_input.file_path // empty')
 [ -z "$file" ] && exit 0
 [ ! -f "$file" ] && exit 0
 
@@ -41,7 +43,7 @@ fi
 
 # Fallback: simple import cycle detection using Python
 # This is a basic check - won't catch all cycles
-python3 - "$file" "$project_root" << 'PYTHON' 2>/dev/null
+python3 - "$file" "$project_root" << 'PYTHON'
 import sys
 import ast
 from pathlib import Path
