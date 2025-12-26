@@ -7,7 +7,7 @@ CURRENT_LINK="${INSTALL_BASE}/${APP}-current"
 BIN_LINK="/usr/local/bin/${APP}"
 
 # Arch AUR package for Antigravity – used as "source of truth" for latest tarball URL
-AUR_PAGE_URL="https://aur.archlinux.org/packages/google-antigravity-bin"
+AUR_PAGE_URL="https://aur.archlinux.org/packages/antigravity"
 
 log() { printf '[update-antigravity] %s\n' "$*" >&2; }
 
