@@ -5,8 +5,10 @@ Inspired by zen-nv, uses nvitop for GPU stats and psutil for system metrics.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -17,6 +19,7 @@ from rich.text import Text
 
 try:
     from nvitop import Device
+
     HAS_NVITOP = True
 except ImportError:
     HAS_NVITOP = False
@@ -46,10 +49,18 @@ def style(color: str, bold: bool = False, dim: bool = False) -> Style:
     return Style(color=COLORS.get(color, color), bold=bold, dim=dim)
 
 
+def read_claude_context() -> dict[str, object] | None:
+    """Read JSON context from Claude Code via stdin."""
+    try:
+        return json.load(sys.stdin)  # type: ignore[no-any-return]
+    except (json.JSONDecodeError, EOFError, ValueError):
+        return None
+
+
 def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
     """Convert hex color to RGB tuple."""
     hex_color = hex_color.lstrip("#")
-    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
 
 
 def rgb_to_hex(r: int, g: int, b: int) -> str:
@@ -253,7 +264,11 @@ def build_git_segment() -> Text | None:
 def detect_project_type() -> tuple[str | None, str | None, str | None]:
     cwd = Path.cwd()
 
-    if (cwd / "pyproject.toml").exists() or (cwd / "setup.py").exists() or (cwd / "requirements.txt").exists():
+    if (
+        (cwd / "pyproject.toml").exists()
+        or (cwd / "setup.py").exists()
+        or (cwd / "requirements.txt").exists()
+    ):
         py_ver = run_cmd(["python3", "--version"])
         version = None
         if py_ver:
@@ -303,7 +318,13 @@ def build_project_segment() -> Text | None:
         return None
 
     icons = {"python": "", "rust": "", "typescript": "", "javascript": "", "go": ""}
-    colors = {"python": "yellow", "rust": "orange", "typescript": "cyan", "javascript": "yellow", "go": "cyan"}
+    colors = {
+        "python": "yellow",
+        "rust": "orange",
+        "typescript": "cyan",
+        "javascript": "yellow",
+        "go": "cyan",
+    }
 
     icon = icons.get(proj_type, "")
     color = colors.get(proj_type, "white")
@@ -496,10 +517,47 @@ def build_disk_warning() -> Text | None:
     return None
 
 
+# --- Context Window Usage ---
+def build_context_segment(ctx: dict[str, object] | None) -> Text | None:
+    """Build context window usage segment: CTX 32%"""
+    if not ctx:
+        return None
+
+    cw = ctx.get("context_window")
+    if not isinstance(cw, dict):
+        return None
+
+    cw_size = cw.get("context_window_size")
+    if not isinstance(cw_size, int) or cw_size == 0:
+        return None
+
+    usage = cw.get("current_usage")
+    if not isinstance(usage, dict):
+        return None
+
+    input_tokens = usage.get("input_tokens", 0)
+    output_tokens = usage.get("output_tokens", 0)
+    cache_tokens = usage.get("cache_creation_input_tokens", 0)
+
+    if not all(isinstance(t, int) for t in (input_tokens, output_tokens, cache_tokens)):
+        return None
+
+    total_tokens = input_tokens + output_tokens + cache_tokens
+    pct = (total_tokens / cw_size) * 100
+
+    text = Text()
+    text.append("CTX ", style=style("blue"))
+    text.append(f"{pct:.0f}%", style=Style(color=gradient_color(pct)))
+    return text
+
+
 # --- Main ---
 def main() -> None:
     """Build and print the complete statusline (single line when possible)."""
     console = Console(force_terminal=True, color_system="truecolor")
+
+    # Read context from Claude Code
+    ctx = read_claude_context()
 
     line = Text()
 
@@ -547,6 +605,11 @@ def main() -> None:
             if i > 0:
                 line.append(" ", style=style("dim"))
             line.append_text(part)
+
+    # Context window usage
+    if ctx_seg := build_context_segment(ctx):
+        add_separator(line)
+        line.append_text(ctx_seg)
 
     console.print(line, end="")
 
