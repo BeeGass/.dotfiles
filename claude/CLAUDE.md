@@ -52,3 +52,4 @@ Before committing, run project-specific checks:
 - `~/.claude/docs/testing.md` - Testing philosophy, frameworks
 - `~/.claude/docs/documentation.md` - Code comments, docstrings, README guidelines
 - `~/.claude/docs/git-workflow.md` - Conventional commits, branch naming
+

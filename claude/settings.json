@@ -1,31 +1,10 @@
 {
-  "model": "opus",
-  "alwaysThinkingEnabled": true,
+  "cleanupPeriodDays": 90,
   "env": {
     "MAX_THINKING_TOKENS": "64000",
-    "CLAUDE_CODE_SUBAGENT_MODEL": "opus"
+    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-opus-4-5-20251101"
   },
-  "defaultMode": "plan",
-  "disableBypassPermissionsMode": true,
-  "cleanupPeriodDays": 90,
   "includeCoAuthoredBy": false,
-  "additionalDirectories": [
-    "~/.dotfiles",
-    "~/Projects",
-    "/data"
-  ],
-  "statusLine": {
-    "type": "command",
-    "command": "uv run --project $HOME/.claude/statusline statusline"
-  },
-  "sandbox": {
-    "enabled": false,
-    "excludedCommands": ["git", "docker", "ssh", "scp"],
-    "network": {
-      "allowLocalBinding": true,
-      "allowUnixSockets": ["/var/run/docker.sock"]
-    }
-  },
   "permissions": {
     "allow": [
       "Read(**)",
@@ -97,7 +76,11 @@
       "WebFetch(domain:apple.com)",
       "WebFetch(domain:*.apple.com)",
       "WebFetch(domain:aws.amazon.com)",
-      "WebFetch(domain:cloud.google.com)"
+      "WebFetch(domain:cloud.google.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:agentskills.io)",
+      "WebSearch",
+      "Bash(du:*)"
     ],
     "deny": [
       "Bash(sudo:*)",
@@ -109,25 +92,21 @@
     ]
   },
   "enableAllProjectMcpServers": false,
-  "enabledMcpjsonServers": ["context7"],
+  "enabledMcpjsonServers": [
+    "context7",
+    "memory",
+    "github",
+    "obsidian",
+    "docker",
+    "ssh",
+    "wandb",
+    "prometheus",
+    "huggingface",
+    "homelab",
+    "ml-tools",
+    "ppm"
+  ],
   "hooks": {
-    "UserPromptSubmit": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/inject-context.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/context7-docs.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Edit|Write",
@@ -140,16 +119,6 @@
           {
             "type": "command",
             "command": "$HOME/.claude/hooks/large-file-check.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/git-status-check.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/context7-docs.sh",
             "timeout": 5
           }
         ]
@@ -176,48 +145,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/format-on-save.sh",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/typecheck.sh",
-            "timeout": 60
-          },
-          {
-            "type": "command",
             "command": "$HOME/.claude/hooks/jax-shape-check.sh",
             "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/docstring-check.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/todo-tracker.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/import-cycle-check.sh",
-            "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/session-logger.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Bash|Read|Glob|Grep",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/session-logger.sh",
-            "timeout": 5
           }
         ]
       }
@@ -234,5 +163,36 @@
         ]
       }
     ]
-  }
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "uv run --project $HOME/.claude/statusline statusline"
+  },
+  "enabledPlugins": {
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "sandbox": {
+    "enabled": false,
+    "network": {
+      "allowUnixSockets": [
+        "/var/run/docker.sock"
+      ],
+      "allowLocalBinding": true
+    },
+    "excludedCommands": [
+      "git",
+      "docker",
+      "ssh",
+      "scp"
+    ]
+  },
+  "alwaysThinkingEnabled": true,
+  "defaultMode": "plan",
+  "disableBypassPermissionsMode": true,
+  "additionalDirectories": [
+    "~/.dotfiles",
+    "~/Projects",
+    "/data"
+  ]
 }
