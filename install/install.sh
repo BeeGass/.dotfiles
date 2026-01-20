@@ -430,7 +430,7 @@ install_python_tools() {
   local UV_BIN
   UV_BIN="$(command -v uv || echo "$HOME/.local/bin/uv")"
   "$UV_BIN" self update || true
-  "$UV_BIN" python install 3.11 3.12 || true
+  "$UV_BIN" python install 3.11 3.12 3.13 3.14 || true
   if ! command -v python-lsp-server >/dev/null 2>&1; then "$UV_BIN" tool install 'python-lsp-server[all]' || true; fi
   if ! command -v ruff              >/dev/null 2>&1; then "$UV_BIN" tool install ruff || true; fi
   if ! command -v mypy              >/dev/null 2>&1; then "$UV_BIN" tool install mypy || true; fi

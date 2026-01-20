@@ -535,7 +535,7 @@ section_python(){
   if (( FAST )); then
     note "FAST: skipping CPython re-installs"
   else
-    run "\"$UV\" python install 3.11 3.12 || true"
+    run "\"$UV\" python install 3.11 3.12 3.13 3.14 || true"
   fi
   # CLI tools via uv tool (idempotent)
   run "\"$UV\" tool install 'python-lsp-server[all]' || true"

@@ -9,5 +9,5 @@ fi
 
 # Claude environment variables
 export CLAUDE_PROJECT_ROOT="${HOME}/projects"
-export CLAUDE_PYTHON_VERSION="3.11"
+export CLAUDE_PYTHON_VERSION="3.13"
 export UV_PYTHON_PREFERENCE="only-managed"
