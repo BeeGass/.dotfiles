@@ -16,10 +16,16 @@ All nodes connected via 2.5GbE switch.
 
 ## Tensor (192.168.68.11) - Secondary Workstation
 
-- **CPU**: AMD Ryzen 9 3900X 12-Core Processor
-- **GPU**: NVIDIA GeForce RTX 3080 (GA102)
+- **CPU**: AMD Ryzen 9 3900X (12 cores / 24 threads)
+- **GPU**: NVIDIA GeForce RTX 3080 (10GB VRAM)
 - **RAM**: 32GB DDR4
-- **OS**: Ubuntu 25.10
+- **Motherboard**: Gigabyte B550I AORUS PRO AX
+- **Storage**:
+  - Samsung SSD 980 1TB (NVMe)
+  - Samsung SSD 970 EVO 1TB (NVMe)
+  - Samsung SSD 860 QVO 1TB (SATA)
+  - Samsung SSD 750 EVO 250GB (SATA)
+- **OS**: Ubuntu 25.10 (Questing Quokka)
 - **Role**: Secondary ML training and compute node
 
 ## Jacobian (192.168.68.30) - Raspberry Pi Node
