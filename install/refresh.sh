@@ -737,22 +737,26 @@ section_snap(){
 section_claude_code(){
   section "Claude Code"
 
+  # Check common Claude Code install locations
+  local claude_bin=""
   if have claude; then
-    note "Claude Code installed"
+    claude_bin="$(command -v claude)"
+  elif [[ -x "$HOME/.local/bin/claude" ]]; then
+    claude_bin="$HOME/.local/bin/claude"
+  elif [[ -x "$HOME/.claude/local/bin/claude" ]]; then
+    claude_bin="$HOME/.claude/local/bin/claude"
+  elif [[ -x "/usr/local/bin/claude" ]]; then
+    claude_bin="/usr/local/bin/claude"
+  fi
+
+  if [[ -n "$claude_bin" ]]; then
+    note "Claude Code installed at $claude_bin"
     local version
-    version=$(claude --version 2>/dev/null || echo "unknown")
+    version=$("$claude_bin" --version 2>/dev/null || echo "unknown")
     ok "Claude Code present: $version"
   else
     warn "Claude Code not found"
-    if [[ "$OS_NAME" == "macOS" ]]; then
-      if have brew; then
-        note "Install with: brew install --cask claude-code"
-      else
-        warn "Homebrew not found; cannot install Claude Code"
-      fi
-    elif [[ "$OS_NAME" == "Linux" ]]; then
-      note "Install with: curl -fsSL https://claude.ai/install.sh | bash"
-    fi
+    note "Install with: curl -fsSL https://claude.ai/install.sh | bash"
   fi
 
   # Check and fix Claude config symlinks
