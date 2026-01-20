@@ -1,7 +1,10 @@
 {
   "cleanupPeriodDays": 90,
+  "showTurnDuration": false,
+  "mcpToolSearch": "auto:15",
   "env": {
-    "MAX_THINKING_TOKENS": "64000",
+    "MAX_THINKING_TOKENS": "32000",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000",
     "CLAUDE_CODE_SUBAGENT_MODEL": "claude-opus-4-5-20251101"
   },
   "includeCoAuthoredBy": false,
@@ -94,14 +97,8 @@
   "enableAllProjectMcpServers": false,
   "enabledMcpjsonServers": [
     "context7",
-    "memory",
     "github",
-    "obsidian",
-    "docker",
     "ssh",
-    "wandb",
-    "prometheus",
-    "huggingface",
     "homelab",
     "ml-tools",
     "ppm"
@@ -147,6 +144,23 @@
             "type": "command",
             "command": "$HOME/.claude/hooks/jax-shape-check.sh",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/format-on-save.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/context7-docs.sh",
+            "timeout": 5
           }
         ]
       }

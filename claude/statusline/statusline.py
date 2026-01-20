@@ -527,23 +527,20 @@ def build_context_segment(ctx: dict[str, object] | None) -> Text | None:
     if not isinstance(cw, dict):
         return None
 
-    cw_size = cw.get("context_window_size")
-    if not isinstance(cw_size, int) or cw_size == 0:
-        return None
-
-    usage = cw.get("current_usage")
-    if not isinstance(usage, dict):
-        return None
-
-    input_tokens = usage.get("input_tokens", 0)
-    output_tokens = usage.get("output_tokens", 0)
-    cache_tokens = usage.get("cache_creation_input_tokens", 0)
-
-    if not all(isinstance(t, int) for t in (input_tokens, output_tokens, cache_tokens)):
-        return None
-
-    total_tokens = input_tokens + output_tokens + cache_tokens
-    pct = (total_tokens / cw_size) * 100
+    # Use pre-calculated percentage (new in 2.1.6)
+    pct = cw.get("used_percentage")
+    if pct is None:
+        # Fallback to manual calculation for older versions
+        cw_size = cw.get("context_window_size")
+        usage = cw.get("current_usage")
+        if isinstance(cw_size, int) and cw_size > 0 and isinstance(usage, dict):
+            input_tokens = usage.get("input_tokens", 0)
+            cache_creation = usage.get("cache_creation_input_tokens", 0)
+            cache_read = usage.get("cache_read_input_tokens", 0)
+            total = input_tokens + cache_creation + cache_read
+            pct = (total / cw_size) * 100
+        else:
+            return None
 
     text = Text()
     text.append("CTX ", style=style("blue"))
