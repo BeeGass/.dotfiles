@@ -11,9 +11,9 @@ All nodes connected via 2.5GbE switch.
 - **Role**: Primary ML training and development workstation
 
 ## Tensor (192.168.68.11) - Secondary Workstation
-- **CPU**: AMD Ryzen 9 3900X
-- **GPU**: NVIDIA RTX 3080
-- **RAM**: 32GB
+- **CPU**: AMD Ryzen 9 3900X 12-Core Processor
+- **GPU**: NVIDIA GeForce RTX 3080 (GA102)
+- **RAM**: 32GB DDR4
 - **OS**: Ubuntu 25.10
 - **Role**: Secondary ML training and compute node
 
