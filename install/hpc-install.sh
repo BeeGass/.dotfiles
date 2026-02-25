@@ -101,11 +101,8 @@ setup_symlinks() {
     create_symlink "$DOTFILES_DIR/zsh/zshenv"      "$HOME/.zshenv"
     create_symlink "$DOTFILES_DIR/zsh/zshrc"        "$HOME/.zshrc"
 
-    # Editors
+    # Editor (vim only; neovim is rarely available on shared clusters)
     create_symlink "$DOTFILES_DIR/vim/vimrc"        "$HOME/.vimrc"
-    if [[ -d "$HOME/.config" ]] || mkdir -p "$HOME/.config"; then
-        create_symlink "$DOTFILES_DIR/vim/vimrc"    "$HOME/.config/nvim/init.vim"
-    fi
 
     # Git
     create_symlink "$DOTFILES_DIR/git/gitconfig"    "$HOME/.gitconfig"
@@ -261,6 +258,9 @@ setup_git_identity() {
 
     # Cache credentials (no system keyring on HPC)
     git config --global credential.helper 'cache --timeout=7200'
+
+    # Use vim as git editor (neovim unavailable on most clusters)
+    git config --global core.editor vim
 
     ok "Git identity configured"
 }

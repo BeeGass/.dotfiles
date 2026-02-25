@@ -52,9 +52,14 @@ else
   export PATH="$HOME/.julia/juliaup/bin:$PATH"
 fi
 
-# Editor
-export EDITOR="nvim"
-export VISUAL="nvim"
+# Editor (vim on HPC where neovim is unavailable)
+if [[ -e "$DOTFILES_FLAGS_DIR/IS_HPC" ]] && ! command -v nvim >/dev/null 2>&1; then
+  export EDITOR="vim"
+  export VISUAL="vim"
+else
+  export EDITOR="nvim"
+  export VISUAL="nvim"
+fi
 export CLAUDE_CODE_MAX_OUTPUT_TOKENS=64000
 
 # Quick Directory Bookmarks
