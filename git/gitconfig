@@ -55,7 +55,7 @@
     defaultBranch = main
 
 [credential]
-	helper = libsecret
+	helper = cache --timeout=7200
 
 # Include machine-specific config (credential helper, etc.)
 # This file is created by install scripts and not tracked in git

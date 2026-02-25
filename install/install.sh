@@ -26,65 +26,8 @@ for arg in "$@"; do
   esac
 done
 
-# --- Colors & Logging ----------------------------------------------------------
-_use_color=1
-if [[ ! -t 1 ]] || [[ -n "${NO_COLOR:-}" ]]; then _use_color=0; fi
-
-if [[ $_use_color -eq 1 ]] && command -v tput >/dev/null 2>&1 && tput colors >/dev/null 2>&1; then
-  BOLD=$(tput bold); RESET=$(tput sgr0); DIM=$(tput dim)
-  RED=$(tput setaf 1); GREEN=$(tput setaf 2); YELLOW=$(tput setaf 3)
-  BLUE=$(tput setaf 4); MAGENTA=$(tput setaf 5); CYAN=$(tput setaf 6)
-else
-  BOLD=$'\033[1m'; RESET=$'\033[0m'; DIM=$'\033[2m'
-  RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'
-  BLUE=$'\033[34m'; MAGENTA=$'\033[35m'; CYAN=$'\033[36m'
-  [[ $_use_color -eq 0 ]] && BOLD='' && RESET='' && DIM='' && RED='' && GREEN='' && YELLOW='' && BLUE='' && MAGENTA='' && CYAN=''
-fi
-
-section() { printf "%s==>%s %s%s%s\n" "$CYAN$BOLD" "$RESET" "$BOLD" "$*" "$RESET"; }
-step()    { printf "  %s->%s %s\n" "$BLUE$BOLD" "$RESET" "$*"; }
-ok()      { printf "  %s[ok]%s %s\n" "$GREEN$BOLD" "$RESET" "$*"; }
-warn()    { printf "  %s[warn]%s %s\n" "$YELLOW$BOLD" "$RESET" "$*"; }
-err()     { printf "  %s[err ]%s %s\n" "$RED$BOLD" "$RESET" "$*"; }
-note()    { printf "  %s%s%s\n" "$DIM" "$*" "$RESET"; }
-
-# --- Script Setup and Constants ------------------------------------------------
-resolve_dotfiles_dir() {
-  if [[ -n "${DOTFILES_DIR:-}" && -d "${DOTFILES_DIR:-}" ]]; then
-    printf '%s\n' "$DOTFILES_DIR"; return
-  fi
-  if command -v git >/dev/null 2>&1; then
-    if top="$(git rev-parse --show-toplevel 2>/dev/null)"; then
-      printf '%s\n' "$top"; return
-    fi
-  fi
-  case "${BASH_SOURCE[0]-}" in
-    ''|/dev/*|/proc/*) ;;
-    *) ( cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd ); return ;;
-  esac
-  printf '%s\n' "$HOME/.dotfiles"
-}
-
-DOTFILES_DIR="$(resolve_dotfiles_dir)"
-SCRIPT_DIR="$DOTFILES_DIR/install"
-LOCAL_BIN_DIR="$HOME/.local/bin"
-XDG_STATE_ROOT="${XDG_STATE_HOME:-$HOME/.local/state}"
-FLAGS_DIR="$XDG_STATE_ROOT/dotfiles/flags"
-ENV_SNAPSHOT="$XDG_STATE_ROOT/dotfiles/os.env"
-NEOFETCH_IMG_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/neofetch/pics"
-
-# --- OS Detect ----------------------------------------------------------------
-detect_os() {
-  if [[ -n "${TERMUX_VERSION-}" ]] || [[ "${PREFIX-}" == *"com.termux"* ]] || [[ "$(uname -o 2>/dev/null || true)" == "Android" ]]; then
-    echo "Termux"
-  elif [[ "$(uname -s)" == "Linux" ]]; then
-    echo "Linux"
-  elif [[ "$(uname -s)" == "Darwin" ]]; then
-    echo "macOS"
-  else
-    echo "Unknown"
-  fi
-}
+# Source shared library (provides colors, logging, paths, helpers)
+source "${BASH_SOURCE[0]%/*}/lib.sh"
 
 # --- Flags / Env snapshot (read by ~/.zshenv) ---------------------------------
 # Keep flags compatible with 40-aliases.zsh (_is_termux checks for 'termux')
@@ -117,17 +60,7 @@ write_os_env_snapshot() {
 }
 
 # --- Helpers ------------------------------------------------------------------
-create_symlink() {
-  local src="$1" dst="$2"
-  mkdir -p "$(dirname "$dst")"
-  if [[ -e "$dst" && ! -L "$dst" ]]; then
-    local bak="${dst}.backup.$(date +%Y%m%d_%H%M%S)"
-    mv "$dst" "$bak"
-    warn "Backed up existing: $dst -> $bak"
-  fi
-  ln -sfn "$src" "$dst"
-  ok "$src -> $dst"
-}
+# create_symlink is provided by lib.sh
 
 # Create a private machine-local overrides file if missing (no secrets by default)
 ensure_local_overrides() {
@@ -376,6 +309,12 @@ setup_symlinks() {
   if [[ -f "$DOTFILES_DIR/install/refresh.sh" ]]; then
     create_symlink "$DOTFILES_DIR/install/refresh.sh" "$LOCAL_BIN_DIR/dots-refresh"
   fi
+  if [[ -f "$DOTFILES_DIR/install/bootstrap.sh" ]]; then
+    create_symlink "$DOTFILES_DIR/install/bootstrap.sh" "$LOCAL_BIN_DIR/dots-bootstrap"
+  fi
+  if [[ -f "$DOTFILES_DIR/install/clean.sh" ]]; then
+    create_symlink "$DOTFILES_DIR/install/clean.sh" "$LOCAL_BIN_DIR/dots-clean"
+  fi
 
   if [[ "$os_type" == "Termux" ]]; then
     section "Termux custom files"
@@ -403,7 +342,7 @@ install_platform_packages() {
       if [[ -f /etc/NIXOS ]]; then
         bash "$SCRIPT_DIR/nixos-install.sh"
       elif [[ -f /proc/device-tree/model ]] && grep -qi "raspberry pi" /proc/device-tree/model 2>/dev/null; then
-        note "Detected Raspberry Pi (headless server)"
+        step "Detected Raspberry Pi (headless server)"
         bash "$SCRIPT_DIR/rpi-install.sh"
       else
         bash "$SCRIPT_DIR/ubuntu-install.sh"
@@ -601,7 +540,7 @@ download_neofetch_assets() {
 # --- Main ---------------------------------------------------------------------
 main() {
   section "Dotfiles Installation"
-  note   "Repo: $DOTFILES_DIR"
+  step   "Repo: $DOTFILES_DIR"
 
   local os_type
   os_type="$(detect_os)"
@@ -630,7 +569,7 @@ main() {
   download_neofetch_assets
 
   section "Done"
-  note   "Open a new shell or run: source ~/.zshrc"
+  step   "Open a new shell or run: source ~/.zshrc"
 }
 
 main "$@"

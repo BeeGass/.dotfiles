@@ -1,25 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
-# --- Colors & Logging ----------------------------------------------------------
-_use_color=1
-if [[ ! -t 1 ]] || [[ -n "${NO_COLOR:-}" ]]; then _use_color=0; fi
-if [[ $_use_color -eq 1 ]] && command -v tput >/dev/null 2>&1 && tput colors >/dev/null 2>&1; then
-  BOLD=$(tput bold); RESET=$(tput sgr0); DIM=$(tput dim)
-  RED=$(tput setaf 1); GREEN=$(tput setaf 2); YELLOW=$(tput setaf 3)
-  BLUE=$(tput setaf 4); MAGENTA=$(tput setaf 5); CYAN=$(tput setaf 6)
-else
-  BOLD=$'\033[1m'; RESET=$'\033[0m'; DIM=$'\033[2m'
-  RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'
-  BLUE=$'\033[34m'; MAGENTA=$'\033[35m'; CYAN=$'\033[36m'
-  [[ $_use_color -eq 0 ]] && BOLD='' && RESET='' && DIM='' && RED='' && GREEN='' && YELLOW='' && BLUE='' && MAGENTA='' && CYAN=''
-fi
-section() { printf "%s==>%s %s%s%s\n" "$CYAN$BOLD" "$RESET" "$BOLD" "$*" "$RESET"; }
-step()    { printf "  %s->%s %s\n"     "$BLUE$BOLD" "$RESET" "$*"; }
-ok()      { printf "  %s[ok]%s %s\n"   "$GREEN$BOLD" "$RESET" "$*"; }
-warn()    { printf "  %s[warn]%s %s\n" "$YELLOW$BOLD" "$RESET" "$*"; }
-err()     { printf "  %s[err ]%s %s\n" "$RED$BOLD" "$RESET" "$*"; }
-note()    { printf "  %s%s%s\n"        "$DIM" "$*" "$RESET"; }
+source "${BASH_SOURCE[0]%/*}/lib.sh"
 
 # --- Main ---------------------------------------------------------------------
 main() {
@@ -224,8 +205,7 @@ setup_git_credential_helper() {
 setup_claude() {
     section "[macOS] Configure Claude Code"
 
-    local claude_dir="$HOME/.claude"
-    local dotfiles_claude="$HOME/.dotfiles/claude"
+    local dotfiles_claude="${DOTFILES_DIR}/claude"
 
     if [[ ! -d "$dotfiles_claude" ]]; then
         warn "Claude dotfiles not found at $dotfiles_claude; skipping"
@@ -233,78 +213,7 @@ setup_claude() {
     fi
 
     step "Ensuring ~/.claude directory exists"
-    mkdir -p "$claude_dir"
-
-    # Helper function to symlink a file with verification
-    _symlink_claude_file() {
-        local src_name="$1"
-        local dst_name="$2"
-        local src="$dotfiles_claude/$src_name"
-        local dst="$claude_dir/$dst_name"
-
-        if [[ ! -e "$src" ]]; then
-            note "Source $src_name not found; skipping"
-            return
-        fi
-
-        if [[ -L "$dst" ]]; then
-            # Verify symlink points to correct location
-            local current_target expected_target
-            current_target="$(readlink "$dst" 2>/dev/null)"
-            expected_target="$src"
-            if [[ "$current_target" == "$expected_target" ]]; then
-                note "$dst_name already symlinked correctly"
-            else
-                warn "$dst_name symlink points to wrong location"
-                rm -f "$dst"
-                ln -s "$src" "$dst"
-                ok "Fixed $dst_name symlink"
-            fi
-        elif [[ -e "$dst" ]]; then
-            step "Backing up existing $dst_name"
-            mv "$dst" "${dst}.backup.$(date +%Y%m%d_%H%M%S)"
-            ln -s "$src" "$dst"
-            ok "Symlinked $dst_name (backed up original)"
-        else
-            ln -s "$src" "$dst"
-            ok "Symlinked $dst_name"
-        fi
-    }
-
-    # Helper function to symlink a directory with verification
-    _symlink_claude_dir() {
-        local dir="$1"
-        local src="$dotfiles_claude/$dir"
-        local dst="$claude_dir/$dir"
-
-        if [[ ! -d "$src" ]]; then
-            note "Source directory $dir not found; skipping"
-            return
-        fi
-
-        if [[ -L "$dst" ]]; then
-            # Verify symlink points to correct location
-            local current_target expected_target
-            current_target="$(readlink "$dst" 2>/dev/null)"
-            expected_target="$src"
-            if [[ "$current_target" == "$expected_target" ]]; then
-                note "$dir/ already symlinked correctly"
-            else
-                warn "$dir/ symlink points to wrong location"
-                rm -f "$dst"
-                ln -s "$src" "$dst"
-                ok "Fixed $dir/ symlink"
-            fi
-        elif [[ -d "$dst" ]]; then
-            step "Backing up existing $dir/"
-            mv "$dst" "${dst}.backup.$(date +%Y%m%d_%H%M%S)"
-            ln -s "$src" "$dst"
-            ok "Symlinked $dir/ (backed up original)"
-        else
-            ln -s "$src" "$dst"
-            ok "Symlinked $dir/"
-        fi
-    }
+    mkdir -p "$HOME/.claude"
 
     step "Symlinking Claude configuration files"
     # Files: src_name -> dst_name (same name for all currently)
