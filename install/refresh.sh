@@ -8,7 +8,7 @@
 set -euo pipefail
 
 # ----------------------------- CLI/flags ---------------------------------------
-DRYRUN=0; FAST=0; VERBOSE=0; CLEAN_BACKUPS=0
+DRYRUN=0; FAST=0; VERBOSE=0; CLEAN_BACKUPS=0; NO_SUDO=0
 DO_PY=1; DO_NODE=1; DO_OMP=1; ONLY=""
 while (( $# )); do
   case "${1}" in
@@ -19,6 +19,7 @@ while (( $# )); do
     --no-python) DO_PY=0 ;;
     --no-node) DO_NODE=0 ;;
     --no-omp) DO_OMP=0 ;;
+    --no-sudo) NO_SUDO=1 ;;
     -v|--verbose) VERBOSE=$((VERBOSE+1)) ;;
     -h|--help)
       cat <<'EOF'
@@ -32,12 +33,13 @@ Options:
   --no-python         Skip Python/uv toolchain section
   --no-node           Skip Node.js/npm section
   --no-omp            Skip Oh-My-Posh updates
+  --no-sudo           Skip commands that require sudo
   -v, --verbose       Increase verbosity (can be repeated)
 
 Sections:
   Core:     path, local, directories, cleanup, backups
   Tools:    omp, zsh, python, node, tmux
-  System:   ssh, git, tailscale, sf
+  System:   ssh, git, tailscale, sf, fonts
   Apps:     snap, claude, gemini, opencode, flatpak
   Doctor:   doctor
   Special:  all (runs all sections)
@@ -64,7 +66,15 @@ ok(){ printf "  %s[ok]%s %s\n" "${GRN}${BOLD}" "${RESET}" "$*"; }
 warn(){ printf "  %s[warn]%s %s\n" "${YEL}${BOLD}" "${RESET}" "$*"; }
 err(){ printf "  %s[err ]%s %s\n" "${RED}${BOLD}" "${RESET}" "$*"; }
 
-run(){ if (( DRYRUN )); then printf "  %s[dry]%s %s\n" "${BLU}${BOLD}" "${RESET}" "$*"; else eval "$@"; fi; }
+run(){
+  if (( DRYRUN )); then
+    printf "  %s[dry]%s %s\n" "${BLU}${BOLD}" "${RESET}" "$*"
+  elif (( NO_SUDO )) && [[ "$*" == *sudo* ]]; then
+    printf "  %s[skip]%s %s (--no-sudo)\n" "${MAG}${BOLD}" "${RESET}" "$*"
+  else
+    eval "$@"
+  fi
+}
 have(){ command -v "$1" >/dev/null 2>&1; }
 
 # ----------------------------- env/context -------------------------------------
@@ -126,6 +136,10 @@ section_path(){
 
 section_cleanup(){
   section "Legacy cleanup"
+  if (( NO_SUDO )); then
+    warn "Skipping legacy cleanup (--no-sudo)"
+    return
+  fi
 
   # Clean up Microsoft repo if it exists (no longer needed)
   if [[ "$OS_NAME" == "Linux" ]] && have_apt; then
@@ -612,6 +626,10 @@ section_tmux(){
 
 section_ssh_server(){
   section "SSH server configuration"
+  if (( NO_SUDO )); then
+    warn "Skipping SSH server configuration (--no-sudo)"
+    return
+  fi
 
   # Check if openssh-server is installed
   if ! have sshd && ! [[ -x /usr/sbin/sshd ]]; then
@@ -948,6 +966,10 @@ section_flatpak(){
 
 section_tailscale(){
   section "Tailscale"
+  if (( NO_SUDO )); then
+    warn "Skipping Tailscale (--no-sudo)"
+    return
+  fi
   if [[ "$OS_NAME" != "Linux" ]] || ! have_apt; then
     note "Non-Ubuntu/apt system; skipping Tailscale enforcement"
     return
@@ -1031,6 +1053,17 @@ section_git_config(){
   fi
 }
 
+section_fonts(){
+  section "Font cache"
+  local fonts_dir="$HOME/.local/share/fonts"
+  if [[ ! -d "$fonts_dir" ]] || ! find "$fonts_dir" -maxdepth 1 -name '*Nerd*' -print -quit 2>/dev/null | grep -q .; then
+    note "No Nerd Fonts found in $fonts_dir; skipping"
+    return
+  fi
+  run "fc-cache -f >/dev/null 2>&1"
+  ok "Font cache rebuilt"
+}
+
 section_doctor(){
   section "Doctor"
   local DOC="$DOT/scripts/doctor.sh"
@@ -1066,6 +1099,7 @@ in_scope flatpak    && section_flatpak
 in_scope tailscale  && section_tailscale
 in_scope sf         && section_sf
 in_scope git        && section_git_config
+in_scope fonts      && section_fonts
 in_scope doctor     && section_doctor
 
 section "Done"

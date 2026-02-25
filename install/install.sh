@@ -4,6 +4,7 @@ set -euo pipefail
 # --- Early bootstrap for one-liner: curl … | bash -s -- --remote ---------------
 # Clone to ~/.dotfiles and re-exec from disk before we touch BASH_SOURCE.
 if [[ "${1-}" == "--remote" ]]; then
+  shift
   repo="${DOTFILES_DIR:-$HOME/.dotfiles}"
   if ! command -v git >/dev/null 2>&1; then
     # Termux convenience; harmless elsewhere
@@ -14,8 +15,16 @@ if [[ "${1-}" == "--remote" ]]; then
   else
     git -C "$repo" pull --ff-only || true
   fi
-  exec bash "$repo/install/install.sh"
+  exec bash "$repo/install/install.sh" "$@"
 fi
+
+# --- CLI flags ----------------------------------------------------------------
+NO_SUDO=0
+for arg in "$@"; do
+  case "$arg" in
+    --no-sudo) NO_SUDO=1 ;;
+  esac
+done
 
 # --- Colors & Logging ----------------------------------------------------------
 _use_color=1
@@ -383,6 +392,10 @@ setup_symlinks() {
 install_platform_packages() {
   local os_type="$1"
   section "2) Installing platform packages"
+  if (( NO_SUDO )); then
+    warn "Skipping platform packages (--no-sudo)"
+    return
+  fi
   case "$os_type" in
     macOS)  bash "$SCRIPT_DIR/macos-install.sh" ;;
     Termux) bash "$SCRIPT_DIR/termux-install.sh" ;;
@@ -481,7 +494,11 @@ install_pfetch() {
       if [[ "$os_type" == "Termux" ]]; then
         install -Dm755 pfetch "${PREFIX:-/data/data/com.termux/files/usr}/bin/pfetch"
       elif [[ "$os_type" == "Linux" ]]; then
-        sudo install -m 0755 pfetch /usr/local/bin/pfetch
+        if (( NO_SUDO )); then
+          warn "Skipping pfetch system install (--no-sudo)"
+        else
+          sudo install -m 0755 pfetch /usr/local/bin/pfetch
+        fi
       fi
   ) || warn "pfetch build/install failed"
   rm -rf "$tmp_dir"
@@ -496,7 +513,11 @@ install_developer_tools() {
         brew install tailscale || true
       fi
     elif [[ "$os_type" == "Linux" ]]; then
-      curl -fsSL https://tailscale.com/install.sh | sh || true
+      if (( NO_SUDO )); then
+        warn "Skipping Tailscale install (--no-sudo)"
+      else
+        curl -fsSL https://tailscale.com/install.sh | sh || true
+      fi
     fi
   fi
   if command -v sf >/dev/null 2>&1; then

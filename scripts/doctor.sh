@@ -14,7 +14,7 @@ command -v nvim >/dev/null || fail "neovim missing"
 # 3) Prompt
 command -v oh-my-posh >/dev/null || fail "oh-my-posh missing"
 # crude glyph check: JetBrainsMono Nerd present?
-fc-list | grep -qi 'JetBrains.*Nerd' || echo "! Nerd Font not detected; prompt icons may be broken"
+(fc-list || true) | grep -qi 'JetBrains.*Nerd' || echo "! Nerd Font not detected; prompt icons may be broken"
 pass "Prompt stack present"
 
 # 4) Git creds
