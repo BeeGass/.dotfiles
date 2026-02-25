@@ -244,6 +244,79 @@ install_tmux() {
     fi
 }
 
+install_fonts() {
+    section "[HPC] Fonts"
+
+    local font_dir="$HOME/.local/share/fonts"
+    mkdir -p "$font_dir"
+
+    # JetBrainsMono Nerd Font (needed for oh-my-posh prompt glyphs)
+    if find "$font_dir" -maxdepth 1 -name 'JetBrains*Nerd*' -print -quit 2>/dev/null | grep -q .; then
+        note "JetBrainsMono Nerd Font already installed"
+    else
+        step "Downloading JetBrainsMono Nerd Font"
+        local zip="/tmp/JetBrainsMono-NF.zip"
+        if curl -fsSL -o "$zip" \
+            "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"; then
+            unzip -o "$zip" -d "$font_dir" >/dev/null 2>&1 || true
+            rm -f "$zip"
+            ok "JetBrainsMono Nerd Font installed"
+        else
+            warn "Failed to download Nerd Font (check network access)"
+            note "You can install manually later from:"
+            note "  https://github.com/ryanoasis/nerd-fonts/releases"
+        fi
+    fi
+
+    # Google Sans Mono
+    local fonts_root="$HOME/.local/share/fonts"
+    local mono_dir="$fonts_root/GoogleSansMono"
+    local sans_dir="$fonts_root/GoogleSans"
+
+    install_google_font() {
+        local repo="$1" dest="$2" label="$3"
+        if [[ -d "$dest" ]]; then
+            local count
+            count=$(find "$dest" -maxdepth 1 \( -name '*.ttf' -o -name '*.otf' \) 2>/dev/null | wc -l)
+            if [[ "$count" -gt 0 ]]; then
+                note "$label already installed ($count files)"
+                return
+            fi
+        fi
+        step "Cloning $label via SSH"
+        local tmp
+        tmp="$(mktemp -d)"
+        if git clone --depth 1 "$repo" "$tmp/repo" >/dev/null 2>&1; then
+            mkdir -p "$dest"
+            find "$tmp/repo" -type f \( -iname '*.ttf' -o -iname '*.otf' \) -exec cp -f {} "$dest"/ \;
+            ok "$label installed"
+        else
+            warn "SSH clone failed for $label; skipping"
+            note "Ensure GitHub SSH access is configured"
+        fi
+        rm -rf "$tmp"
+    }
+
+    install_google_font "git@github.com:mehant-kr/Google-Sans-Mono.git" "$mono_dir" "Google Sans Mono"
+    install_google_font "git@github.com:hprobotic/Google-Sans-Font.git" "$sans_dir" "Google Sans"
+
+    # Fontconfig override for Google Sans Mono (force mono spacing)
+    if [[ -f "$DOTFILES_DIR/fontconfig/30-google-sans-mono-mono.conf" ]]; then
+        mkdir -p "$HOME/.config/fontconfig/conf.d"
+        create_symlink "$DOTFILES_DIR/fontconfig/30-google-sans-mono-mono.conf" \
+            "$HOME/.config/fontconfig/conf.d/30-google-sans-mono-mono.conf"
+    fi
+
+    # Rebuild font cache if fc-cache is available
+    if have fc-cache; then
+        step "Rebuilding font cache"
+        fc-cache -f >/dev/null 2>&1 || true
+        ok "Font cache rebuilt"
+    else
+        note "fc-cache not available; font cache not rebuilt"
+    fi
+}
+
 setup_git_identity() {
     section "[HPC] Git identity"
 
@@ -358,6 +431,7 @@ main() {
     install_user_tools
     install_zsh_plugins
     install_tmux
+    install_fonts
     setup_git_identity
     setup_local_overrides
 
