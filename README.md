@@ -68,7 +68,16 @@ git clone https://github.com/BeeGass/.dotfiles ~/.dotfiles
 | `just refresh-node` | Refresh only the Node.js section |
 | `just refresh --only <section>` | Run a specific section |
 
-Available sections: `path`, `local`, `directories`, `cleanup`, `backups`, `omp`, `zsh`, `python`, `node`, `tmux`, `ssh`, `snap`, `claude`, `gemini`, `opencode`, `flatpak`, `tailscale`, `sf`, `git`, `fonts`
+Available sections: `path`, `local`, `directories`, `cleanup`, `backups`, `omp`, `zsh`, `python`, `node`, `tmux`, `ssh`, `snap`, `claude`, `codex`, `gemini`, `opencode`, `flatpak`, `tailscale`, `sf`, `git`, `fonts`, `secrets`
+
+### Secrets recipes
+
+| Recipe | Description |
+|--------|-------------|
+| `just secrets-check` | Verify connectivity to pass store and secrets server |
+| `just secrets-init` | Initialize pass store with GPG key |
+| `just secrets-push` | Push pass store to git remote |
+| `just secrets-pull` | Pull pass store from git remote |
 
 ### Utility recipes
 
@@ -221,6 +230,46 @@ This installs everything to `~/.local/bin` and `~/.cargo/bin`:
 
 ---
 
+## Secrets management
+
+API keys and tokens are managed via a hybrid approach: **`pass`** (GPG-encrypted password store) on machines with a YubiKey, with **SSH fallback** to a dedicated secrets server for environments without one (e.g. HPC clusters).
+
+### Architecture
+
+* **Secrets server** (Jacobian, RPi 5) stores plaintext keys at `~/.secrets/env`, accessible only via SSH with YubiKey auth
+* **Home machines** (manifold, tensor, macOS) use `pass` with GPG encryption; keys are decrypted on demand when the YubiKey is present
+* **HPC clusters** fetch secrets over SSH from the secrets server; nothing is stored on disk
+
+### Daily usage
+
+```bash
+# Load all API keys into current shell
+load-secrets
+
+# Check what sources are available
+load-secrets --check
+
+# Manage the pass store
+load-secrets --init       # first-time setup (requires YubiKey)
+load-secrets --push       # sync to git remote
+load-secrets --pull       # pull from git remote
+
+# Add a new key
+pass insert api/OPENAI_API_KEY
+pass insert api/ANTHROPIC_API_KEY
+pass insert api/HF_TOKEN
+```
+
+The `load-secrets` function (defined in `zsh/50-functions.zsh`) tries `pass` first, then falls back to SSH. On HPC, it goes straight to SSH.
+
+### Setup
+
+* **Secrets server setup**: see [`docs/secrets-server-setup.md`](docs/secrets-server-setup.md)
+* **Client setup**: `pass` is installed automatically by the platform installers (Ubuntu, macOS, RPi). Run `just secrets-init` to initialize the store.
+* **HPC**: no setup needed beyond SSH access to the secrets server
+
+---
+
 ## GPG + SSH quickstart
 
 ```bash
@@ -308,6 +357,7 @@ Plugins via TPM are declared at the bottom; first-run will auto-install TPM.
 | `scripts/yk-status.sh`              | Inspect sockets, keys, sshcontrol, and optional remote test.                                      |
 | `scripts/yk-lock.sh`                | Clear agent caches; restart scdaemon/gpg-agent.                                                   |
 | `scripts/neofetch_random.sh`        | Smart backend choice; draws random image alongside neofetch.                                      |
+| `scripts/load-secrets.sh`           | Hybrid secrets loader: pass (GPG) with SSH fallback to secrets server.                            |
 | `scripts/doctor.sh`                 | Health checks for PATH, nvim, prompt, git helper, tmux, SF CLI.                                   |
 | `scripts/repo_to_text`              | Emit a text snapshot of repo structure/files with a globby ignore.                                |
 | `scripts/sfssh`, `scripts/sftunnel` | Convenience wrappers around SF Compute CLI.                                                       |
@@ -343,8 +393,9 @@ Plugins via TPM are declared at the bottom; first-run will auto-install TPM.
     sections/                        # Modular refresh sections
       path.sh  local.sh  directories.sh  cleanup.sh  backups.sh
       omp.sh   zsh.sh    python.sh       node.sh     tmux.sh
-      ssh.sh   snap.sh   claude.sh       gemini.sh   opencode.sh
-      flatpak.sh  tailscale.sh  sf.sh    git.sh      fonts.sh
+      ssh.sh   snap.sh   claude.sh       codex.sh    gemini.sh
+      opencode.sh  flatpak.sh  tailscale.sh  sf.sh   git.sh
+      fonts.sh  secrets.sh
   fontconfig/30-google-sans-mono-mono.conf
   ghostty/config         kitty/kitty.conf      wezterm/wezterm.lua
   git/gitconfig          ssh/{config,sshd_config_secure}
