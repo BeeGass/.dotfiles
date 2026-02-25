@@ -6,29 +6,43 @@ INSTALL_BASE="/opt"
 CURRENT_LINK="${INSTALL_BASE}/${APP}-current"
 BIN_LINK="/usr/local/bin/${APP}"
 
-# Arch AUR package for Antigravity – used as "source of truth" for latest tarball URL
-AUR_PAGE_URL="https://aur.archlinux.org/packages/antigravity"
+# Official Google apt repository for Antigravity
+APT_REPO_BASE="https://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev"
+PACKAGES_URL="${APT_REPO_BASE}/dists/antigravity-debian/main/binary-amd64/Packages"
 
 log() { printf '[update-antigravity] %s\n' "$*" >&2; }
 
-get_tarball_url_from_aur() {
-  log "Fetching latest tarball URL from AUR (${AUR_PAGE_URL})..."
-  local page
-  if ! page="$(curl -fsSL "${AUR_PAGE_URL}")"; then
-    log "ERROR: Failed to fetch AUR page."
+get_deb_info_from_repo() {
+  log "Fetching package info from apt repository..."
+  local packages
+  if ! packages="$(curl -fsSL "${PACKAGES_URL}")"; then
+    # Try .gz version if uncompressed fails
+    if ! packages="$(curl -fsSL "${PACKAGES_URL}.gz" | gunzip)"; then
+      log "ERROR: Failed to fetch Packages file from apt repo."
+      return 1
+    fi
+  fi
+
+  # Extract all versions and filenames, then get the latest (last entry when sorted by version)
+  local version filename
+  version="$(printf '%s\n' "$packages" | grep -E '^Version:' | awk '{print $2}' | sort -V | tail -n1)"
+
+  # Get the filename for the latest version by finding the block with that version
+  filename="$(printf '%s\n' "$packages" | awk -v ver="$version" '
+    /^Package:/ { pkg_block = "" }
+    { pkg_block = pkg_block $0 "\n" }
+    /^Version:/ && $2 == ver { found = 1 }
+    /^Filename:/ && found { print $2; found = 0; exit }
+  ')"
+
+  if [[ -z "$version" || -z "$filename" ]]; then
+    log "ERROR: Could not parse version/filename from Packages file."
     return 1
   fi
 
-  # Grab the first Antigravity.tar.gz URL on the page
-  local url
-  url="$(printf '%s\n' "$page" | grep -oE 'https://[^"]*Antigravity\.tar\.gz' | head -n1 || true)"
-
-  if [[ -z "$url" ]]; then
-    log "ERROR: Could not find Antigravity.tar.gz URL on AUR page."
-    return 1
-  fi
-
-  printf '%s\n' "$url"
+  # Output version and full URL
+  printf '%s\n' "$version"
+  printf '%s\n' "${APT_REPO_BASE}/${filename}"
 }
 
 cleanup_old_versions() {
@@ -112,65 +126,81 @@ main() {
     esac
   done
 
-  # 1) Decide tarball URL
-  local tarball_url
-  if [[ "${AG_TARBALL_URL-}" != "" ]]; then
-    tarball_url="${AG_TARBALL_URL}"
-    log "Using tarball URL from AG_TARBALL_URL:"
-    log "  ${tarball_url}"
+  # 1) Get version and .deb URL from apt repository
+  local deb_info full_version deb_url
+  if [[ "${AG_DEB_URL-}" != "" ]]; then
+    deb_url="${AG_DEB_URL}"
+    # Parse version from provided URL
+    full_version="$(printf '%s\n' "$deb_url" \
+      | sed -E 's#.*/antigravity_([0-9]+\.[0-9]+\.[0-9]+(-[0-9]+)?)_amd64\.deb#\1#')"
+    log "Using .deb URL from AG_DEB_URL:"
+    log "  ${deb_url}"
   else
-    tarball_url="$(get_tarball_url_from_aur)"
-    log "Found tarball URL:"
-    log "  ${tarball_url}"
+    deb_info="$(get_deb_info_from_repo)"
+    full_version="$(printf '%s\n' "$deb_info" | sed -n '1p')"
+    deb_url="$(printf '%s\n' "$deb_info" | sed -n '2p')"
+    log "Found version: ${full_version}"
+    log "Found .deb URL: ${deb_url}"
   fi
 
-  # 2) Parse version from URL: .../stable/<version>/linux-x64/Antigravity.tar.gz
-  local full_version
-  full_version="$(printf '%s\n' "$tarball_url" \
-    | sed -E 's#.*/stable/([^/]+)/linux-x64/Antigravity\.tar\.gz#\1#')"
-
-  if [[ -z "$full_version" || "$full_version" == "$tarball_url" ]]; then
-    log "ERROR: Could not parse version from tarball URL."
+  if [[ -z "$full_version" ]]; then
+    log "ERROR: Could not determine version."
     exit 1
   fi
 
-  local install_dir="${INSTALL_BASE}/${APP}-${full_version}"
-  log "Resolved Antigravity version: ${full_version}"
+  # Strip debian revision (e.g., 1.14.2-1768287740 -> 1.14.2) for directory name
+  local short_version="${full_version%%-*}"
+  local install_dir="${INSTALL_BASE}/${APP}-${short_version}"
   log "Target install dir: ${install_dir}"
 
-  # 3) If already installed, just repoint symlinks
+  # 2) If already installed, just repoint symlinks
   if [[ -d "$install_dir" ]]; then
     log "Version already installed at ${install_dir}, skipping extraction."
   else
-    # Download tarball to tmp
-    local tmp_tar
-    tmp_tar="$(mktemp "/tmp/${APP}.tar.XXXXXX")"
-    log "Downloading tarball to ${tmp_tar}..."
-    curl -fL "${tarball_url}" -o "${tmp_tar}"
+    # Download .deb to tmp
+    local tmp_deb tmp_extract
+    tmp_deb="$(mktemp "/tmp/${APP}.deb.XXXXXX")"
+    tmp_extract="$(mktemp -d "/tmp/${APP}.extract.XXXXXX")"
+    log "Downloading .deb to ${tmp_deb}..."
+    curl -fL "${deb_url}" -o "${tmp_deb}"
 
-    # Extract into /opt/antigravity-<full_version>
-    log "Extracting into ${install_dir}..."
+    # Extract .deb (ar archive containing data.tar.*)
+    log "Extracting .deb..."
+    cd "${tmp_extract}"
+    ar x "${tmp_deb}"
+
+    # Extract data.tar.* (could be .xz, .zst, .gz)
+    local data_tar
+    data_tar="$(ls data.tar.* 2>/dev/null | head -n1)"
+    if [[ -z "$data_tar" ]]; then
+      log "ERROR: No data.tar.* found in .deb"
+      rm -rf "${tmp_deb}" "${tmp_extract}"
+      exit 1
+    fi
+
+    log "Extracting ${data_tar} into ${install_dir}..."
     sudo mkdir -p "${install_dir}"
-    sudo tar xf "${tmp_tar}" -C "${install_dir}" --strip-components=1
+    sudo tar xf "${data_tar}" -C "${install_dir}" --strip-components=4 ./usr/share/antigravity
 
-    rm -f "${tmp_tar}"
+    rm -rf "${tmp_deb}" "${tmp_extract}"
+    cd - >/dev/null
   fi
 
-  # 4) Update /opt/antigravity-current -> new version
+  # 3) Update /opt/antigravity-current -> new version
   log "Updating ${CURRENT_LINK} -> ${install_dir}"
   sudo ln -sfn "${install_dir}" "${CURRENT_LINK}"
 
-  # 5) Update /usr/local/bin/antigravity -> /opt/antigravity-current/antigravity
+  # 4) Update /usr/local/bin/antigravity -> /opt/antigravity-current/antigravity
   log "Updating ${BIN_LINK} -> ${CURRENT_LINK}/antigravity"
   sudo ln -sfn "${CURRENT_LINK}/antigravity" "${BIN_LINK}"
 
-  # 6) Show final state
+  # 5) Show final state
   log "Final symlinks:"
   log "  $(readlink -f "${CURRENT_LINK}")"
   log "  $(readlink -f "${BIN_LINK}")"
-  log "Installed Antigravity version (from URL/dir name): ${full_version}"
+  log "Installed Antigravity version: ${short_version}"
 
-  # 7) Cleanup old installs
+  # 6) Cleanup old installs
   cleanup_old_versions "${keep_old}"
 
   log "Done. If your .desktop Exec points at /opt/antigravity-current/antigravity, the icon now uses this version."
