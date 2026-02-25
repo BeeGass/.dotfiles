@@ -86,11 +86,11 @@ fi
 # ==============================================================================
 # API KEYS
 # ==============================================================================
+# Secrets are managed via pass (GPG-encrypted) with SSH fallback to Jacobian.
+# Load on demand:  load-secrets
+# Check status:    load-secrets --check
+# Or uncomment below for manual overrides:
 # export GEMINI_API_KEY="__SET_ME_SECURELY__"
-
-# HF_TOKEN: User Access Token for HuggingFace Hub authentication
-# Default: None
-# Usage: Set to your personal access token from https://huggingface.co/settings/tokens
 # export HF_TOKEN="__SET_ME_SECURELY__"
 
 # ==============================================================================

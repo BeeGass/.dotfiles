@@ -321,6 +321,10 @@ fi
 # ==============================================================================
 # API Keys
 # ==============================================================================
+# Secrets are managed via SSH fallback to Jacobian (pass unavailable on HPC).
+# Load on demand:  load-secrets
+# Check status:    load-secrets --check
+# Or set manually:
 # export HF_TOKEN="__SET_ME_SECURELY__"
 LOCALEOF
     chmod 600 "$zsh_local"

@@ -42,7 +42,7 @@ Options:
 Sections:
   Core:     path, local, directories, cleanup, backups
   Tools:    omp, zsh, python, node, tmux
-  System:   ssh, git, tailscale, sf, fonts
+  System:   ssh, git, tailscale, sf, fonts, secrets
   Apps:     snap, claude, codex, gemini, opencode, flatpak
   Doctor:   doctor
   Special:  all (runs all sections)
@@ -99,6 +99,7 @@ in_scope tailscale  && run_section tailscale
 in_scope sf         && run_section sf
 in_scope git        && run_section git
 in_scope fonts      && run_section fonts
+in_scope secrets    && run_section secrets
 
 # Doctor runs inline (it's a separate script already)
 in_scope doctor     && {

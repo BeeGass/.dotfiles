@@ -177,6 +177,11 @@ refresh-git:
 refresh-fonts:
     @bash "{{DOTFILES_DIR}}/install/sections/fonts.sh"
 
+# Refresh secrets management (pass store, SSH connectivity)
+[group('sections')]
+refresh-secrets:
+    @bash "{{DOTFILES_DIR}}/install/sections/secrets.sh"
+
 # ------------------------------------------------------------------------------
 # Doctor
 # ------------------------------------------------------------------------------
@@ -233,6 +238,26 @@ update-node:
 [group('utils')]
 update-tmux:
     @just refresh --only tmux
+
+# Check secrets connectivity (pass store + SSH fallback)
+[group('secrets')]
+secrets-check:
+    @bash "{{DOTFILES_DIR}}/scripts/load-secrets.sh" --check
+
+# Initialize pass store for secrets management
+[group('secrets')]
+secrets-init:
+    @bash "{{DOTFILES_DIR}}/scripts/load-secrets.sh" --init
+
+# Push pass store to git remote
+[group('secrets')]
+secrets-push:
+    @bash "{{DOTFILES_DIR}}/scripts/load-secrets.sh" --push
+
+# Pull pass store from git remote
+[group('secrets')]
+secrets-pull:
+    @bash "{{DOTFILES_DIR}}/scripts/load-secrets.sh" --pull
 
 # Remove all dotfiles-managed symlinks, configs, and tools
 [group('utils')]

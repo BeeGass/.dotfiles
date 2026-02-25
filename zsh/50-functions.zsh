@@ -58,6 +58,26 @@ gpgmsg() {
     gpg -se -r "$1"
 }
 
+# Secrets management
+load-secrets() {
+  local script="${DOTFILES_DIR:-$HOME/.dotfiles}/scripts/load-secrets.sh"
+  if [[ ! -x "$script" ]]; then
+    script="$(command -v load-secrets 2>/dev/null || true)"
+  fi
+  if [[ -z "$script" ]]; then
+    echo "load-secrets not found" >&2
+    return 1
+  fi
+
+  if [[ "${1:-}" == --* ]]; then
+    # Pass-through for --check, --init, --push, --pull, --help
+    bash "$script" "$@"
+  else
+    # Default: eval the export statements
+    eval "$(bash "$script")"
+  fi
+}
+
 # SF Compute helpers (thin wrappers around the CLI)
 sfssh()   { command sf vms ssh -A "$@"; }
 sftunnel(){ command sftunnel "$@"; }  # script above will be on PATH via installer
