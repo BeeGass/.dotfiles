@@ -13,7 +13,7 @@ Host *
 # Tailscale short names → MagicDNS
 Host Jacobian Hessian
     HostName %h.tailf7d439.ts.net
-    User ubuntu
+    User beegass
     Port 40822
     ForwardAgent no
 
