@@ -19,7 +19,6 @@
     autosetupremote = true
 
 [core]
-    editor = nvim
     pager = delta
 
 [interactive]
@@ -33,6 +32,13 @@
 
 [merge]
     conflictstyle = diff3
+    tool = vimdiff
+
+[mergetool]
+    keepBackup = false
+
+[mergetool "vimdiff"]
+    layout = LOCAL,BASE,REMOTE / MERGED
 
 [diff]
     colorMoved = default

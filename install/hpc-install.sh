@@ -259,9 +259,6 @@ setup_git_identity() {
     # Cache credentials (no system keyring on HPC)
     git config --global credential.helper 'cache --timeout=7200'
 
-    # Use vim as git editor (neovim unavailable on most clusters)
-    git config --global core.editor vim
-
     ok "Git identity configured"
 }
 
