@@ -43,7 +43,7 @@ Sections:
   Core:     path, local, directories, cleanup, backups
   Tools:    omp, zsh, python, node, tmux
   System:   ssh, git, tailscale, sf, fonts
-  Apps:     snap, claude, gemini, opencode, flatpak
+  Apps:     snap, claude, codex, gemini, opencode, flatpak
   Doctor:   doctor
   Special:  all (runs all sections)
 EOF
@@ -91,6 +91,7 @@ in_scope tmux       && run_section tmux
 in_scope ssh        && run_section ssh
 in_scope snap       && run_section snap
 in_scope claude     && run_section claude
+in_scope codex      && run_section codex
 in_scope gemini     && run_section gemini
 in_scope opencode   && run_section opencode
 in_scope flatpak    && run_section flatpak

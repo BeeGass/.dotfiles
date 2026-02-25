@@ -21,6 +21,6 @@ cat <<'NIX'
 
 # After rebuild:
 #   - Install uv:  curl -Ls https://astral.sh/uv/install.sh | sh && uv self update
-#   - Install CLIs: npm i -g @google/gemini-cli@latest @anthropic-ai/claude-code@latest
+#   - Install CLIs: npm i -g @google/gemini-cli@latest @openai/codex@latest @anthropic-ai/claude-code@latest
 
 NIX

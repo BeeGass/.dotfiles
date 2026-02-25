@@ -410,6 +410,7 @@ install_clis() {
   if command -v npm >/dev/null 2>&1; then
     npm install -g \
       @google/gemini-cli@latest \
+      @openai/codex@latest \
       typescript \
       typescript-language-server || true
   fi

@@ -18,7 +18,7 @@ main() {
     run "nvm alias default 'lts/*'"
     run "nvm use default >/dev/null || true"
     # Globals (customize via NPM_GLOBALS env)
-    GLOBALS="${NPM_GLOBALS:-@google/gemini-cli typescript typescript-language-server}"
+    GLOBALS="${NPM_GLOBALS:-@google/gemini-cli @openai/codex typescript typescript-language-server}"
     run "npm install -g ${GLOBALS} || true"
     ok "Node $(node -v 2>/dev/null || echo '-')"
   else

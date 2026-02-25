@@ -137,6 +137,11 @@ refresh-snap:
 refresh-claude:
     @bash "{{DOTFILES_DIR}}/install/sections/claude.sh"
 
+# Refresh Codex CLI configuration
+[group('sections')]
+refresh-codex:
+    @bash "{{DOTFILES_DIR}}/install/sections/codex.sh"
+
 # Refresh Gemini configuration
 [group('sections')]
 refresh-gemini:
