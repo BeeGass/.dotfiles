@@ -63,7 +63,7 @@
             "commit_icon": "\uf417 ",
             "tag_icon": "\uf412 "
           },
-          "template": " {{ .UpstreamIcon }}{{ .HEAD }}{{ .BranchStatus }}{{ if .Working.Changed }} \uf044 {{ .Working.String }}{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Staging.Changed }} \uf046 {{ .Staging.String }}{{ end }}{{ if .StashCount }} \uf692 {{ .StashCount }}{{ end }} "
+          "template": " {{ .UpstreamIcon }}{{ .HEAD }}{{ .BranchStatus }}{{ if .Working.Changed }} \uf044 {{ .Working.String }}{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Staging.Changed }} \uf046 {{ .Staging.String }}{{ end }}{{ if .StashCount }} 󰆧 {{ .StashCount }}{{ end }} "
         },
         {
           "type": "executiontime",
