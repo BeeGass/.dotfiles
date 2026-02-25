@@ -23,7 +23,7 @@ install_pkgs() {
 
     local pkgs=(
         awk bat chafa coreutils curl eza fd file findutils fzf gh git gnupg grep jq
-        lsd neofetch openssh openssl pinentry-curses ripgrep sed shellcheck shfmt tar
+        lsd neofetch neovim openssh openssl pinentry-curses ripgrep sed shellcheck shfmt tar
         termux-api tmux tree unzip w3m wget which zsh
     )
     step "Installing ${#pkgs[@]} packages"
