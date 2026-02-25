@@ -1,7 +1,5 @@
 {
   "cleanupPeriodDays": 90,
-  "showTurnDuration": false,
-  "mcpToolSearch": "auto:15",
   "env": {
     "MAX_THINKING_TOKENS": "32000",
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000",
@@ -14,14 +12,22 @@
       "Glob(**)",
       "Grep(**)",
       "Bash(uv run:*)",
-      "Bash(uv pip:*)",
+      "Bash(uv run python:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(uv run ruff format:*)",
+      "Bash(uv run ruff check:*)",
+      "Bash(uv run mypy:*)",
+      "Bash(uv run python -m pytest:*)",
+      "Bash(uv sync --extra cuda13)",
       "Bash(uv sync:*)",
+      "Bash(uv add:*)",
+      "Bash(uv lock --upgrade)",
+      "Bash(uv tree:*)",
       "Bash(uv build:*)",
-      "Bash(npm run test:*)",
-      "Bash(npm run build:*)",
+      "Bash(npm run:*)",
       "Bash(npm test:*)",
-      "Bash(pnpm run test:*)",
-      "Bash(pnpm run build:*)",
+      "Bash(pnpm run:*)",
       "Bash(pnpm test:*)",
       "Bash(cargo test:*)",
       "Bash(cargo build:*)",
@@ -35,16 +41,12 @@
       "Bash(git branch:*)",
       "Bash(git show:*)",
       "Bash(git remote:*)",
-      "Bash(pytest:*)",
-      "Bash(python -m pytest:*)",
-      "Bash(ruff check:*)",
-      "Bash(ruff format:*)",
-      "Bash(mypy:*)",
       "Bash(pyright:*)",
       "Bash(prettier:*)",
       "Bash(eslint:*)",
       "Bash(tsc:*)",
       "Bash(rustfmt:*)",
+      "Bash(du:*)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:*.github.com)",
       "WebFetch(domain:docs.python.org)",
@@ -82,16 +84,25 @@
       "WebFetch(domain:cloud.google.com)",
       "WebFetch(domain:www.npmjs.com)",
       "WebFetch(domain:agentskills.io)",
-      "WebSearch",
-      "Bash(du:*)"
+      "WebSearch"
     ],
     "deny": [
       "Bash(sudo:*)",
       "Bash(su:*)",
-      "Bash(rm -rf:*)",
-      "Bash(rm -r -f:*)",
       "Bash(chmod 777:*)",
-      "Bash(chmod -R 777:*)"
+      "Bash(chmod -R 777:*)",
+      "Bash(uv pip:*)",
+      "Bash(uv pip install:*)",
+      "Bash(pytest:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(ruff check:*)",
+      "Bash(ruff format:*)",
+      "Bash(mypy:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Bash(pip uninstall:*)",
+      "Bash(pip3 install:*)",
+      "Bash(pip3 uninstall:*)"
     ]
   },
   "enableAllProjectMcpServers": false,
@@ -144,11 +155,6 @@
             "type": "command",
             "command": "$HOME/.claude/hooks/jax-shape-check.sh",
             "timeout": 30
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/format-on-save.sh",
-            "timeout": 30
           }
         ]
       }
@@ -190,6 +196,8 @@
     ]
   },
   "alwaysThinkingEnabled": true,
+  "showTurnDuration": false,
+  "mcpToolSearch": "auto:15",
   "defaultMode": "plan",
   "disableBypassPermissionsMode": true,
   "additionalDirectories": [
