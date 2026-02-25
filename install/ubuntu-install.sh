@@ -41,6 +41,7 @@ install_apt_packages() {
         neovim
         openssh-client
         openssh-server
+        pass
         openssl
         pcscd
         pinentry-curses
