@@ -12,10 +12,12 @@
 {{-   $machineType = "server" -}}
 {{- else -}}
 {{-   $machineType = promptChoiceOnce . "machineType" "Machine type" (list "desktop" "server" "hpc") -}}
-{{- end }}
+{{- end -}}
+{{- $machineName := promptChoiceOnce . "machineName" "Machine name" (list "Manifold" "Tensor" "Matrix" "Hessian" "Jacobian" "Vector") }}
 
 data:
   machineType: {{ $machineType | quote }}
+  machineName: {{ $machineName | quote }}
   isTermux: {{ $isTermux }}
   isRpi: {{ $isRpi }}
   isHpc: {{ eq $machineType "hpc" }}
