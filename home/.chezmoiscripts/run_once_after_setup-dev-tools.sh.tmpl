@@ -56,4 +56,34 @@ if ! command -v opencode >/dev/null 2>&1 && [ ! -d "$HOME/.opencode" ]; then
   curl -fsSL https://opencode.ai/install | bash || true
 fi
 
+# Tailscale
+step "Installing Tailscale"
+if ! command -v tailscale >/dev/null 2>&1; then
+{{ if eq .chezmoi.os "darwin" -}}
+  brew install tailscale || true
+{{ else -}}
+  curl -fsSL https://tailscale.com/install.sh | sh || true
+{{ end -}}
+fi
+
+# SF Compute CLI
+step "Installing SF Compute CLI"
+if ! command -v sf >/dev/null 2>&1; then
+  curl -fsSL https://sfcompute.com/cli/install | bash || warn "SF Compute CLI install failed"
+fi
+
+# Neofetch image assets
+step "Downloading neofetch image assets"
+NEOFETCH_IMG_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/neofetch/pics"
+mkdir -p "$NEOFETCH_IMG_DIR"
+if ! find "$NEOFETCH_IMG_DIR" -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) 2>/dev/null | grep -q .; then
+  if command -v uvx >/dev/null 2>&1; then
+    uvx gdown 'https://drive.google.com/drive/folders/1vjMG9j9t9cay5baPQbYLngWRi-EQ2pyK?usp=sharing' \
+      --folder --no-cookies --output "$NEOFETCH_IMG_DIR" \
+      || warn "Neofetch asset download failed"
+  else
+    warn "uvx not found; skipping neofetch assets"
+  fi
+fi
+
 ok "Developer tools setup complete"
