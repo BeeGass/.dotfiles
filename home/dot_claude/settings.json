@@ -1,0 +1,208 @@
+{
+  "cleanupPeriodDays": 90,
+  "env": {
+    "MAX_THINKING_TOKENS": "32000",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-opus-4-5-20251101"
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Glob(**)",
+      "Grep(**)",
+      "Bash(uv run:*)",
+      "Bash(uv run python:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(uv run ruff format:*)",
+      "Bash(uv run ruff check:*)",
+      "Bash(uv run mypy:*)",
+      "Bash(uv run python -m pytest:*)",
+      "Bash(uv sync --extra cuda13)",
+      "Bash(uv sync:*)",
+      "Bash(uv add:*)",
+      "Bash(uv lock --upgrade)",
+      "Bash(uv tree:*)",
+      "Bash(uv build:*)",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(pnpm run:*)",
+      "Bash(pnpm test:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo build:*)",
+      "Bash(cargo run:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo fmt:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git show:*)",
+      "Bash(git remote:*)",
+      "Bash(pyright:*)",
+      "Bash(prettier:*)",
+      "Bash(eslint:*)",
+      "Bash(tsc:*)",
+      "Bash(rustfmt:*)",
+      "Bash(du:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:*.github.com)",
+      "WebFetch(domain:docs.python.org)",
+      "WebFetch(domain:*.readthedocs.io)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:crates.io)",
+      "WebFetch(domain:docs.rs)",
+      "WebFetch(domain:npmjs.com)",
+      "WebFetch(domain:anthropic.com)",
+      "WebFetch(domain:*.anthropic.com)",
+      "WebFetch(domain:huggingface.co)",
+      "WebFetch(domain:*.huggingface.co)",
+      "WebFetch(domain:jax.readthedocs.io)",
+      "WebFetch(domain:flax.readthedocs.io)",
+      "WebFetch(domain:optax.readthedocs.io)",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:stackoverflow.com)",
+      "WebFetch(domain:developer.mozilla.org)",
+      "WebFetch(domain:rust-lang.org)",
+      "WebFetch(domain:*.rust-lang.org)",
+      "WebFetch(domain:pytorch.org)",
+      "WebFetch(domain:tensorflow.org)",
+      "WebFetch(domain:numpy.org)",
+      "WebFetch(domain:pandas.pydata.org)",
+      "WebFetch(domain:scikit-learn.org)",
+      "WebFetch(domain:openai.com)",
+      "WebFetch(domain:*.openai.com)",
+      "WebFetch(domain:google.com)",
+      "WebFetch(domain:*.google.com)",
+      "WebFetch(domain:microsoft.com)",
+      "WebFetch(domain:*.microsoft.com)",
+      "WebFetch(domain:apple.com)",
+      "WebFetch(domain:*.apple.com)",
+      "WebFetch(domain:aws.amazon.com)",
+      "WebFetch(domain:cloud.google.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:agentskills.io)",
+      "WebSearch"
+    ],
+    "deny": [
+      "Bash(sudo:*)",
+      "Bash(su:*)",
+      "Bash(chmod 777:*)",
+      "Bash(chmod -R 777:*)",
+      "Bash(uv pip:*)",
+      "Bash(uv pip install:*)",
+      "Bash(pytest:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(ruff check:*)",
+      "Bash(ruff format:*)",
+      "Bash(mypy:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Bash(pip uninstall:*)",
+      "Bash(pip3 install:*)",
+      "Bash(pip3 uninstall:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": false,
+  "enabledMcpjsonServers": [
+    "context7",
+    "github",
+    "ssh",
+    "homelab",
+    "ml-tools",
+    "ppm"
+  ],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/protect-files.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/large-file-check.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/dangerous-command.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/validate-commit.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/jax-shape-check.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/context7-docs.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "uv run --project $HOME/.claude/statusline statusline"
+  },
+  "enabledPlugins": {
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "sandbox": {
+    "enabled": false,
+    "network": {
+      "allowUnixSockets": [
+        "/var/run/docker.sock"
+      ],
+      "allowLocalBinding": true
+    },
+    "excludedCommands": [
+      "git",
+      "docker",
+      "ssh",
+      "scp"
+    ]
+  },
+  "alwaysThinkingEnabled": true,
+  "showTurnDuration": false,
+  "mcpToolSearch": "auto:15",
+  "defaultMode": "plan",
+  "disableBypassPermissionsMode": true,
+  "additionalDirectories": [
+    "~/.dotfiles",
+    "~/Projects",
+    "/data"
+  ]
+}
