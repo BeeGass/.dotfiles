@@ -1,0 +1,54 @@
+# Use the gpg-agent SSH socket drop-in created by setup_gpg_ssh.sh:
+# ~/.ssh/config.d/10-gpg-agent.conf sets: IdentityAgent /run/.../S.gpg-agent.ssh
+Include ~/.ssh/config.d/*.conf
+
+Host *
+    PreferredAuthentications publickey
+    PubkeyAuthentication yes
+    ForwardAgent no
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    IdentitiesOnly no
+
+# Tailscale short names → MagicDNS
+Host Jacobian Hessian
+    HostName %h.tailf7d439.ts.net
+    User beegass
+    Port 40822
+    ForwardAgent no
+
+Host Tensor Matrix Vector Manifold
+    HostName %h.tailf7d439.ts.net
+    User beegass
+    Port 40822            # make sure sshd on each device actually listens here (or change to 22)
+    ForwardAgent no
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+Host github.com github
+    HostName github.com
+    User git
+    Port 22
+    ForwardAgent no
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+# mcopp with gpg-agent socket forwards
+Host mcopp
+    HostName mcopp.com
+    User beegass
+    Port 12211
+    RequestTTY yes
+    StreamLocalBindUnlink yes
+    ForwardAgent yes
+    IdentitiesOnly no
+
+# You (client) on Linux → remote sockets under /run/...
+Match host mcopp exec "uname -s | grep -q Linux"
+    RemoteForward /run/user/1001/gnupg/S.gpg-agent     /run/user/1000/gnupg/S.gpg-agent.extra
+    RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh /run/user/1000/gnupg/S.gpg-agent.ssh
+
+# You (client) on macOS → remote sockets under ~/.gnupg/...
+Match host mcopp exec "uname -s | grep -q Darwin"
+    RemoteForward /run/user/1001/gnupg/S.gpg-agent     /Users/beegass/.gnupg/S.gpg-agent.extra
+    RemoteForward /run/user/1001/gnupg/S.gpg-agent.ssh /Users/beegass/.gnupg/S.gpg-agent.ssh

@@ -1,0 +1,20 @@
+# ============================================================================
+# ZSH Configuration - Main Entry Point
+# ============================================================================
+
+source ~/.dotfiles/zsh/00-init.zsh
+source ~/.dotfiles/zsh/10-oh-my-posh.zsh
+source ~/.dotfiles/zsh/20-environment.zsh
+source ~/.dotfiles/zsh/30-plugins.zsh
+source ~/.dotfiles/zsh/40-aliases.zsh
+source ~/.dotfiles/zsh/50-functions.zsh
+source ~/.dotfiles/zsh/60-completions.zsh
+source ~/.dotfiles/zsh/70-keybindings.zsh
+source ~/.dotfiles/zsh/80-tools.zsh
+source ~/.dotfiles/zsh/90-local.zsh 2>/dev/null  # Local overrides (not in git)
+[[ -r ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && source ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+[[ -r ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && source ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+export PATH="$HOME/.local/bin:$PATH"
+
+export PATH="$HOME/bin:$PATH"

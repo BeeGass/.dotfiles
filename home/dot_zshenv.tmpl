@@ -1,0 +1,34 @@
+# minimal ~/.zshenv -- only sanity + PATH
+set +u
+
+# XDG sane defaults early
+: "${XDG_CONFIG_HOME:=$HOME/.config}"
+: "${XDG_DATA_HOME:=$HOME/.local/share}"
+: "${XDG_STATE_HOME:=$HOME/.local/state}"
+: "${XDG_CACHE_HOME:=$HOME/.cache}"
+export XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME XDG_CACHE_HOME
+
+# Dotfiles flags (written by install.sh)
+FLAGS_DIR="${XDG_STATE_HOME}/dotfiles/flags"
+export FLAGS_DIR
+
+# Safe, OS-aware PATH seed
+{{- if .isTermux }}
+prefix="${PREFIX:-/data/data/com.termux/files/usr}"
+_base="$HOME/.local/bin:$prefix/bin"
+{{- else if eq .chezmoi.os "darwin" }}
+_base="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+{{- else }}
+_base="$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+{{- end }}
+
+# Keep any existing PATH but make sure our base comes first
+export PATH="${_base}:${PATH:-}"
+
+# zsh-specific: dedupe while preserving left-to-right order
+if [[ -n ${ZSH_VERSION-} ]]; then
+  typeset -U path PATH
+fi
+
+unset _base prefix
+[[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"

@@ -1,0 +1,534 @@
+"==============================================================================
+" vimrc for beegass
+"==============================================================================
+"
+" This configuration is organized into the following sections:
+"   1. Vim-Plug Plugin Management
+"   2. General Settings
+"   3. UI Configuration
+"   4. Key Mappings (Colemak-DH optimized)
+"   5. Plugin Configurations
+"
+" NOTE: This config uses Colemak-DH keyboard layout!
+" Navigation: r (left), s (down), f (up), t (right)
+" Displaced keys: l (replace), j (substitute), k (find), n (till)
+"
+"==============================================================================
+" 1. VIM-PLUG PLUGIN MANAGEMENT
+"==============================================================================
+" Auto-install vim-plug if it's not found
+let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
+if empty(glob(data_dir . '/autoload/plug.vim'))
+  silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+
+" Begin plugin list
+call plug#begin('~/.vim/plugged')
+
+"------------------------------------------------------------------------------
+" § A. Foundational Plugins
+"------------------------------------------------------------------------------
+Plug 'tpope/vim-sensible'    " Provides sensible default settings for a modern Vim experience.
+Plug 'liuchengxu/vim-which-key' " Shows available keybindings in popup - perfect for learning!
+Plug 'jiangmiao/auto-pairs'     " Auto-close brackets, quotes, and parentheses.
+Plug 'sheerun/vim-polyglot'     " Language pack with syntax for 600+ languages.
+
+"------------------------------------------------------------------------------
+" § B. UI & Appearance
+"------------------------------------------------------------------------------
+Plug 'jaredgorski/spacecamp'              " The primary colorscheme being used.
+Plug 'altercation/vim-colors-solarized'   " Another popular colorscheme.
+Plug 'vim-airline/vim-airline'            " A sleek and colorful status/tabline.
+Plug 'nathanaelkane/vim-indent-guides'    " Visually display indentation levels.
+Plug 'mhinz/vim-startify'                 " Start screen with recent files and bookmarks.
+
+"------------------------------------------------------------------------------
+" § C. File & Project Navigation
+"------------------------------------------------------------------------------
+Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' } " A classic file system tree explorer.
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }     " A command-line fuzzy finder.
+Plug 'jremmen/vim-ripgrep'                 " Integrates Ripgrep for fast, project-wide search.
+
+"------------------------------------------------------------------------------
+" § D. Code Completion & Linting
+"
+" NOTE: You have multiple plugins for code intelligence (LSP, ALE, YCM, Jedi).
+" This can lead to conflicts. Consider choosing one primary system for linting
+" and completion to ensure the best performance and avoid unexpected behavior.
+"------------------------------------------------------------------------------
+Plug 'dense-analysis/ale'                 " Asynchronous linting and fixing engine.
+Plug 'prabirshrestha/vim-lsp'             " Asynchronous Language Server Protocol plugin.
+" YouCompleteMe is a heavy-duty completion engine that requires compilation.
+" Run `./install.py` in its plugin directory after installing.
+" Plug 'valloric/youcompleteme'             " Powerful code-completion engine. (Consider removing if using LSP)
+" Plug 'davidhalter/jedi-vim'               " Python autocompletion using the Jedi library. (Consider removing if using LSP)
+
+"------------------------------------------------------------------------------
+" § E. Language Support & Syntax
+"------------------------------------------------------------------------------
+Plug 'leafgarland/typescript-vim'         " Enhanced syntax highlighting for TypeScript.
+" Plug 'suan/vim-instant-markdown', {'for': 'markdown'} " Live preview for Markdown files. (Disabled - requires Node.js dependencies)
+Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && npx --yes yarn install', 'for': 'markdown' } " Markdown preview with LaTeX support
+
+"------------------------------------------------------------------------------
+" § F. Git Integration
+"------------------------------------------------------------------------------
+Plug 'tpope/vim-fugitive'                 " A premier Git wrapper for Vim.
+Plug 'mhinz/vim-signify'                  " Shows git diff in the sign column (+/-/~).
+
+"------------------------------------------------------------------------------
+" § G. General Utility & Editing Enhancements
+"------------------------------------------------------------------------------
+Plug 'tpope/vim-surround'                 " Easily delete, change, and add 'surroundings' like quotes, brackets, etc.
+Plug 'tpope/vim-commentary'               " Easy commenting with 'gc' - works with any language.
+Plug 'easymotion/vim-easymotion'          " Fast navigation - jump anywhere with a few keystrokes.
+Plug 'terryma/vim-multiple-cursors'       " Sublime Text-style multiple cursor editing.
+Plug 'mbbill/undotree'                    " Visualizes your undo history as a tree.
+Plug 'vim-utils/vim-man'                  " View man pages inside Vim.
+
+" Initialize plugin system
+call plug#end()
+
+" Auto-install missing plugins on Vim startup
+autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+  \| PlugInstall --sync | source $MYVIMRC
+\| endif
+
+
+"==============================================================================
+" 2. GENERAL SETTINGS
+"==============================================================================
+set encoding=utf-8          " Set default encoding to UTF-8.
+set backspace=indent,eol,start " Allow backspacing over everything in insert mode.
+set history=1000            " Increase command history.
+set noswapfile              " Disable creation of swap files.
+set undofile                " Persist undo history between sessions.
+set autoread                " Automatically re-read files if changed outside of Vim.
+
+"------------------------------------------------------------------------------
+" § Tabs & Indentation
+"------------------------------------------------------------------------------
+set tabstop=4               " Number of visual spaces per TAB.
+set softtabstop=4           " Number of spaces in tab when editing.
+set shiftwidth=4            " Number of spaces to use for auto-indent.
+set expandtab               " Use spaces instead of tabs.
+set smartindent             " Be smart about indentation.
+filetype indent on          " Load filetype-specific indent files.
+
+"------------------------------------------------------------------------------
+" § Searching
+"------------------------------------------------------------------------------
+set incsearch               " Show search results as you type.
+set hlsearch                " Highlight all search matches.
+set ignorecase              " Ignore case when searching...
+set smartcase               " ...unless the query contains an uppercase letter.
+
+
+"==============================================================================
+" 3. UI CONFIGURATION
+"==============================================================================
+syntax on                   " Enable syntax highlighting.
+set number                  " Show line numbers.
+set relativenumber          " Show relative line numbers for easier navigation.
+set cursorline              " Highlight the current line.
+set ruler                   " Show cursor position (line, column) in the status line.
+set showcmd                 " Display incomplete commands in the status line.
+set showmatch               " Briefly jump to matching brackets.
+set wildmenu                " Visual autocomplete for command menu.
+set visualbell              " Use a visual bell instead of a beep.
+set nowrap                  " Do not wrap long lines.
+
+" Set the main colorscheme
+colorscheme spacecamp
+
+"------------------------------------------------------------------------------
+" § Fonts (GUI Vim only - gvim/MacVim)
+"------------------------------------------------------------------------------
+" Note: Terminal vim uses your terminal emulator's font settings
+if has("gui_running")
+  if has("gui_gtk2") || has("gui_gtk3")
+    " Linux GTK
+    set guifont=Google\ Sans\ Mono\ 11
+  elseif has("gui_macvim")
+    " macOS
+    set guifont=Google\ Sans\ Mono:h13
+  elseif has("gui_win32")
+    " Windows
+    set guifont=Google_Sans_Mono:h11:cANSI
+  endif
+endif
+
+
+"==============================================================================
+" 4. KEY MAPPINGS
+"==============================================================================
+let mapleader = " "         " Set the leader key to Space.
+
+"------------------------------------------------------------------------------
+" § Colemak-DH Navigation
+"------------------------------------------------------------------------------
+" Use r-s-f-t for navigation (home row focused)
+" r = left (was h)
+" s = down (was j)
+" f = up (was k)
+" t = right (was l)
+noremap r h
+noremap s gj
+noremap f gk
+noremap t l
+
+" Remap displaced keys to maintain functionality
+" l = replace character (was r)
+noremap l r
+noremap L R
+" j = substitute character (was s)
+noremap j s
+noremap J S
+" k = find character forward (was f)
+noremap k f
+noremap K F
+" n = till character forward (was t)
+noremap n t
+noremap N T
+
+" Window navigation with Colemak-DH
+nnoremap <C-w>r <C-w>h
+nnoremap <C-w>s <C-w>j
+nnoremap <C-w>f <C-w>k
+nnoremap <C-w>t <C-w>l
+
+" Arrow keys also work (visual line movement)
+noremap <Up> gk
+noremap <Down> gj
+noremap <Left> h
+noremap <Right> l
+
+" Arrow keys in insert mode
+inoremap <Up> <C-o>gk
+inoremap <Down> <C-o>gj
+
+" Visual mode: maintain selection when indenting
+vnoremap < <gv
+vnoremap > >gv
+
+" Clear search highlight with <leader>c
+nnoremap <leader>c :nohlsearch<CR>
+
+"------------------------------------------------------------------------------
+" § Plugin Mappings
+"------------------------------------------------------------------------------
+" NERDTree: Toggle file explorer with <leader>n
+nnoremap <leader>n :NERDTreeToggle<CR>
+
+" Undotree: Toggle undo history viewer with <leader>u
+nnoremap <leader>u :UndotreeToggle<CR>
+
+" FZF: Fuzzy find files with <leader>f
+nnoremap <leader>f :FZF<CR>
+
+" Ripgrep: Project-wide search with <leader>rg
+nnoremap <leader>rg :Rg<CR>
+
+
+"==============================================================================
+" 5. PLUGIN CONFIGURATIONS
+"==============================================================================
+
+"------------------------------------------------------------------------------
+" § ALE (Asynchronous Linting Engine)
+"------------------------------------------------------------------------------
+" Set linters and fixers. Example for JavaScript/TypeScript:
+let g:ale_linters = {
+\   'javascript': ['eslint'],
+\   'typescript': ['eslint'],
+\}
+let g:ale_fixers = {
+\   'javascript': ['eslint'],
+\   'typescript': ['eslint'],
+\   '*': ['remove_trailing_lines', 'trim_whitespace'],
+\}
+let g:ale_fix_on_save = 1 " Automatically fix files on save.
+
+"------------------------------------------------------------------------------
+" § vim-indent-guides
+"------------------------------------------------------------------------------
+let g:indent_guides_enable_on_vim_startup = 1 " Enable indent guides on startup.
+
+"------------------------------------------------------------------------------
+" § vim-lsp
+"------------------------------------------------------------------------------
+" Python LSP (requires 'python-lsp-server' installed via pip)
+augroup LspPython
+    autocmd!
+    autocmd FileType python call lsp#register_server({
+        \ 'name': 'pylsp',
+        \ 'cmd': ['pylsp'],
+        \ 'root_uri': lsp#utils#get_root_uri(),
+        \ 'initialization_options': {},
+        \ 'allowlist': ['python'],
+        \ 'config': {
+        \     'pylsp': {
+        \         'plugins': {
+        \             'pycodestyle': {'enabled': v:true},
+        \             'pylint': {'enabled': v:false}, " Disable pylint if you prefer flake8/pycodestyle
+        \             'flake8': {'enabled': v:true},
+        \             'yapf': {'enabled': v:false}, " Disable yapf if you prefer black
+        \             'black': {'enabled': v:true},
+        \         }
+        \     }
+        \ }
+        \})
+augroup END
+
+" TypeScript/JavaScript LSP (requires 'typescript-language-server' installed via npm)
+augroup LspTypeScript
+    autocmd!
+    autocmd FileType typescript,typescriptreact,javascript,javascriptreact call lsp#register_server({
+        \ 'name': 'typescript-language-server',
+        \ 'cmd': ['typescript-language-server', '--stdio'],
+        \ 'root_uri': lsp#utils#get_root_uri(),
+        \ 'initialization_options': {},
+        \ 'allowlist': ['typescript', 'typescriptreact', 'javascript', 'javascriptreact'],
+        \})
+augroup END
+
+" General LSP settings (optional)
+let g:lsp_diagnostics_enabled = 1
+let g:lsp_diagnostics_delay = 200
+let g:lsp_diagnostics_signs_enabled = 1
+let g:lsp_diagnostics_virtual_text_enabled = 0 " Set to 1 for inline diagnostics
+
+" Keybindings for LSP (example)
+nnoremap <silent> gd <plug>(lsp-definition)
+nnoremap <silent> gr <plug>(lsp-references)
+nnoremap <silent> gh <plug>(lsp-hover)
+nnoremap <silent> gD <plug>(lsp-declaration)
+nnoremap <silent> gi <plug>(lsp-implementation)
+nnoremap <silent> gs <plug>(lsp-document-symbol)
+nnoremap <silent> gw <plug>(lsp-workspace-symbol)
+nnoremap <silent> <leader>rn <plug>(lsp-rename)
+nnoremap <silent> <leader>lf <plug>(lsp-format-buffer)
+command! LspFormatBuffer call lsp#format()
+
+"------------------------------------------------------------------------------
+" § markdown-preview.nvim
+"------------------------------------------------------------------------------
+" Enable LaTeX math rendering (uses KaTeX by default)
+let g:mkdp_preview_options = {
+    \ 'mkit': {},
+    \ 'katex': {},
+    \ 'uml': {},
+    \ 'maid': {},
+    \ 'disable_sync_scroll': 0,
+    \ 'sync_scroll_type': 'middle',
+    \ 'hide_yaml_meta': 1,
+    \ 'sequence_diagrams': {},
+    \ 'flowchart_diagrams': {},
+    \ 'content_editable': v:false,
+    \ 'disable_filename': 0,
+    \ 'toc': {}
+    \ }
+
+" Preview in browser (set to 1) or in vim preview window (set to 0)
+let g:mkdp_auto_close = 1
+let g:mkdp_refresh_slow = 0
+let g:mkdp_browser = ''  " Use system default browser
+
+" Key mapping for markdown preview
+nnoremap <leader>mp :MarkdownPreview<CR>
+nnoremap <leader>ms :MarkdownPreviewStop<CR>
+
+"------------------------------------------------------------------------------
+" § vim-startify (Dashboard)
+"------------------------------------------------------------------------------
+" Custom header with welcome message
+let g:startify_custom_header = [
+    \ '   ╦  ╦╦╔╦╗',
+    \ '   ╚╗╔╝║║║║',
+    \ '    ╚╝ ╩╩ ╩',
+    \ '',
+    \ '   Welcome to Vim!',
+    \ '',
+    \ ]
+
+" Show these items in order
+let g:startify_lists = [
+    \ { 'type': 'commands',  'header': ['   Quick Actions'] },
+    \ { 'type': 'files',     'header': ['   Recent Files'] },
+    \ { 'type': 'dir',       'header': ['   Recent Files in ' . getcwd()] },
+    \ { 'type': 'bookmarks', 'header': ['   Bookmarks'] },
+    \ ]
+
+" Custom commands that appear on the dashboard
+let g:startify_commands = [
+    \ { 't': ['Vim Tutorial (run :Tutor)', 'Tutor'] },
+    \ { 'h': ['Vim Help', 'help'] },
+    \ { 'c': ['Vim Cheatsheet', 'help quickref'] },
+    \ { 'p': ['Install/Update Plugins', 'PlugInstall'] },
+    \ { 'u': ['Check Plugin Updates', 'PlugUpdate'] },
+    \ ]
+
+" Bookmarks - add your common files/directories here
+let g:startify_bookmarks = [
+    \ { 'v': '~/.dotfiles/vim/vimrc' },
+    \ { 'z': '~/.zshrc' },
+    \ { 'b': '~/.bashrc' },
+    \ ]
+
+" Automatically update sessions
+let g:startify_session_autoload = 1
+let g:startify_session_persistence = 1
+let g:startify_change_to_vcs_root = 1
+
+" Number of recent files to show
+let g:startify_files_number = 8
+
+" Custom footer with helpful tips
+let g:startify_custom_footer = [
+    \ '',
+    \ '   Quick Tips (Colemak-DH):',
+    \ '   • Navigation: r(left) s(down) f(up) t(right)',
+    \ '   • Press number or letter to select an option',
+    \ '   • Press "q" to quit',
+    \ '   • Leader key is <Space>',
+    \ '   • <Space>n - Toggle file tree',
+    \ '   • <Space>ff - Fuzzy find files',
+    \ '   • <Space>mp - Markdown preview',
+    \ ]
+
+" Keybinding to open startify dashboard anytime
+nnoremap <leader>st :Startify<CR>
+
+"------------------------------------------------------------------------------
+" § vim-which-key (Keybinding Guide)
+"------------------------------------------------------------------------------
+" Enable vim-which-key on leader key press
+nnoremap <silent> <leader> :<c-u>WhichKey '<Space>'<CR>
+
+" Set timeout for which-key popup (in milliseconds)
+set timeoutlen=500
+
+" Define keybinding descriptions for which-key
+let g:which_key_map = {}
+
+" File operations
+let g:which_key_map.f = {
+      \ 'name' : '+file/find',
+      \ 'f' : ['FZF'                  , 'fuzzy-find-files'],
+      \ }
+
+" Navigation
+let g:which_key_map.n = ['NERDTreeToggle', 'file-tree']
+
+" Markdown
+let g:which_key_map.m = {
+      \ 'name' : '+markdown',
+      \ 'p' : ['MarkdownPreview'      , 'preview'],
+      \ 's' : ['MarkdownPreviewStop'  , 'stop-preview'],
+      \ }
+
+" LSP operations
+let g:which_key_map.l = {
+      \ 'name' : '+lsp',
+      \ 'f' : ['call lsp#format()'    , 'format-buffer'],
+      \ }
+
+" Git operations (via vim-fugitive and vim-signify)
+let g:which_key_map.g = {
+      \ 'name' : '+git',
+      \ 'i' : ['Git'                  , 'git-status'],
+      \ 'd' : ['Gdiff'                , 'git-diff'],
+      \ 'c' : ['Git commit'           , 'git-commit'],
+      \ 'b' : ['Git blame'            , 'git-blame'],
+      \ 'l' : ['Git log'              , 'git-log'],
+      \ 'p' : ['Git push'             , 'git-push'],
+      \ 's' : ['next-hunk'            , 'next-git-change'],
+      \ 'f' : ['prev-hunk'            , 'prev-git-change'],
+      \ }
+
+" Search operations
+let g:which_key_map.r = {
+      \ 'name' : '+search',
+      \ 'g' : ['Rg'                   , 'ripgrep-search'],
+      \ 'n' : ['call lsp#rename()'    , 'lsp-rename'],
+      \ }
+
+" UI operations
+let g:which_key_map.u = ['UndotreeToggle', 'undo-tree']
+let g:which_key_map.c = ['nohlsearch', 'clear-search-highlight']
+let g:which_key_map.s = {
+      \ 'name' : '+session/start',
+      \ 't' : ['Startify'             , 'startify-dashboard'],
+      \ }
+
+" Register the dictionary with which-key
+call which_key#register('<Space>', "g:which_key_map")
+
+" Show which-key popup automatically when leader is pressed
+autocmd! User vim-which-key call which_key#register('<Space>', 'g:which_key_map')
+
+"------------------------------------------------------------------------------
+" § vim-signify (Git Integration)
+"------------------------------------------------------------------------------
+" Update signs faster (default is 4000ms)
+set updatetime=100
+
+" Customize signs for git changes
+let g:signify_sign_add               = '+'
+let g:signify_sign_delete            = '-'
+let g:signify_sign_delete_first_line = '‾'
+let g:signify_sign_change            = '~'
+
+" Show signs for these VCS systems
+let g:signify_vcs_list = ['git', 'svn', 'hg']
+
+" Jump between hunks (changes) - Colemak-DH friendly (s=down, f=up)
+nmap <leader>gs <plug>(signify-next-hunk)
+nmap <leader>gf <plug>(signify-prev-hunk)
+
+" Hunk text object (allows operations on git hunks)
+omap ic <plug>(signify-motion-inner-pending)
+xmap ic <plug>(signify-motion-inner-visual)
+omap ac <plug>(signify-motion-outer-pending)
+xmap ac <plug>(signify-motion-outer-visual)
+
+"------------------------------------------------------------------------------
+" § vim-easymotion (Fast Navigation)
+"------------------------------------------------------------------------------
+" Use single leader key for easymotion (default is double)
+map <Leader> <Plug>(easymotion-prefix)
+
+" Quick word jump - Colemak-DH friendly
+nmap <Leader><Leader>w <Plug>(easymotion-w)
+nmap <Leader><Leader>b <Plug>(easymotion-b)
+
+" Quick line jump with <leader><leader>s/f (Colemak-DH: s=down, f=up)
+nmap <Leader><Leader>s <Plug>(easymotion-j)
+nmap <Leader><Leader>f <Plug>(easymotion-k)
+
+" Character search with <leader><leader>k/n (remapped from f/t)
+nmap <Leader><Leader>k <Plug>(easymotion-f)
+nmap <Leader><Leader>n <Plug>(easymotion-t)
+
+" Search with easymotion (like /)
+map <Leader>/ <Plug>(easymotion-sn)
+
+" Smartcase for easymotion (case insensitive unless uppercase used)
+let g:EasyMotion_smartcase = 1
+
+"------------------------------------------------------------------------------
+" § vim-commentary (Easy Commenting)
+"------------------------------------------------------------------------------
+" Works out of the box! Usage:
+" - 'gcc' to comment/uncomment a line
+" - 'gc' in visual mode to comment selection
+" - 'gc{motion}' to comment with motion (e.g., 'gcap' for paragraph)
+
+"------------------------------------------------------------------------------
+" § auto-pairs (Auto-close Brackets)
+"------------------------------------------------------------------------------
+" Works out of the box! Automatically closes:
+" - () [] {} '' "" `` and more
+" - Press <CR> inside brackets for nice indentation
+" - Use <M-p> (Alt-p) to toggle auto-pairs on/off

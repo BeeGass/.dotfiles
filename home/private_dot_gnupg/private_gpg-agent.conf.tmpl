@@ -1,0 +1,14 @@
+enable-ssh-support
+{{- if eq .chezmoi.os "darwin" }}
+pinentry-program /opt/homebrew/bin/pinentry-mac
+{{- else if .isTermux }}
+pinentry-program /data/data/com.termux/files/usr/bin/pinentry-curses
+{{- else if .isRpi }}
+pinentry-program /usr/bin/pinentry-curses
+{{- else }}
+pinentry-program /usr/bin/pinentry-gnome3
+{{- end }}
+default-cache-ttl 1800
+default-cache-ttl-ssh 1800
+max-cache-ttl 7200
+max-cache-ttl-ssh 7200
