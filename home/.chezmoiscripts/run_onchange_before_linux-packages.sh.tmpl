@@ -17,4 +17,15 @@ sudo apt install -y \
   || true
 
 ok "APT packages installed"
+
+section "Create Debian command aliases"
+if command -v fdfind >/dev/null 2>&1 && ! command -v fd >/dev/null 2>&1; then
+    step "Linking fdfind -> fd"
+    sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd
+fi
+if command -v batcat >/dev/null 2>&1 && ! command -v bat >/dev/null 2>&1; then
+    step "Linking batcat -> bat"
+    sudo ln -sf "$(command -v batcat)" /usr/local/bin/bat
+fi
+ok "Debian aliases configured"
 {{ end -}}
