@@ -1,0 +1,17 @@
+{{ if and (eq .chezmoi.os "linux") (not .isTermux) (not .isHpc) -}}
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+section "Fontconfig override"
+
+if [[ -f "$HOME/.dotfiles/fontconfig/30-google-sans-mono-mono.conf" ]]; then
+    mkdir -p "$HOME/.config/fontconfig/conf.d"
+    ln -sfn "$HOME/.dotfiles/fontconfig/30-google-sans-mono-mono.conf" \
+        "$HOME/.config/fontconfig/conf.d/30-google-sans-mono-mono.conf"
+    fc-cache -f >/dev/null 2>&1 || true
+    ok "Fontconfig override linked"
+else
+    note "Fontconfig override file not found; skipping"
+fi
+{{ end -}}

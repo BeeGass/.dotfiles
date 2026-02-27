@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+section "Configure fail2ban"
+src="$HOME/.dotfiles/fail2ban/jail.local"
+[[ ! -f "$src" ]] && { warn "jail.local not found"; exit 0; }
+
+{{ if eq .chezmoi.os "darwin" -}}
+command -v brew >/dev/null || { warn "No Homebrew"; exit 0; }
+brew list fail2ban &>/dev/null || brew install fail2ban
+dst="$(brew --prefix)/etc/fail2ban/jail.local"
+mkdir -p "$(dirname "$dst")"
+diff -q "$src" "$dst" &>/dev/null || cp "$src" "$dst"
+sudo brew services start fail2ban 2>/dev/null || sudo brew services restart fail2ban
+{{ else -}}
+command -v fail2ban-client >/dev/null || sudo apt install -y fail2ban
+dst="/etc/fail2ban/jail.local"
+diff -q "$src" "$dst" &>/dev/null || sudo cp "$src" "$dst"
+sudo systemctl enable fail2ban
+sudo systemctl restart fail2ban
+{{ end -}}
+ok "fail2ban configured"

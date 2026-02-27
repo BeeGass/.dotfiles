@@ -1,0 +1,19 @@
+{{ if and (eq .chezmoi.os "linux") (not .isHpc) (not .isTermux) -}}
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+section "Install Ghostty"
+
+if command -v ghostty >/dev/null 2>&1; then
+    ok "Ghostty already installed"
+    exit 0
+fi
+
+step "Running community Ghostty installer"
+if curl -fsSL https://ghostty.dev/install.sh | bash; then
+    ok "Ghostty installed"
+else
+    warn "Ghostty install failed; Kitty is available as fallback"
+fi
+{{ end -}}
