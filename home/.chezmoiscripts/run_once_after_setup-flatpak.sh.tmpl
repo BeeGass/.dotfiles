@@ -1,0 +1,45 @@
+{{ if and (eq .chezmoi.os "linux") (not .isHpc) (not .isTermux) -}}
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+section "Setup Flatpak and install applications"
+
+if ! command -v flatpak >/dev/null 2>&1; then
+    warn "Flatpak not found; skipping"
+    exit 0
+fi
+
+step "Adding Flathub repository"
+if flatpak remote-list | grep -q flathub; then
+    note "Flathub already configured"
+else
+    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    ok "Added Flathub repository"
+fi
+
+sudo flatpak update -y || warn "Flatpak update had warnings"
+
+apps=(
+    "md.obsidian.Obsidian:Obsidian"
+    "com.discordapp.Discord:Discord"
+    "com.valvesoftware.Steam:Steam"
+    "com.google.Chrome:Google Chrome"
+    "org.telegram.desktop:Telegram"
+    "com.spotify.Client:Spotify"
+    "com.slack.Slack:Slack"
+)
+
+for app in "${apps[@]}"; do
+    app_id="${app%%:*}"
+    app_name="${app#*:}"
+    step "Installing $app_name ($app_id)"
+    if flatpak list --app | grep -q "$app_id"; then
+        note "$app_name already installed"
+    else
+        sudo flatpak install -y flathub "$app_id" || warn "Failed to install $app_name"
+    fi
+done
+
+ok "Flatpak setup complete"
+{{ end -}}

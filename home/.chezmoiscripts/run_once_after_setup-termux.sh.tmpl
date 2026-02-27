@@ -1,0 +1,49 @@
+{{ if .isTermux -}}
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+section "Termux setup"
+
+step "Updating and installing packages"
+pkg update -y && pkg upgrade -y
+pkg install -y x11-repo science-repo game-repo root-repo || true
+
+pkgs=(
+    awk bat chafa coreutils curl eza fd file findutils fzf gh git gnupg grep jq
+    lsd neofetch neovim openssh openssl pinentry-curses ripgrep sed shellcheck shfmt tar
+    termux-api tmux tree unzip w3m wget which zsh
+)
+for p in "${pkgs[@]}"; do
+    if apt-cache show "$p" >/dev/null 2>&1; then
+        pkg install -y "$p"
+    else
+        warn "Skipping missing package: $p"
+    fi
+done
+
+# Nerd Font for Termux
+if [ ! -f "$HOME/.termux/font.ttf" ]; then
+    step "Installing Nerd Font for Termux"
+    mkdir -p "$HOME/.termux"
+    curl -fsSL -o "$HOME/.termux/font.ttf" \
+      "https://github.com/ryanoasis/nerd-fonts/raw/refs/heads/master/patched-fonts/JetBrainsMono/Regular/JetBrainsMonoNerdFont-Regular.ttf" || true
+fi
+
+# Zsh plugins
+step "Installing zsh plugins"
+PLUG_DIR="$HOME/.zsh/plugins"
+mkdir -p "$PLUG_DIR"
+if [[ ! -d "$PLUG_DIR/zsh-autosuggestions" ]]; then
+    git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions "$PLUG_DIR/zsh-autosuggestions"
+fi
+if [[ ! -d "$PLUG_DIR/zsh-syntax-highlighting" ]]; then
+    git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting "$PLUG_DIR/zsh-syntax-highlighting"
+fi
+
+if command -v termux-reload-settings >/dev/null 2>&1; then
+    termux-reload-settings || true
+fi
+
+ok "Termux setup complete"
+{{ end -}}

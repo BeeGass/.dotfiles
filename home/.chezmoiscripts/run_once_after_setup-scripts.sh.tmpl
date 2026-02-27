@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+mkdir -p "$HOME/.local/bin"
+for s in "$HOME/.dotfiles/scripts"/*; do
+  [[ -f "$s" ]] || continue
+  chmod +x "$s" || true
+  base="$(basename "$s")"
+  ln -sfn "$s" "$HOME/.local/bin/$base"
+  [[ "$base" == *.sh ]] && ln -sfn "$s" "$HOME/.local/bin/${base%.sh}"
+done

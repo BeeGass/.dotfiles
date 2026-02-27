@@ -1,0 +1,55 @@
+{{ if and (eq .chezmoi.os "linux") (not .isTermux) (not .isHpc) -}}
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+section "Install fonts"
+
+# JetBrainsMono Nerd Font
+if [ ! -f "$HOME/.local/share/fonts/JetBrainsMonoNerd.ttf" ]; then
+  mkdir -p "$HOME/.local/share/fonts"
+  step "Downloading JetBrainsMono Nerd Font"
+  curl -fsSL -o /tmp/JBMNF.zip \
+    "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+  unzip -o /tmp/JBMNF.zip -d "$HOME/.local/share/fonts" >/dev/null 2>&1 || true
+  rm -f /tmp/JBMNF.zip
+  fc-cache -f >/dev/null 2>&1 || true
+  ok "Installed JetBrainsMono Nerd Font"
+else
+  note "JetBrainsMono Nerd Font already installed"
+fi
+
+# Google Sans Mono
+fonts_root="$HOME/.local/share/fonts"
+mono_dir="$fonts_root/GoogleSansMono"
+sans_dir="$fonts_root/GoogleSans"
+
+install_google_font() {
+    local repo="$1" dest="$2" label="$3"
+    if [[ -d "$dest" ]]; then
+        local count
+        count=$(find "$dest" -maxdepth 1 \( -name '*.ttf' -o -name '*.otf' \) 2>/dev/null | wc -l)
+        if [[ "$count" -gt 0 ]]; then
+            note "$label already installed ($count files)"
+            return
+        fi
+    fi
+    step "Cloning $label via SSH"
+    local tmp
+    tmp="$(mktemp -d)"
+    if git clone --depth 1 "$repo" "$tmp/repo" >/dev/null 2>&1; then
+        mkdir -p "$dest"
+        find "$tmp/repo" -type f \( -iname '*.ttf' -o -iname '*.otf' \) -exec cp -f {} "$dest"/ \;
+        ok "$label installed"
+    else
+        warn "SSH clone failed for $label; skipping"
+    fi
+    rm -rf "$tmp"
+}
+
+install_google_font "git@github.com:mehant-kr/Google-Sans-Mono.git" "$mono_dir" "Google Sans Mono"
+install_google_font "git@github.com:hprobotic/Google-Sans-Font.git" "$sans_dir" "Google Sans"
+
+fc-cache -f >/dev/null 2>&1 || true
+ok "Fonts ready"
+{{ end -}}

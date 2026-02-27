@@ -1,0 +1,23 @@
+{{ if and (eq .chezmoi.os "linux") (not .isHpc) (not .isTermux) -}}
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+section "Setup Snap and install VS Code"
+
+if ! command -v snap >/dev/null 2>&1; then
+    warn "Snap not found; skipping"
+    exit 0
+fi
+
+step "Installing VS Code via snap"
+if snap list 2>/dev/null | grep -q "^code "; then
+    note "VS Code already installed"
+else
+    if sudo snap install code --classic; then
+        ok "Installed VS Code"
+    else
+        warn "Failed to install VS Code"
+    fi
+fi
+{{ end -}}

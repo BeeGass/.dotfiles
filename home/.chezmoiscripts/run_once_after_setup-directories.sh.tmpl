@@ -1,0 +1,27 @@
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+section "User directories"
+
+mkdir -p "$HOME/Projects" "$HOME/Papers"
+ok "Ensured Projects and Papers directories exist"
+
+{{ if eq .chezmoi.os "linux" -}}
+# Add to GTK bookmarks (for GNOME Files/Nautilus sidebar)
+bookmarks_file="$HOME/.config/gtk-3.0/bookmarks"
+mkdir -p "$(dirname "$bookmarks_file")"
+touch "$bookmarks_file"
+
+projects_bookmark="file://$HOME/Projects Projects"
+papers_bookmark="file://$HOME/Papers Papers"
+
+if ! grep -Fxq "$projects_bookmark" "$bookmarks_file" 2>/dev/null; then
+    echo "$projects_bookmark" >> "$bookmarks_file"
+    ok "Added Projects bookmark"
+fi
+if ! grep -Fxq "$papers_bookmark" "$bookmarks_file" 2>/dev/null; then
+    echo "$papers_bookmark" >> "$bookmarks_file"
+    ok "Added Papers bookmark"
+fi
+{{ end -}}
