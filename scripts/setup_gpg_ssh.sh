@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 # ~/.dotfiles/scripts/setup_gpg_ssh.sh
-# Idempotent GPG+SSH bootstrap that SYMLINKS configs from ~/.dotfiles/gnupg/.
-# - Picks per-OS gpg-agent.conf from: linux-/macos-/termux-gpg-agent.conf
-# - Optionally links gpg.conf and dirmngr.conf if present (no file generation)
-# - Wires gpg-agent as SSH agent, exports SSH pubkey from auth subkey
-# - Adds zsh snippet and ssh IdentityAgent drop-in
+# Idempotent GPG+SSH bootstrap.
+# Config files (gpg-agent.conf, gpg.conf, dirmngr.conf) are deployed by chezmoi.
+# This script handles operations that require a YubiKey physically inserted:
+# - Imports GPG public keys from GitHub
+# - Probes smartcard and loads key stubs
+# - Exports SSH public key from auth subkey
+# - Verifies gpg-agent SSH socket is working
+# - Configures macOS sshd port (40822) if needed
 # - TTY-aware colored output; no emojis
 
 set -euo pipefail
@@ -16,7 +19,6 @@ set -euo pipefail
 : "${SSH_PUB_OUT:=$HOME/.ssh/id_gpg_yubikey.pub}"
 : "${QUIET:=1}"             # 1=minimal output, 0=verbose
 : "${AUTO_GIT_CONFIG:=0}"   # 1 to set git signing key automatically if discoverable
-: "${GNUPG_DOT:=$HOME/.dotfiles/gnupg}"
 
 # -------- colors / log --------------------------------------------------------
 _use_color=1
@@ -79,48 +81,32 @@ ensure_dirs() {
   ok "Directories exist and are secure"
 }
 
-backup_if_necessary() {
-  local dst="$1"
-  if [[ -e "$dst" && ! -L "$dst" ]]; then
-    local bak="${dst}.backup.$(date +%Y%m%d_%H%M%S)"
-    mv -f "$dst" "$bak"
-    note "Backed up existing file to $bak"
-  fi
-}
 
-symlink_if_present() {
-  local src="$1" dst="$2"
-  if [[ -f "$src" ]]; then
-    backup_if_necessary "$dst"
-    ln -sfn "$src" "$dst"
-    ok "Linked $(basename "$src") → ${dst/#$HOME/~}"
-    return 0
+verify_configs() {
+  section "Verifying GnuPG configs (deployed by chezmoi)"
+  local reload_needed=0
+
+  if [[ -f "$HOME/.gnupg/gpg-agent.conf" ]]; then
+    ok "gpg-agent.conf present"
   else
-    warn "Missing $(basename "$src"); skipped"
-    return 1
+    warn "gpg-agent.conf missing -- run 'chezmoi apply' first"
+    reload_needed=1
   fi
-}
 
-link_configs() {
-  section "Linking GnuPG configs from dotfiles"
-  local os="$1"
-  local agent_src=""
-  case "$os" in
-    macOS)       agent_src="$GNUPG_DOT/macos-gpg-agent.conf"  ;;
-    Termux)      agent_src="$GNUPG_DOT/termux-gpg-agent.conf" ;;
-    RaspberryPi) agent_src="$GNUPG_DOT/rpi-gpg-agent.conf"    ;;
-    Linux)       agent_src="$GNUPG_DOT/linux-gpg-agent.conf"  ;;
-  esac
-
-  local linked_any=0
-  if symlink_if_present "$agent_src" "$HOME/.gnupg/gpg-agent.conf"; then linked_any=1; fi
-  symlink_if_present "$GNUPG_DOT/gpg.conf"      "$HOME/.gnupg/gpg.conf"      || true
-  symlink_if_present "$GNUPG_DOT/dirmngr.conf"  "$HOME/.gnupg/dirmngr.conf"  || true
-
-  if [[ $linked_any -eq 1 ]]; then
-    step "Reloading gpg-agent to pick up changes"
-    gpgconf --kill gpg-agent || true
+  if [[ -f "$HOME/.gnupg/gpg.conf" ]]; then
+    ok "gpg.conf present"
+  else
+    warn "gpg.conf missing -- run 'chezmoi apply' first"
   fi
+
+  if [[ -f "$HOME/.gnupg/dirmngr.conf" ]]; then
+    ok "dirmngr.conf present"
+  else
+    warn "dirmngr.conf missing -- run 'chezmoi apply' first"
+  fi
+
+  step "Reloading gpg-agent"
+  gpgconf --kill gpg-agent || true
 }
 
 launch_agent_env() {
@@ -134,47 +120,37 @@ launch_agent_env() {
 }
 
 ensure_login_snippet() {
-  section "Ensuring zsh login snippet"
+  section "Verifying zsh GPG/SSH snippet"
   local f="$HOME/.dotfiles/zsh/90-local.zsh"
-  mkdir -p "$(dirname "$f")"; touch "$f"; chmod 600 "$f"
-  local start="# BEGIN gpg-ssh"
-  local end="# END gpg-ssh"
-  local block="$start
-if command -v gpgconf >/dev/null 2>&1; then
-  export GPG_TTY=\$(tty 2>/dev/null || echo /dev/tty)
-  gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1 || true
-  export SSH_AUTH_SOCK=\"\$(gpgconf --list-dirs agent-ssh-socket)\"
-  gpgconf --launch gpg-agent >/dev/null 2>&1 || true
-fi
-$end"
-  if grep -qF "$start" "$f" 2>/dev/null; then
-    awk -v RS= -v ORS= -v s="$start" -v e="$end" -v r="$block"$'\n' \
-      '{ gsub(s"[\\s\\S]*?"e"\n?", r) }1' "$f" > "$f.tmp" && mv -f "$f.tmp" "$f"
-    ok "Updated managed block in ${f/#$HOME/~}"
+  if [[ -f "$f" ]] && grep -q "gpgconf" "$f" 2>/dev/null; then
+    ok "GPG/SSH wiring present in ${f/#$HOME/~} (deployed by chezmoi)"
   else
-    printf "\n%s\n" "$block" >> "$f"
-    ok "Appended managed block to ${f/#$HOME/~}"
+    warn "GPG/SSH wiring missing from ${f/#$HOME/~} -- run 'chezmoi apply' first"
   fi
 }
 
 ensure_ssh_identityagent() {
-  section "Configuring ssh IdentityAgent"
-  local sock; sock="$(gpgconf --list-dirs agent-ssh-socket)"
+  section "Verifying ssh IdentityAgent"
   local drop="$HOME/.ssh/config.d/10-gpg-agent.conf"
-  printf "Host *\n  IdentityAgent %s\n" "$sock" > "$drop"
-  chmod 600 "$drop"
-  ok "Wrote ${drop/#$HOME/~}"
+  if [[ -f "$drop" ]]; then
+    ok "IdentityAgent drop-in present (deployed by chezmoi)"
+  else
+    warn "IdentityAgent drop-in missing at ${drop/#$HOME/~}"
+    warn "Run 'chezmoi apply' to create it, or generating fallback now"
+    mkdir -p "$HOME/.ssh/config.d"
+    local sock; sock="$(gpgconf --list-dirs agent-ssh-socket)"
+    printf "# GPG agent as SSH agent -- generated by setup_gpg_ssh.sh fallback\nHost *\n  IdentityAgent %s\n" "$sock" > "$drop"
+    chmod 600 "$drop"
+    ok "Wrote fallback ${drop/#$HOME/~}"
+  fi
 
   local sshconf="$HOME/.ssh/config"
-  if [[ -f "$sshconf" && ! -L "$sshconf" ]]; then
-    if ! grep -qE '^\s*Include\s+~/.ssh/config\.d/\*\.conf' "$sshconf"; then
-      { echo ""; echo "Include ~/.ssh/config.d/*.conf"; } >> "$sshconf"
-      ok "Included config.d in ${sshconf/#$HOME/~}"
+  if [[ -f "$sshconf" ]]; then
+    if grep -qE '^\s*Include\s+~/.ssh/config\.d/\*\.conf' "$sshconf"; then
+      ok "~/.ssh/config includes config.d"
     else
-      note "${sshconf/#$HOME/~} already includes config.d"
+      warn "~/.ssh/config missing Include directive for config.d"
     fi
-  else
-    note "~/.ssh/config is symlink or missing; ensure your repo config includes: Include ~/.ssh/config.d/*.conf"
   fi
 }
 
@@ -286,7 +262,7 @@ main() {
   require_bins
   ensure_dirs
   local os; os="$(detect_os)"
-  link_configs "$os"
+  verify_configs
   launch_agent_env
   ensure_login_snippet
   ensure_ssh_identityagent

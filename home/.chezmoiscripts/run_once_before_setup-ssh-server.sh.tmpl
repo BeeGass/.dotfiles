@@ -44,6 +44,25 @@ else
     ok "Symlinked SSH config to /etc/ssh/sshd_config.d/"
 fi
 
+step "Configuring macOS sshd port"
+services="/etc/services"
+target_port="40822"
+
+if grep -qE "^ssh[[:space:]]+${target_port}/" "$services" 2>/dev/null; then
+    ok "sshd already configured for port $target_port"
+else
+    step "Patching $services to use port $target_port for ssh"
+    if sudo sed -i '' "s/^ssh[[:space:]]*22\//ssh              ${target_port}\//" "$services"; then
+        ok "Updated ssh port in $services"
+        step "Reloading sshd to apply port change"
+        sudo launchctl unload /System/Library/LaunchDaemons/ssh.plist 2>/dev/null || true
+        sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist 2>/dev/null || true
+        ok "sshd reloaded on port $target_port"
+    else
+        warn "Failed to patch $services (may need manual intervention)"
+    fi
+fi
+
 step "Adding YubiKey SSH public key to authorized_keys"
 mkdir -p "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"

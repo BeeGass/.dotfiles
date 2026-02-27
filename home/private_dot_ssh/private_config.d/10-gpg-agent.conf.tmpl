@@ -1,0 +1,6 @@
+# GPG agent as SSH agent -- deployed by chezmoi
+# Socket path is OS-dependent; do not edit manually
+Host *
+{{ if and (eq .chezmoi.os "linux") (not .isTermux) }}    IdentityAgent /run/user/{{ output "id" "-u" | trim }}/gnupg/S.gpg-agent.ssh
+{{ else }}    IdentityAgent {{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent.ssh
+{{ end -}}
