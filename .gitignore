@@ -9,6 +9,7 @@ git/gitconfig.local
 git/private-*
 **/local/*
 **/*.local
+kitty/local.conf
 
 # Sensitive data
 *.pem

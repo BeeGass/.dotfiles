@@ -309,4 +309,80 @@ setup_ssh_server_common() {
   else
     warn "SSH may not be listening on port 40822; check configuration"
   fi
+
+  setup_fail2ban
+}
+
+setup_fail2ban() {
+  section "Configure fail2ban"
+
+  if (( NO_SUDO )); then
+    warn "Skipping fail2ban setup (--no-sudo)"
+    return
+  fi
+
+  local os_type
+  os_type="$(detect_os)"
+  local src="$DOTFILES_DIR/fail2ban/jail.local"
+
+  if [[ ! -f "$src" ]]; then
+    warn "fail2ban jail config not found at $src; skipping"
+    return
+  fi
+
+  if [[ "$os_type" == "macOS" ]]; then
+    # macOS: install via Homebrew, manage with brew services
+    if ! have fail2ban-client; then
+      if have brew; then
+        step "Installing fail2ban via Homebrew"
+        brew install fail2ban
+      else
+        warn "Homebrew not found; cannot install fail2ban"
+        return
+      fi
+    fi
+
+    local brew_prefix
+    brew_prefix="$(brew --prefix)"
+    local dst="$brew_prefix/etc/fail2ban/jail.local"
+    mkdir -p "$brew_prefix/etc/fail2ban"
+
+    if [[ -f "$dst" ]] && diff -q "$src" "$dst" >/dev/null 2>&1; then
+      note "fail2ban jail.local already up to date"
+    else
+      step "Deploying fail2ban jail.local"
+      cp "$src" "$dst"
+      ok "Copied $src -> $dst"
+    fi
+
+    step "Enabling fail2ban via brew services"
+    sudo brew services start fail2ban 2>/dev/null || sudo brew services restart fail2ban
+    ok "fail2ban configured (macOS)"
+  else
+    # Linux: install via apt, manage with systemctl
+    if ! have fail2ban-client; then
+      if have_apt; then
+        step "Installing fail2ban"
+        run "sudo apt install -y fail2ban"
+      else
+        warn "fail2ban not found and no apt available; skipping"
+        return
+      fi
+    fi
+
+    local dst="/etc/fail2ban/jail.local"
+
+    if [[ -f "$dst" ]] && diff -q "$src" "$dst" >/dev/null 2>&1; then
+      note "fail2ban jail.local already up to date"
+    else
+      step "Deploying fail2ban jail.local"
+      run "sudo cp \"$src\" \"$dst\""
+      ok "Copied $src -> $dst"
+    fi
+
+    step "Enabling and restarting fail2ban"
+    run "sudo systemctl enable fail2ban"
+    run "sudo systemctl restart fail2ban"
+    ok "fail2ban configured (Linux)"
+  fi
 }

@@ -40,7 +40,9 @@ config.cursor_blink_rate = 500
 config.enable_tab_bar = false
 
 -- Performance
-config.enable_wayland = false
+if wezterm.target_triple():find('linux') then
+  config.enable_wayland = false
+end
 config.front_end = "OpenGL"
 config.max_fps = 120
 config.scrollback_lines = 10000

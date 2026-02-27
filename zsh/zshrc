@@ -18,14 +18,3 @@ source ~/.dotfiles/zsh/90-local.zsh 2>/dev/null  # Local overrides (not in git)
 export PATH="$HOME/.local/bin:$PATH"
 
 export PATH="$HOME/bin:$PATH"
-
-# >>> juliaup initialize >>>
-
-# !! Contents within this block are managed by juliaup !!
-
-path=('/home/beegass/.juliaup/bin' $path)
-export PATH
-
-# <<< juliaup initialize <<<
-
-. "$HOME/.local/share/../bin/env"
