@@ -5,11 +5,11 @@
 zsh/90-local.zsh
 zsh/*.local
 zsh/private/*
-git/gitconfig.local
-git/private-*
 **/local/*
 **/*.local
-kitty/local.conf
+
+# Old claude/ directory (now managed by chezmoi under home/dot_claude/)
+claude/
 
 # Sensitive data
 *.pem
