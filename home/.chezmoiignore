@@ -1,0 +1,22 @@
+README.md
+justfile
+docs/**
+.chezmoiroot
+
+{{ if ne .chezmoi.os "linux" }}
+.config/picom/**
+.config/systemd/**
+{{ end }}
+
+{{ if not .isTermux }}
+.termux/**
+{{ end }}
+
+{{ if .isHpc }}
+.claude/**
+.config/kitty/**
+.config/wezterm/**
+.config/ghostty/**
+.config/picom/**
+.config/systemd/**
+{{ end }}

@@ -1,0 +1,108 @@
+# Source: https://github.com/Chick2D/neofetch-themes/
+# Do consider checking out the repository, it has a ton of great configs like this.
+
+# Made by Chick (BlockFetch)
+
+# Customization Wiki https://github.com/dylanaraps/neofetch/wiki/Customizing-Info
+
+print_info() {
+    info "   ${cl0}██ OS${reset}"               os
+    info "   ${cl1}██ Host${reset}"             host
+    info "   ${cl3}██ Distro${reset}"           distro
+    info "   ${cl4}██ Kernel${reset}"           kernel
+    info "   ${cl2}██ CPU${reset}"              cpu
+    info "   ${cl9}██ GPU${reset}"              gpu
+    info "   ${cl8}██ Terminal${reset}"         term
+    info "   ${cl5}██ Terminal Font${reset}"    font
+    info "   ${cl7}██ WM${reset}"               wm
+    info "   ${cl1}██ Shell${reset}"            shell
+    info "   ${cl3}██ Packages${reset}"         packages
+    info cols
+}
+
+kernel_shorthand="on"
+distro_shorthand="on"
+os_arch="on"
+uptime_shorthand="on"
+memory_percent="on"
+package_managers="on"
+shell_path="off"
+shell_version="on"
+speed_type="bios_limit"
+speed_shorthand="on"
+cpu_brand="on"
+cpu_speed="off"
+cpu_cores="logical"
+cpu_temp="off"
+gpu_brand="on"
+gpu_type="all"
+refresh_rate="on"
+gtk_shorthand="on"
+gtk2="on"
+gtk3="on"
+public_ip_host="https://ident.me"
+public_ip_timeout=2
+disk_show=('/')
+music_player="vlc"
+song_format="%artist% - %title%"
+song_shorthand="off"
+colors=(distro)
+bold="off"
+underline_enabled="off"
+underline_char="-"
+separator=""
+color_blocks="off"
+block_range=(0 31) # Colorblocks
+
+# Nice looking colors
+# These are ANSI escape codes for colors.
+reset="\033[0m"
+# Brand bases
+cl0="\033[38;2;66;133;244m"   # Google Blue
+cl1="\033[38;2;234;67;53m"    # Google Red
+cl2="\033[38;2;52;168;83m"    # Google Green
+cl3="\033[38;2;251;188;5m"    # Google Yellow
+
+# Tints/Shades to keep it lively
+cl4="\033[38;2;104;157;246m"  # Blue Light 20%
+cl5="\033[38;2;53;106;195m"   # Blue Dark 20%
+cl6="\033[38;2;93;185;117m"   # Green Light 20%
+cl7="\033[38;2;42;134;66m"    # Green Dark 20%
+cl8="\033[38;2;252;201;55m"   # Yellow Light 20%
+cl9="\033[38;2;187;54;42m"    # Red Dark 20%
+cl10="\033[38;2;95;99;104m"   # Google Gray 700 (UI text)
+
+block_width=3
+block_height=1
+
+bar_char_elapsed="-"
+bar_char_total="="
+bar_border="on"
+bar_length=15
+bar_color_elapsed="distro"
+bar_color_total="distro"
+
+cpu_display="on"
+memory_display="on"
+battery_display="on"
+disk_display="on"
+
+image_backend="w3m"
+# image_source="auto"
+image_size="auto"
+image_loop="off"
+
+ascii_distro="auto"
+ascii_colors=(distro)
+ascii_bold="on"
+
+thumbnail_dir="${XDG_CACHE_HOME:-${HOME}/.cache}/thumbnails/neofetch"
+crop_mode="normal"
+crop_offset="center"
+
+gap=2
+
+yoffset=0
+xoffset=0
+
+stdout="off"

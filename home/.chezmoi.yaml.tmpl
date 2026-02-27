@@ -1,0 +1,21 @@
+{{- $isTermux := or (env "TERMUX_VERSION") (lookPath "termux-info") -}}
+{{- $isRpi := false -}}
+{{- if and (eq .chezmoi.os "linux") (not $isTermux) -}}
+{{-   if stat "/proc/device-tree/model" -}}
+{{-     $isRpi = true -}}
+{{-   end -}}
+{{- end -}}
+{{- $machineType := "" -}}
+{{- if $isTermux -}}
+{{-   $machineType = "termux" -}}
+{{- else if $isRpi -}}
+{{-   $machineType = "server" -}}
+{{- else -}}
+{{-   $machineType = promptChoiceOnce . "machineType" "Machine type" (list "desktop" "server" "hpc") -}}
+{{- end }}
+
+data:
+  machineType: {{ $machineType | quote }}
+  isTermux: {{ $isTermux }}
+  isRpi: {{ $isRpi }}
+  isHpc: {{ eq $machineType "hpc" }}
