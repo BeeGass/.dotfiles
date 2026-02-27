@@ -1,0 +1,110 @@
+{{ if and (eq .chezmoi.os "linux") (not .isHpc) (not .isTermux) -}}
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+section "Configure SSH server"
+
+if ! have sshd && ! [[ -x /usr/sbin/sshd ]]; then
+    warn "sshd not found; ensure openssh-server is installed"
+    exit 0
+fi
+ok "openssh-server installed"
+
+step "Creating SSH config drop-in directory"
+sudo mkdir -p /etc/ssh/sshd_config.d
+
+ssh_config_source="$HOME/.dotfiles/ssh/99-yubikey-only.conf"
+ssh_config_target="/etc/ssh/sshd_config.d/99-yubikey-only.conf"
+
+if [[ ! -f "$ssh_config_source" ]]; then
+    warn "Source SSH config not found: $ssh_config_source"
+    exit 0
+fi
+
+step "Symlinking YubiKey SSH configuration"
+needs_restart=0
+
+if [[ -L "$ssh_config_target" ]]; then
+    current_target="$(readlink -f "$ssh_config_target" 2>/dev/null)"
+    expected_target="$(readlink -f "$ssh_config_source" 2>/dev/null)"
+    if [[ "$current_target" == "$expected_target" ]]; then
+        note "SSH config symlink correct"
+    else
+        sudo ln -sf "$ssh_config_source" "$ssh_config_target"
+        ok "Fixed SSH config symlink"
+        needs_restart=1
+    fi
+elif [[ -f "$ssh_config_target" ]]; then
+    sudo rm -f "$ssh_config_target"
+    sudo ln -sf "$ssh_config_source" "$ssh_config_target"
+    ok "Created SSH config symlink"
+    needs_restart=1
+else
+    sudo ln -sf "$ssh_config_source" "$ssh_config_target"
+    ok "Symlinked SSH config to /etc/ssh/sshd_config.d/"
+    needs_restart=1
+fi
+
+step "Verifying main sshd_config has Include directive"
+if [[ -f /etc/ssh/sshd_config ]] && ! grep -q "^Include /etc/ssh/sshd_config.d/\*.conf" /etc/ssh/sshd_config; then
+    warn "Include directive not found in sshd_config; may need manual configuration"
+else
+    ok "Include directive present"
+fi
+
+step "Disabling SSH socket activation (conflicts with custom port)"
+if systemctl is-enabled ssh.socket >/dev/null 2>&1; then
+    sudo systemctl stop ssh.socket
+    sudo systemctl disable ssh.socket
+    ok "Disabled ssh.socket"
+    needs_restart=1
+else
+    note "ssh.socket not enabled"
+fi
+
+step "Adding YubiKey SSH public key to authorized_keys"
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+if [[ -f "$HOME/.ssh/id_gpg_yubikey.pub" ]]; then
+    if ! grep -qF "$(cat "$HOME/.ssh/id_gpg_yubikey.pub")" "$HOME/.ssh/authorized_keys" 2>/dev/null; then
+        cat "$HOME/.ssh/id_gpg_yubikey.pub" >> "$HOME/.ssh/authorized_keys"
+        chmod 600 "$HOME/.ssh/authorized_keys"
+        ok "Added YubiKey SSH public key to authorized_keys"
+    else
+        note "YubiKey SSH key already in authorized_keys"
+    fi
+else
+    warn "YubiKey SSH public key not found; run GPG setup first"
+fi
+
+step "Enabling SSH service"
+if systemctl is-enabled ssh >/dev/null 2>&1 || systemctl is-enabled sshd >/dev/null 2>&1; then
+    note "SSH service enabled"
+else
+    sudo systemctl enable ssh || sudo systemctl enable sshd
+    ok "Enabled SSH service"
+fi
+
+if systemctl is-active ssh >/dev/null 2>&1 || systemctl is-active sshd >/dev/null 2>&1; then
+    note "SSH service running"
+    if (( needs_restart )); then
+        step "Restarting SSH due to config changes"
+        sudo systemctl restart ssh || sudo systemctl restart sshd
+        ok "Restarted SSH service"
+    fi
+else
+    step "Starting SSH service"
+    sudo systemctl start ssh || sudo systemctl start sshd
+    ok "Started SSH service"
+fi
+
+step "Verifying SSH is listening on port 40822"
+if sudo ss -tlnp 2>/dev/null | grep -q ":40822"; then
+    ok "SSH server listening on port 40822"
+else
+    warn "SSH may not be listening on port 40822; check configuration"
+fi
+
+ok "SSH server configuration complete"
+{{ end -}}

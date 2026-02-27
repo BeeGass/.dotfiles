@@ -1,0 +1,23 @@
+{{ if and (eq .chezmoi.os "linux") (not .isHpc) (not .isTermux) -}}
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+section "Picom user service"
+
+mkdir -p "$HOME/.config/picom"
+if [[ -f "$HOME/.dotfiles/picom/picom.conf" ]]; then
+    ln -sfn "$HOME/.dotfiles/picom/picom.conf" "$HOME/.config/picom/picom.conf"
+    ok "Linked picom.conf"
+fi
+
+mkdir -p "$HOME/.config/systemd/user"
+if [[ -f "$HOME/.dotfiles/systemd/user/picom.service" ]]; then
+    ln -sfn "$HOME/.dotfiles/systemd/user/picom.service" "$HOME/.config/systemd/user/picom.service"
+    ok "Linked systemd user unit for picom"
+fi
+
+systemctl --user daemon-reload || true
+systemctl --user enable --now picom.service || warn "Could not start picom (likely non-X11 session)"
+ok "Picom service configured"
+{{ end -}}

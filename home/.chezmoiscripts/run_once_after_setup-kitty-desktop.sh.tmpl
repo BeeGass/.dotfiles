@@ -1,0 +1,45 @@
+{{ if and (eq .chezmoi.os "linux") (not .isHpc) (not .isTermux) -}}
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+section "Kitty desktop integration"
+
+appdir="$HOME/.local/kitty.app"
+localbin="$HOME/.local/bin"
+applications_dir="$HOME/.local/share/applications"
+icon_path="$appdir/share/icons/hicolor/256x256/apps/kitty.png"
+desktop_main="$applications_dir/kitty.desktop"
+desktop_open="$applications_dir/kitty-open.desktop"
+
+if [[ ! -d "$appdir" ]]; then
+    step "Installing Kitty via official installer"
+    curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin launch=n
+fi
+
+step "Ensuring directories"
+mkdir -p "$localbin" "$applications_dir"
+
+step "Linking kitty/kitten into PATH"
+ln -sf "$appdir/bin/kitty" "$localbin/kitty"
+ln -sf "$appdir/bin/kitten" "$localbin/kitten"
+
+step "Copying desktop entries"
+cp -f "$appdir/share/applications/kitty.desktop" "$desktop_main"
+cp -f "$appdir/share/applications/kitty-open.desktop" "$desktop_open" 2>/dev/null || true
+
+step "Rewriting Exec/Icon paths"
+sed -i "s|^Icon=kitty$|Icon=${icon_path}|g" "$desktop_main"
+sed -i "s|^Exec=kitty|Exec=${appdir}/bin/kitty|g" "$desktop_main"
+if [ -f "$desktop_open" ]; then
+    sed -i "s|^Icon=kitty$|Icon=${icon_path}|g" "$desktop_open"
+    sed -i "s|^Exec=kitty|Exec=${appdir}/bin/kitty|g" "$desktop_open"
+fi
+
+step "Making xdg-terminal-exec prefer kitty"
+mkdir -p "$HOME/.config"
+echo 'kitty.desktop' > "$HOME/.config/xdg-terminals.list"
+update-desktop-database "$applications_dir" >/dev/null 2>&1 || true
+
+ok "Kitty desktop integration complete"
+{{ end -}}
