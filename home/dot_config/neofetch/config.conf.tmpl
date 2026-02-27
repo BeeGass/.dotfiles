@@ -1,0 +1,5 @@
+{{- if .isTermux -}}
+{{ include "neofetch-termux" }}
+{{- else -}}
+{{ include "neofetch-desktop" }}
+{{- end -}}
