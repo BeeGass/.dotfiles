@@ -6,6 +6,13 @@ section "Configure fail2ban"
 src="$HOME/.dotfiles/fail2ban/jail.local"
 [[ ! -f "$src" ]] && { warn "jail.local not found"; exit 0; }
 
+# Skip if sudo is not available (non-interactive environment)
+if ! sudo -n true 2>/dev/null; then
+  warn "sudo not available without password; skipping fail2ban setup"
+  warn "Run 'just rerun-scripts' in a terminal with sudo access to complete setup"
+  exit 0
+fi
+
 {{ if eq .chezmoi.os "darwin" -}}
 command -v brew >/dev/null || { warn "No Homebrew"; exit 0; }
 brew list fail2ban &>/dev/null || brew install fail2ban

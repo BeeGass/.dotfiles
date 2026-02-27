@@ -1,10 +1,67 @@
-{{ if and (eq .chezmoi.os "linux") (not .isHpc) (not .isTermux) -}}
+{{ if and (not .isHpc) (not .isTermux) -}}
 #!/bin/bash
 set -euo pipefail
 source "$HOME/.dotfiles/scripts/lib-common.sh"
 
+# Skip if sudo is not available (non-interactive environment)
+if ! sudo -n true 2>/dev/null; then
+  warn "sudo not available without password; skipping SSH server setup"
+  warn "Run 'just rerun-scripts' in a terminal with sudo access to complete setup"
+  exit 0
+fi
+
 section "Configure SSH server"
 
+{{ if eq .chezmoi.os "darwin" -}}
+# macOS SSH server setup
+step "Configuring SSH server drop-in directory"
+sudo mkdir -p /etc/ssh/sshd_config.d
+
+ssh_config_source="$HOME/.dotfiles/ssh/99-yubikey-only.conf"
+ssh_config_target="/etc/ssh/sshd_config.d/99-yubikey-only.conf"
+
+if [[ ! -f "$ssh_config_source" ]]; then
+    warn "Source SSH config not found: $ssh_config_source"
+    exit 0
+fi
+
+step "Deploying YubiKey SSH configuration"
+if [[ -L "$ssh_config_target" ]]; then
+    current_target="$(readlink -f "$ssh_config_target" 2>/dev/null)"
+    expected_target="$(readlink -f "$ssh_config_source" 2>/dev/null)"
+    if [[ "$current_target" == "$expected_target" ]]; then
+        note "SSH config symlink correct"
+    else
+        sudo ln -sf "$ssh_config_source" "$ssh_config_target"
+        ok "Fixed SSH config symlink"
+    fi
+elif [[ -f "$ssh_config_target" ]]; then
+    sudo rm -f "$ssh_config_target"
+    sudo ln -sf "$ssh_config_source" "$ssh_config_target"
+    ok "Created SSH config symlink"
+else
+    sudo ln -sf "$ssh_config_source" "$ssh_config_target"
+    ok "Symlinked SSH config to /etc/ssh/sshd_config.d/"
+fi
+
+step "Adding YubiKey SSH public key to authorized_keys"
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+if [[ -f "$HOME/.ssh/id_gpg_yubikey.pub" ]]; then
+    if ! grep -qF "$(cat "$HOME/.ssh/id_gpg_yubikey.pub")" "$HOME/.ssh/authorized_keys" 2>/dev/null; then
+        cat "$HOME/.ssh/id_gpg_yubikey.pub" >> "$HOME/.ssh/authorized_keys"
+        chmod 600 "$HOME/.ssh/authorized_keys"
+        ok "Added YubiKey SSH public key to authorized_keys"
+    else
+        note "YubiKey SSH key already in authorized_keys"
+    fi
+else
+    warn "YubiKey SSH public key not found; run GPG setup first"
+fi
+
+ok "SSH server configuration complete (macOS)"
+{{ else -}}
+# Linux SSH server setup
 if ! have sshd && ! [[ -x /usr/sbin/sshd ]]; then
     warn "sshd not found; ensure openssh-server is installed"
     exit 0
@@ -107,4 +164,5 @@ else
 fi
 
 ok "SSH server configuration complete"
+{{ end -}}
 {{ end -}}

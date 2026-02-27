@@ -6,5 +6,7 @@ for s in "$HOME/.dotfiles/scripts"/*; do
   chmod +x "$s" || true
   base="$(basename "$s")"
   ln -sfn "$s" "$HOME/.local/bin/$base"
-  [[ "$base" == *.sh ]] && ln -sfn "$s" "$HOME/.local/bin/${base%.sh}"
+  if [[ "$base" == *.sh ]]; then
+    ln -sfn "$s" "$HOME/.local/bin/${base%.sh}"
+  fi
 done

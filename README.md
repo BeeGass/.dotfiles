@@ -1,6 +1,6 @@
 # BeeGass Dotfiles
 
-Streamlined, idempotent setup for shells, editors, terminals, fonts, SSH/GPG, and daily CLI tooling across macOS, Ubuntu/Linux, NixOS, Raspberry Pi, HPC clusters, and Termux. Uses clean symlinks, keeps backups, and stays out of your secrets.
+Declarative, idempotent dotfiles managed by [chezmoi](https://www.chezmoi.io/) across macOS, Ubuntu/Linux, Raspberry Pi, HPC clusters, and Termux. OS-aware templates handle per-platform differences (credential helpers, pinentry programs, PATH seeds) so one source tree works everywhere.
 
 ---
 
@@ -9,8 +9,8 @@ Streamlined, idempotent setup for shells, editors, terminals, fonts, SSH/GPG, an
 **Bootstrap (recommended for bare machines)**
 
 ```bash
-# Installs git + just, clones repo, runs `just install`
-curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/bootstrap.sh | bash
+# Installs git + chezmoi, clones repo, applies dotfiles
+curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/bootstrap.sh | bash
 ```
 
 **Using `just` (if repo is already cloned)**
@@ -18,17 +18,17 @@ curl -fsSL https://raw.githubusercontent.com/BeeGass/.dotfiles/main/install/boot
 ```bash
 git clone https://github.com/BeeGass/.dotfiles ~/.dotfiles
 cd ~/.dotfiles
-just install
+just apply
 ```
 
 **Manual (no `just` required)**
 
 ```bash
 git clone https://github.com/BeeGass/.dotfiles ~/.dotfiles
-~/.dotfiles/install/install.sh
+chezmoi init --apply --source ~/.dotfiles
 ```
 
-> Re-run the installer any time; it's safe. Existing non-symlink files are timestamp-backed up.
+> Re-run `just apply` or `chezmoi apply` any time -- it's idempotent. Files marked `create_` are never overwritten once written.
 
 ---
 
@@ -38,43 +38,64 @@ git clone https://github.com/BeeGass/.dotfiles ~/.dotfiles
 * **Ubuntu/Linux** (apt; Kitty + Ghostty)
 * **Raspberry Pi** (apt; headless-friendly)
 * **HPC clusters** (no sudo; user-space tools only)
-* **NixOS** (snippet provided; minor manual steps)
 * **Termux (Android)** (pkg; ergonomic mobile defaults)
+
+---
+
+## How chezmoi works here
+
+chezmoi manages dotfiles declaratively: source files under `home/` are deployed to `~` using naming conventions that control behavior:
+
+| Prefix/Suffix | Effect |
+|---------------|--------|
+| `dot_` | Becomes a `.` in the target name |
+| `private_` | File deployed with mode `0600` |
+| `create_` | Written once; never overwritten by subsequent applies |
+| `exact_` | Directory is mirrored exactly (extra files removed) |
+| `symlink_` | Creates a symbolic link instead of a copy |
+| `.tmpl` | Processed as a Go template with machine-specific data |
+
+During `chezmoi init`, the machine is classified interactively:
+
+```yaml
+# ~/.config/chezmoi/chezmoi.yaml (auto-generated)
+data:
+  machineType: "desktop"    # desktop | server | hpc
+  machineName: "Matrix"     # Manifold | Tensor | Matrix | Hessian | Jacobian | Vector
+  isTermux: false
+  isRpi: false
+  isHpc: false
+```
+
+Templates use these values for OS and machine-specific branching (credential helpers, pinentry programs, PATH seeds, package lists, etc.).
 
 ---
 
 ## Task runner (`just`)
 
-[`just`](https://github.com/casey/just) is the primary interface for managing the dotfiles. All recipes are listed with `just --list`.
+[`just`](https://github.com/casey/just) is the primary interface. All recipes are listed with `just --list`.
 
-### Install recipes
-
-| Recipe | Description |
-|--------|-------------|
-| `just install` | Auto-detect platform and run main installer |
-| `just install-ubuntu` | Ubuntu/Debian desktop |
-| `just install-macos` | macOS (Homebrew) |
-| `just install-rpi` | Raspberry Pi |
-| `just install-hpc` | HPC cluster (no sudo, user-space only) |
-
-### Refresh recipes
+### Chezmoi recipes
 
 | Recipe | Description |
 |--------|-------------|
-| `just refresh` | Full idempotent refresh |
-| `just refresh-fast` | Skip slow operations (Python installs, tmux updates) |
-| `just refresh-dry` | Preview changes without applying |
-| `just refresh-python` | Refresh only the Python/uv section |
-| `just refresh-node` | Refresh only the Node.js section |
-| `just refresh --only <section>` | Run a specific section |
-
-Available sections: `path`, `local`, `directories`, `cleanup`, `backups`, `omp`, `zsh`, `python`, `node`, `tmux`, `ssh`, `snap`, `claude`, `codex`, `gemini`, `opencode`, `flatpak`, `tailscale`, `sf`, `git`, `fonts`, `secrets`
+| `just apply` | Apply dotfiles to this machine |
+| `just update` | Pull latest changes from git and apply |
+| `just diff` | Show what would change |
+| `just status` | Show managed file status |
+| `just edit <file>` | Edit a chezmoi-managed file (opens source + target) |
+| `just sync` | Re-add modified target files back to chezmoi source |
+| `just bootstrap` | Bootstrap on a fresh machine (`chezmoi init --apply`) |
+| `just dry-run` | Dry-run apply (preview changes without modifying) |
+| `just rerun-scripts` | Force re-run all one-time setup scripts |
+| `just chezmoi-doctor` | Run chezmoi diagnostics |
 
 ### Secrets recipes
 
 | Recipe | Description |
 |--------|-------------|
 | `just secrets-check` | Verify connectivity to pass store and secrets server |
+| `just secrets-load` | Load secrets into current session |
 | `just secrets-init` | Initialize pass store with GPG key |
 | `just secrets-push` | Push pass store to git remote |
 | `just secrets-pull` | Pull pass store from git remote |
@@ -83,143 +104,113 @@ Available sections: `path`, `local`, `directories`, `cleanup`, `backups`, `omp`,
 
 | Recipe | Description |
 |--------|-------------|
-| `just clean` | Remove all dotfiles-managed state (with confirmation) |
-| `just clean --dry-run` | Preview what clean would remove |
-| `just doctor` | Run health checks |
-| `just update-omp` | Update Oh My Posh |
-| `just update-python` | Update Python environment |
-| `just update-node` | Update Node.js environment |
-| `just update-tmux` | Update tmux plugins |
-| `just clean-backups` | Remove old `*.backup.*` files |
-
-### Common flags
-
-All install and refresh scripts accept these flags:
-
-| Flag | Description |
-|------|-------------|
-| `--no-sudo` | Skip commands requiring sudo |
-| `--dry-run` | Preview changes without applying |
-| `--fast` | Skip slow operations |
-| `-v`, `--verbose` | Increase verbosity |
-
-Every script still runs standalone without `just` installed (e.g. `bash install/refresh.sh --only python`).
+| `just doctor` | Run system health checks |
+| `just yk-status` | Show YubiKey status |
+| `just yk-refresh` | Refresh YubiKey GPG configuration |
+| `just yk-lock` | Lock YubiKey (clear PIN caches) |
 
 ---
 
-## What the installer does
+## What chezmoi deploys
 
-1. **Detects OS** and writes flags to `${XDG_STATE_HOME:-~/.local/state}/dotfiles/flags` and an OS snapshot to `os.env`.
+### 1. Config files (via templates and copies)
 
-2. **Symlinks config**
+* `~/.zshrc`, `~/.zshenv` (OS-aware PATH template), `~/.gitconfig` (OS-aware credential helper)
+* `~/.vimrc`, `~/.tmux.conf`, `~/.ssh/config`, `~/.gnupg/*`
+* `~/.config/{kitty,wezterm,ghostty,oh-my-posh,neofetch,nvim,picom,systemd}`
+* `~/.claude/` (settings, hooks, docs, templates, commands)
+* `~/.termux/` (Termux only)
+* `~/.config/nvim/init.vim` symlinked to `~/.vimrc`
 
-   * `~/.zshenv` (early), `~/.zshrc`, `~/.gitconfig`, Vim/Neovim, tmux, ssh, kitty/wezterm/ghostty.
-   * Binaries in `~/.dotfiles/scripts/*` linked into `~/.local/bin` (both with and without `.sh`).
-   * Convenience commands: `dots-install`, `dots-refresh`, `dots-bootstrap`, `dots-clean`.
-   * Backs up any existing non-symlink targets as `*.backup.YYYYMMDD_HHMMSS`.
+### 2. Machine-local overrides (create-once)
 
-3. **Installs platform packages**
+* `~/.dotfiles/zsh/90-local.zsh` -- GPG/SSH agent wiring, environment variables, PATH additions. Written once with `0600` permissions; never overwritten.
+* `~/.config/kitty/local.conf` -- tmux autostart, Linux-specific X11/Nerd Font config. Written once; edit freely.
 
-   * macOS: Homebrew + common CLIs, Kitty/Ghostty.
-   * Ubuntu: apt CLIs, Kitty, Ghostty (or Kitty fallback).
-   * Raspberry Pi: apt CLIs, headless tools.
-   * HPC: user-space only (uv, cargo tools, fzf, oh-my-posh).
-   * NixOS: declarative snippet to add packages.
-   * Termux: pkg CLIs, Zsh plugins.
+### 3. Platform packages (via chezmoi scripts)
 
-4. **Developer tooling**
+* **macOS**: Homebrew taps, brews, and casks (defined in `.chezmoidata.yaml`)
+* **Ubuntu/Linux**: apt packages (defined in `.chezmoidata.yaml`)
+* **HPC**: user-space only (uv, cargo tools, fzf, oh-my-posh)
+* **Termux**: pkg packages, Zsh plugins, Nerd font
 
-   * **oh-my-posh** prompt + theme at `~/.config/oh-my-posh/config.json`.
-   * **uv** (Python launcher/PM); installs CPython **3.11-3.14**; common tools (`ruff`, `mypy`, `pytest`, `pre-commit`, `python-lsp-server`).
-   * **Node** via `nvm` (latest LTS), plus `@google/gemini-cli`, `typescript`, `typescript-language-server`.
-   * **Optional**: tailscale, SF Compute CLI if available.
+### 4. Developer tooling (via chezmoi scripts)
 
-5. **Fonts & terminals**
+* **oh-my-posh** prompt + theme at `~/.config/oh-my-posh/config.json`
+* **uv** (Python launcher/PM); installs CPython 3.11-3.14; tools: `ruff`, `mypy`, `pytest`, `pre-commit`, `python-lsp-server`
+* **Node** via `nvm` (latest LTS), plus `@google/gemini-cli`, `typescript`, `typescript-language-server`
+* **tmux** plugin manager (TPM) auto-installed
 
-   * JetBrains Mono Nerd Font (platform-appropriate install).
-   * Optional Google Sans / Google Sans Mono (Ubuntu installs via SSH cloning; see notes).
-   * Kitty, Ghostty, WezTerm configured; right-click paste; tmux autostart; 80% opacity; F11 fullscreen.
+### 5. System setup (via chezmoi scripts, run once)
 
-6. **GPG + SSH**
-
-   * `scripts/setup_gpg_ssh.sh` links `gnupg/*` configs per-OS, wires **gpg-agent as SSH agent**, exports SSH pubkey from your auth subkey, and drops a `~/.ssh/config.d/10-gpg-agent.conf` with `IdentityAgent`.
-   * Helpers: `yk-status` (diagnostics), `yk-lock` (clear pin caches), `sfssh`/`sftunnel` (SF Compute wrappers).
-
-7. **Quality of life**
-
-   * `scripts/doctor.sh` sanity checks.
-   * `scripts/neofetch_random.sh` aliasable to `nf` (random image, backend auto-pick); optional image pack fetched with `uvx gdown`.
-   * `systemd --user` picom service on X11 with app-opacity rules.
+* SSH server hardening (`99-yubikey-only.conf` deployed to `/etc/ssh/sshd_config.d/`)
+* fail2ban configuration
+* Kitty desktop integration (Linux)
+* Ghostty installation
+* Picom compositor service (Linux/X11)
+* Font installation (JetBrains Mono Nerd Font, Google Sans)
+* Flatpak apps, Snap packages (Linux)
+* Utility scripts linked to `~/.local/bin/`
 
 ---
 
-## Safety & design choices
+## Safety and design choices
 
-* **Idempotent**: re-running is fine; safe backups for pre-existing files.
+* **Idempotent**: `chezmoi apply` is safe to re-run. Create-once files (`create_` prefix) are never overwritten.
 * **No secrets in repo**: machine-local, private overrides live in `zsh/90-local.zsh` (auto-created, `0600`).
-* **Credential helpers**: macOS: `osxkeychain`/`git-credential-manager`; Ubuntu: `libsecret`; HPC/Termux: `cache`.
+* **Credential helpers**: macOS: `osxkeychain`; Linux: `store`. Configured via template.
+* **GPG agent config**: consolidated from 4 per-OS files into a single template selecting the correct pinentry program.
 * **Termux ergonomics**: ESC/back mapping, extra keys, Nerd font, Zsh plugins.
-* **Shared library**: all scripts source `install/lib.sh` for logging, helpers, and OS detection -- no duplicated code.
+* **Runtime-adaptive configs**: tmux, ssh, wezterm, kitty, and zsh plugin files handle OS differences at runtime (no templates needed).
+* **Package lists**: centralized in `home/.chezmoidata.yaml`, used by `run_onchange_` scripts that re-run when the data file changes.
 
 ---
 
-## Install, update, refresh
+## First install
 
-### First install
+Use the **bootstrap one-liner**, `just apply`, or `chezmoi init --apply`. Chezmoi will:
 
-Use the **bootstrap one-liner**, `just install`, or clone + run `install/install.sh`. The script will:
-
-* write OS flags/env snapshot
-* symlink configs
-* install OS packages + core CLIs
-* set up dev tools (uv, node, prompt)
-* configure Git identity + credential helper
-* bootstrap GPG/SSH if `gpg` exists
+* Prompt for machine type (desktop/server/hpc) and machine name
+* Deploy all config files from `home/` to `~`
+* Run platform-specific package installation scripts
+* Set up developer tools (uv, node, prompt)
+* Configure GPG/SSH agent
+* Create machine-local override files (once)
 
 Open a new shell or `source ~/.zshrc`.
 
-### Refresh an existing machine
+## Update an existing machine
 
 ```bash
-just refresh          # or: ~/.dotfiles/install/refresh.sh
-just refresh-fast     # skip slow operations
-just refresh-dry      # preview only
+just update           # git pull + chezmoi apply
+just apply            # apply without pulling
+just dry-run          # preview what would change
 ```
 
-* Ensures `~/.zshrc` loads repo config (no-op if symlinked)
-* (Re)installs/updates oh-my-posh, Zsh plugins, Node CLIs, `uv`, CPython
-* Scaffolds a minimal prompt config if missing
-
-### Health check
+## Health check
 
 ```bash
 just doctor           # or: ~/.dotfiles/scripts/doctor.sh
+just chezmoi-doctor   # chezmoi-specific diagnostics
 ```
 
-### Clean (undo all changes)
+## Force re-run setup scripts
+
+If you modify a `run_once_*` chezmoi script and need it to run again:
 
 ```bash
-just clean --dry-run  # preview what would be removed
-just clean            # remove all dotfiles-managed state (prompts for confirmation)
+just rerun-scripts    # clears script state, then applies
 ```
-
-The clean script:
-* Removes all symlinks pointing into the dotfiles tree
-* Removes shell modifications (loader stubs, PATH exports)
-* Removes OS flags, plugins, fonts, desktop entries
-* **Keeps** git identity and SSH config by default (use `--clean-git` / `--clean-ssh` to remove)
-* Supports `--keep-tools` to preserve user-space tools (uv, cargo, nvm, etc.)
-
-After cleaning, run the correct installer for your platform.
 
 ---
 
 ## HPC cluster setup
 
-For shared clusters without sudo access:
+For shared clusters without sudo access, select `hpc` as the machine type during `chezmoi init`:
 
 ```bash
-just install-hpc      # or: bash install/hpc-install.sh
+chezmoi init --apply BeeGass/.dotfiles
+# Select: Machine type → hpc
 ```
 
 This installs everything to `~/.local/bin` and `~/.cargo/bin`:
@@ -227,6 +218,7 @@ This installs everything to `~/.local/bin` and `~/.cargo/bin`:
 * Falls back to `.bash_profile` exec stub if `chsh` is denied
 * Installs uv + Python, oh-my-posh, Rust toolchain, cargo tools (bat, fd, rg, delta, eza), fzf
 * Creates an HPC-specific `90-local.zsh` with Slurm aliases and module stubs
+* Skips GUI applications (kitty, wezterm, ghostty, claude) via `.chezmoiignore`
 
 ---
 
@@ -265,7 +257,7 @@ The `load-secrets` function (defined in `zsh/50-functions.zsh`) tries `pass` fir
 ### Setup
 
 * **Secrets server setup**: see [`docs/secrets-server-setup.md`](docs/secrets-server-setup.md)
-* **Client setup**: `pass` is installed automatically by the platform installers (Ubuntu, macOS, RPi). Run `just secrets-init` to initialize the store.
+* **Client setup**: `pass` is installed automatically by the chezmoi package scripts (macOS Homebrew, Ubuntu apt). Run `just secrets-init` to initialize the store.
 * **HPC**: no setup needed beyond SSH access to the secrets server
 
 ---
@@ -277,25 +269,24 @@ The `load-secrets` function (defined in `zsh/50-functions.zsh`) tries `pass` fir
 ~/.dotfiles/scripts/setup_gpg_ssh.sh --regen --git
 
 # Verify sockets, keys, and card
-yk-status
+just yk-status
 
 # Force a lock (clear caches)
-yk-lock
+just yk-lock
 ```
 
 **Notes**
 
-* Per-OS agent config is symlinked from `gnupg/*-gpg-agent.conf`.
-* Shell snippet appended to `zsh/90-local.zsh` ensures `GPG_TTY` + SSH agent wiring on login.
+* Per-OS agent config is generated by chezmoi from `home/private_dot_gnupg/private_gpg-agent.conf.tmpl`.
+* Shell snippet in `zsh/90-local.zsh` ensures `GPG_TTY` + SSH agent wiring on login.
 * SSH config includes `Include ~/.ssh/config.d/*.conf` and ships a `10-gpg-agent.conf` drop-in.
 
 ---
 
-## Fonts & Fontconfig
+## Fonts and Fontconfig
 
 * **JetBrains Mono Nerd**: installed per-platform for glyphs used by the prompt.
 * **Google Sans / Google Sans Mono**: optional, **installed via SSH cloning** on Ubuntu:
-
   * `git@github.com:mehant-kr/Google-Sans-Mono.git`
   * `git@github.com:hprobotic/Google-Sans-Font.git`
   * If you don't have GitHub SSH access on that machine, the step is skipped.
@@ -307,7 +298,7 @@ yk-lock
 
 ### Kitty (Linux/macOS)
 
-* 80% opacity; right-click paste; `shell tmux -u new-session -A -s main` autostart.
+* 80% opacity; right-click paste; tmux autostart (via `local.conf`).
 * Fonts respect Fontconfig fallbacks: Google Sans Mono, JetBrains Mono, SF Mono, Symbols Nerd Mono.
 * Key: `F11` toggles fullscreen.
 
@@ -334,108 +325,89 @@ yk-lock
 | New window / switch         | `Ctrl+Space` `c` / `n` `p` `0..9`                       |       |
 | Reload config               | `Ctrl+Space` `r`                                        |       |
 
-Plugins via TPM are declared at the bottom; first-run will auto-install TPM.
+Plugins via TPM are declared at the bottom of `tmux.conf`; first-run will auto-install TPM.
 
 ---
 
-## Scripts (selected)
+## Scripts
 
-| Script                              | What it does                                                                                      |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `install/install.sh`                | Main installer; supports `--remote` when piped from curl.                                         |
-| `install/bootstrap.sh`              | Curl-able bootstrap: installs git + just, clones repo, runs `just install`.                       |
-| `install/clean.sh`                  | Removes all dotfiles-managed symlinks, configs, and tools (with confirmation).                    |
-| `install/refresh.sh`                | Idempotent refresh; dispatches to modular section scripts in `install/sections/`.                 |
-| `install/lib.sh`                    | Shared library: logging, OS detection, helpers. Sourced by all install scripts.                   |
-| `install/ubuntu-install.sh`         | apt packages; Kitty install + desktop entries; Ghostty; fonts; picom service.                     |
-| `install/macos-install.sh`          | Homebrew packages; Kitty CLI wiring; macOS applet "Open Here in Kitty".                           |
-| `install/rpi-install.sh`            | Raspberry Pi setup; apt packages; SSH server hardening.                                           |
-| `install/hpc-install.sh`            | HPC cluster setup; no sudo; user-space tools to `~/.local/bin`.                                   |
-| `install/termux-install.sh`         | pkg packages; Zsh plugins; Nerd font; Termux ergonomics.                                          |
-| `install/nixos-install.sh`          | NixOS snippet; guidance.                                                                          |
-| `scripts/setup_gpg_ssh.sh`          | Wire gpg-agent -> SSH; per-OS agent conf; export SSH pub; login snippet; optional git signing.     |
-| `scripts/yk-status.sh`              | Inspect sockets, keys, sshcontrol, and optional remote test.                                      |
-| `scripts/yk-lock.sh`                | Clear agent caches; restart scdaemon/gpg-agent.                                                   |
-| `scripts/neofetch_random.sh`        | Smart backend choice; draws random image alongside neofetch.                                      |
-| `scripts/load-secrets.sh`           | Hybrid secrets loader: pass (GPG) with SSH fallback to secrets server.                            |
-| `scripts/doctor.sh`                 | Health checks for PATH, nvim, prompt, git helper, tmux, SF CLI.                                   |
-| `scripts/repo_to_text`              | Emit a text snapshot of repo structure/files with a globby ignore.                                |
-| `scripts/sfssh`, `scripts/sftunnel` | Convenience wrappers around SF Compute CLI.                                                       |
+| Script | What it does |
+| --- | --- |
+| `scripts/setup_gpg_ssh.sh` | Wire gpg-agent -> SSH; per-OS agent conf; export SSH pub; login snippet; optional git signing |
+| `scripts/yk-status.sh` | Inspect sockets, keys, sshcontrol, and optional remote test |
+| `scripts/yk-lock.sh` | Clear agent caches; restart scdaemon/gpg-agent |
+| `scripts/yk-gpg-refresh.sh` | Refresh YubiKey GPG configuration |
+| `scripts/neofetch_random.sh` | Smart backend choice; draws random image alongside neofetch |
+| `scripts/load-secrets.sh` | Hybrid secrets loader: pass (GPG) with SSH fallback to secrets server |
+| `scripts/doctor.sh` | Health checks for PATH, nvim, prompt, git helper, tmux, SF CLI |
+| `scripts/repo_to_text` | Emit a text snapshot of repo structure/files with a globby ignore |
+| `scripts/sfssh`, `scripts/sftunnel` | Convenience wrappers around SF Compute CLI |
+| `scripts/lib-common.sh` | Shared logging library (section, step, ok, warn, err) used by chezmoi scripts |
 
-> All scripts are linked into `~/.local/bin` (both with and without `.sh`).
+> All scripts are linked into `~/.local/bin` (both with and without `.sh`) by the `run_once_after_setup-scripts.sh` chezmoi script.
 
 ---
 
 ## Picom (Linux/X11)
 
 * Config at `picom/picom.conf` enforces app-specific opacity (kitty/wezterm at 80%).
-* `systemd --user` unit `systemd/user/picom.service` is linked and **ExecCondition**-gated to X11.
+* `systemd --user` unit `systemd/user/picom.service` is deployed and **ExecCondition**-gated to X11.
 
 ---
 
-## Directory layout (abridged)
+## Directory layout
 
 ```
 .dotfiles/
-  justfile                           # Task runner entry point
-  install/
-    lib.sh                           # Shared library (logging, helpers, OS detect)
-    install.sh                       # Main installer
-    bootstrap.sh                     # Curl-able bootstrap
-    clean.sh                         # Undo all changes
-    refresh.sh                       # Idempotent refresh (dispatches to sections/)
-    ubuntu-install.sh                # Ubuntu/Debian
-    macos-install.sh                 # macOS
-    rpi-install.sh                   # Raspberry Pi
-    hpc-install.sh                   # HPC clusters
-    termux-install.sh                # Termux (Android)
-    nixos-install.sh                 # NixOS
-    sections/                        # Modular refresh sections
-      path.sh  local.sh  directories.sh  cleanup.sh  backups.sh
-      omp.sh   zsh.sh    python.sh       node.sh     tmux.sh
-      ssh.sh   snap.sh   claude.sh       codex.sh    gemini.sh
-      opencode.sh  flatpak.sh  tailscale.sh  sf.sh   git.sh
-      fonts.sh  secrets.sh
-  fontconfig/30-google-sans-mono-mono.conf
-  ghostty/config         kitty/kitty.conf      wezterm/wezterm.lua
-  git/gitconfig          ssh/{config,sshd_config_secure}
-  gnupg/*.conf           systemd/user/picom.service
-  scripts/*              tmux/tmux.conf
-  neofetch/*.conf        oh-my-posh/config.json
-  termux/*               vim/{vimrc,pyproject.toml}
-  zsh/*                  .pre-commit-config.yaml
+  .chezmoiroot                        # Points chezmoi source to home/
+  bootstrap.sh                        # Curl-able bootstrap: installs git + chezmoi
+  justfile                            # Task runner entry point
+  home/                               # chezmoi source directory
+    .chezmoi.yaml.tmpl                # Machine config template (type, name, OS flags)
+    .chezmoidata.yaml                 # Package lists (Homebrew, apt)
+    .chezmoiignore                    # OS-conditional ignores
+    .chezmoiscripts/                  # chezmoi run scripts
+      run_onchange_before_*           # Package installers (re-run when data changes)
+      run_once_before_*               # System setup (SSH server, fail2ban)
+      run_once_after_*                # Dev tools, fonts, apps, scripts
+    .chezmoitemplates/                # Shared template fragments
+      neofetch-desktop                # Desktop neofetch config
+      neofetch-termux                 # Termux neofetch config
+    dot_zshrc                         # -> ~/.zshrc
+    dot_zshenv.tmpl                   # -> ~/.zshenv (OS-aware PATH)
+    dot_gitconfig.tmpl                # -> ~/.gitconfig (OS-aware credential helper)
+    dot_vimrc                         # -> ~/.vimrc
+    dot_tmux.conf                     # -> ~/.tmux.conf
+    private_dot_ssh/                  # -> ~/.ssh/ (mode 0600)
+    private_dot_gnupg/                # -> ~/.gnupg/ (mode 0600, templated gpg-agent)
+    dot_config/                       # -> ~/.config/
+      kitty/ ghostty/ wezterm/        # Terminal configs
+      oh-my-posh/ neofetch/ nvim/     # Tool configs
+      picom/ systemd/user/            # Linux-only (ignored on macOS via .chezmoiignore)
+    dot_claude/                       # -> ~/.claude/
+    dot_termux/                       # -> ~/.termux/ (Termux only)
+    dot_dotfiles/zsh/                 # -> ~/.dotfiles/zsh/
+      create_private_90-local.zsh.tmpl  # Machine-local overrides (write once)
+  zsh/                                # Shell config sourced at runtime from ~/.dotfiles/zsh/
+    00-init.zsh ... 80-tools.zsh      # Numbered files sourced in order by ~/.zshrc
+  scripts/                            # Utility scripts -> ~/.local/bin/
+  fontconfig/ fail2ban/ ssh/          # Configs deployed by chezmoi scripts to system paths
+  neofetch/ picom/ systemd/           # Source files for chezmoi templates and scripts
+  docs/                               # Documentation
 ```
-
----
-
-## Uninstall / rollback
-
-Use the clean script to remove all dotfiles-managed state:
-
-```bash
-just clean --dry-run   # preview first
-just clean             # prompts for confirmation
-```
-
-Options:
-* `--keep-tools` -- keep uv, cargo, nvm, oh-my-posh, fzf
-* `--clean-git` -- also remove git identity (kept by default)
-* `--clean-ssh` -- also remove SSH config (kept by default)
-* `--no-sudo` -- skip system-level removals
-* `--dry-run` -- preview without changes
-
-Or manually: remove symlinks you don't want under `~`, or delete `~/.dotfiles` + hand-pick from timestamped backups.
 
 ---
 
 ## FAQ / Notes
 
-* **Where do machine-local secrets go?** `zsh/90-local.zsh` (auto-created; `0600`).
+* **Where do machine-local secrets go?** `zsh/90-local.zsh` (auto-created by chezmoi; `0600`).
 * **Why Google Sans?** Optional aesthetics; Fontconfig rule ensures mono spacing for terminals.
-* **Can I skip fonts?** Yes -- Ubuntu task will skip Google Sans if SSH cloning fails.
+* **Can I skip fonts?** Yes -- the font script will skip Google Sans if SSH cloning fails.
 * **What does `doctor.sh` warn about?** It checks presence of core tools and advises on credential helpers and Nerd Fonts.
-* **Do I need `just` installed?** No -- all scripts run standalone. `just` is the preferred interface but not a hard dependency.
-* **How do I undo a wrong install?** Run `just clean` (or `bash install/clean.sh`), then run the correct installer.
+* **Do I need `just` installed?** No -- `chezmoi apply` works directly. `just` is a convenience wrapper.
+* **How do I add a new config file?** Place it under `home/` with the appropriate chezmoi naming, then `just apply`.
+* **How do I force a setup script to re-run?** `just rerun-scripts` clears chezmoi script state and re-applies.
+* **What if I edit a deployed file directly?** Use `just sync` (`chezmoi re-add`) to pull changes back into the source.
 
 ---
 

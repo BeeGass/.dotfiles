@@ -6,7 +6,7 @@ This guide covers setting up Jacobian (Raspberry Pi 5) as a dedicated key server
 
 * Jacobian is accessible via Tailscale (hostname: `Jacobian`, or `Jacobian.tailf7d439.ts.net`)
 * SSH access is configured with YubiKey-only authentication (see `docs/ssh-yubikey-setup.md`)
-* The dotfiles are installed on Jacobian (`just install-rpi` or `bash install/rpi-install.sh`)
+* The dotfiles are installed on Jacobian (`chezmoi init --apply BeeGass/.dotfiles`)
 
 ## 1. Create the key directory
 

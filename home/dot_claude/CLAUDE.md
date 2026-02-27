@@ -6,7 +6,7 @@
 - Prioritize correctness and maintainability over cleverness
 
 ## Environment
-- **Dotfiles**: `~/.dotfiles/` (symlinked to target locations)
+- **Dotfiles**: `~/.dotfiles/` (managed by chezmoi; deployed to `~` via `chezmoi apply`)
 - **Primary workstation**: `manifold` (192.168.68.10) - RTX 5090, 64GB, Ubuntu 25.10
 - **Secondary workstation**: `tensor` (192.168.68.11) - RTX 3080, 32GB
 - See `~/.claude/docs/hardware.md` for full homelab specs

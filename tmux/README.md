@@ -32,20 +32,22 @@ tmux ls
 tmux attach -t work
 
 # Detach from session
-Ctrl+a d
+Ctrl+Space d
 ```
 
 ## Installation
 
-The tmux configuration is automatically linked by the install script:
+The tmux configuration is deployed automatically by chezmoi:
 
 ```bash
-# From the dotfiles directory
-./install.sh
+# Apply dotfiles (includes tmux.conf)
+just apply
 
-# Or manually
-ln -sf ~/.dotfiles/tmux/tmux.conf ~/.tmux.conf
+# Or directly with chezmoi
+chezmoi apply
 ```
+
+The config is deployed to `~/.tmux.conf` from the chezmoi source at `home/dot_tmux.conf`.
 
 ## Key Concepts
 
@@ -70,9 +72,11 @@ Session (workspace)
 
 ### The Prefix Key
 
-All tmux commands start with the **prefix key**: `Ctrl+a`
+All tmux commands start with the **prefix key**: `Ctrl+Space`
 
-To send a literal `Ctrl+a` to applications, press `Ctrl+a` twice.
+To send a literal `Ctrl+Space` to applications, press `Ctrl+Space` twice.
+
+> Note: Many tmux guides use `Ctrl+b` (the default) or `Ctrl+a`. This config uses `Ctrl+Space` instead.
 
 ## Essential Commands
 
@@ -84,50 +88,50 @@ To send a literal `Ctrl+a` to applications, press `Ctrl+a` twice.
 | `tmux ls` | List all sessions |
 | `tmux attach -t name` | Attach to named session |
 | `tmux kill-session -t name` | Kill named session |
-| `Ctrl+a d` | Detach from current session |
-| `Ctrl+a s` | List and switch sessions |
-| `Ctrl+a $` | Rename current session |
-| `Ctrl+a (` | Switch to previous session |
-| `Ctrl+a )` | Switch to next session |
+| `Ctrl+Space d` | Detach from current session |
+| `Ctrl+Space s` | List and switch sessions |
+| `Ctrl+Space $` | Rename current session |
+| `Ctrl+Space (` | Switch to previous session |
+| `Ctrl+Space )` | Switch to next session |
 
 ### Window (Tab) Management
 
 | Command | Description |
 |---------|-------------|
-| `Ctrl+a c` | Create new window |
-| `Ctrl+a n` | Next window |
-| `Ctrl+a p` | Previous window |
-| `Ctrl+a l` | Last window (toggle) |
-| `Ctrl+a 0-9` | Switch to window 0-9 |
-| `Ctrl+a w` | List all windows |
-| `Ctrl+a ,` | Rename current window |
-| `Ctrl+a &` | Kill current window (with confirmation) |
+| `Ctrl+Space c` | Create new window |
+| `Ctrl+Space n` | Next window |
+| `Ctrl+Space p` | Previous window |
+| `Ctrl+Space l` | Last window (toggle) |
+| `Ctrl+Space 0-9` | Switch to window 0-9 |
+| `Ctrl+Space w` | List all windows |
+| `Ctrl+Space ,` | Rename current window |
+| `Ctrl+Space &` | Kill current window (with confirmation) |
 
 ### Pane Management
 
 | Command | Description |
 |---------|-------------|
-| `Ctrl+a |` | Split pane vertically |
-| `Ctrl+a -` | Split pane horizontally |
-| `Ctrl+a h/j/k/l` | Navigate panes (vim-style) |
-| `Ctrl+a H/J/K/L` | Resize panes (repeatable) |
-| `Ctrl+a x` | Kill current pane |
-| `Ctrl+a z` | Toggle pane zoom (fullscreen) |
-| `Ctrl+a Space` | Cycle through pane layouts |
-| `Ctrl+a {` | Move pane left |
-| `Ctrl+a }` | Move pane right |
-| `Ctrl+a q` | Show pane numbers |
-| `Ctrl+a o` | Cycle through panes |
+| `Ctrl+Space |` | Split pane vertically |
+| `Ctrl+Space -` | Split pane horizontally |
+| `Ctrl+Space h/j/k/l` | Navigate panes (vim-style) |
+| `Ctrl+Space H/J/K/L` | Resize panes (repeatable) |
+| `Ctrl+Space x` | Kill current pane |
+| `Ctrl+Space z` | Toggle pane zoom (fullscreen) |
+| `Ctrl+Space Space` | Cycle through pane layouts |
+| `Ctrl+Space {` | Move pane left |
+| `Ctrl+Space }` | Move pane right |
+| `Ctrl+Space q` | Show pane numbers |
+| `Ctrl+Space o` | Cycle through panes |
 
 ### Copy Mode
 
 | Command | Description |
 |---------|-------------|
-| `Ctrl+a [` | Enter copy mode |
+| `Ctrl+Space [` | Enter copy mode |
 | `q` or `Escape` | Exit copy mode |
 | `Space` or `v` | Start selection |
 | `Enter` or `y` | Copy selection |
-| `Ctrl+a ]` | Paste from buffer |
+| `Ctrl+Space ]` | Paste from buffer |
 
 **In copy mode (vim bindings):**
 - `h/j/k/l` - Navigate
@@ -159,20 +163,20 @@ To send a literal `Ctrl+a` to applications, press `Ctrl+a` twice.
 
 | Binding | Action |
 |---------|--------|
-| `Ctrl+a ?` | Show all key bindings |
-| `Ctrl+a :` | Enter command prompt |
-| `Ctrl+a r` | Reload configuration |
-| `Ctrl+a t` | Show time |
+| `Ctrl+Space ?` | Show all key bindings |
+| `Ctrl+Space :` | Enter command prompt |
+| `Ctrl+Space r` | Reload configuration |
+| `Ctrl+Space t` | Show time |
 
 ### Advanced Pane Commands
 
 | Binding | Action |
 |---------|--------|
-| `Ctrl+a !` | Break pane into new window |
-| `Ctrl+a m` | Mark pane |
-| `Ctrl+a M` | Clear marked pane |
-| `Ctrl+a >` | Swap with next pane |
-| `Ctrl+a <` | Swap with previous pane |
+| `Ctrl+Space !` | Break pane into new window |
+| `Ctrl+Space m` | Mark pane |
+| `Ctrl+Space M` | Clear marked pane |
+| `Ctrl+Space >` | Swap with next pane |
+| `Ctrl+Space <` | Swap with previous pane |
 
 ## Features
 
@@ -201,7 +205,7 @@ To send a literal `Ctrl+a` to applications, press `Ctrl+a` twice.
 
 ### Changing the Color Scheme
 
-Edit `~/.dotfiles/tmux/tmux.conf`:
+Edit `~/.dotfiles/home/dot_tmux.conf` (then run `just apply`):
 
 ```bash
 # Status bar colors
@@ -261,11 +265,11 @@ sudo apt install xclip
 
 ### Prefix Key Conflicts
 
-If `Ctrl+a` conflicts with other programs, change it:
+If `Ctrl+Space` conflicts with other programs, change the prefix in `~/.dotfiles/home/dot_tmux.conf`:
 ```bash
-# Change to Ctrl+b
+# Change to Ctrl+b (tmux default)
 set -g prefix C-b
-unbind C-a
+unbind C-Space
 ```
 
 ## Advanced Usage
@@ -292,14 +296,14 @@ tmux attach -t dev
 Control multiple panes simultaneously:
 ```bash
 # Toggle synchronization
-Ctrl+a :setw synchronize-panes
+Ctrl+Space :setw synchronize-panes
 ```
 
 ### Save/Restore Sessions
 
 Using tmux-resurrect plugin (uncomment in config):
-- `Ctrl+a Ctrl+s` - Save session
-- `Ctrl+a Ctrl+r` - Restore session
+- `Ctrl+Space Ctrl+s` - Save session
+- `Ctrl+Space Ctrl+r` - Restore session
 
 ### Remote Pair Programming
 
@@ -333,13 +337,13 @@ For best integration with WezTerm or other terminals:
 
 ## Tips and Tricks
 
-1. **Quick window switching**: Use `Ctrl+a` followed by window number
-2. **Zoom for focus**: `Ctrl+a z` to zoom current pane
-3. **Resize precisely**: Hold `Ctrl+a` and press `H/J/K/L` multiple times
+1. **Quick window switching**: Use `Ctrl+Space` followed by window number
+2. **Zoom for focus**: `Ctrl+Space z` to zoom current pane
+3. **Resize precisely**: Hold `Ctrl+Space` and press `H/J/K/L` multiple times
 4. **Copy mode search**: In copy mode, use `/` to search
-5. **Command history**: `Ctrl+a :` then use up/down arrows
+5. **Command history**: `Ctrl+Space :` then use up/down arrows
 6. **Rename for organization**: Name your windows and sessions meaningfully
-7. **Layout presets**: `Ctrl+a Space` cycles through useful layouts
+7. **Layout presets**: `Ctrl+Space Space` cycles through useful layouts
 
 ## Resources
 

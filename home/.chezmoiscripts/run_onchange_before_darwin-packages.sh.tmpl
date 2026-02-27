@@ -13,7 +13,7 @@ eval "$("$(command -v brew || echo /opt/homebrew/bin/brew)" shellenv)"
 ok "Homebrew ready"
 
 section "Install Homebrew packages"
-brew bundle --no-lock --file=/dev/stdin <<'BREWFILE'
+brew bundle --file=/dev/stdin <<'BREWFILE'
 {{ range .packages.darwin.taps -}}
 tap {{ . | quote }}
 {{ end -}}
