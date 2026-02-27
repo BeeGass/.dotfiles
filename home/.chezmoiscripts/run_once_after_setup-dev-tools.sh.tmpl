@@ -1,0 +1,45 @@
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+section "Install developer tools"
+
+# oh-my-posh
+step "Installing oh-my-posh"
+{{ if eq .chezmoi.os "darwin" -}}
+brew install jandedobbeleer/oh-my-posh/oh-my-posh || true
+{{ else -}}
+curl -s https://ohmyposh.dev/install.sh | bash -s -- -d "$HOME/.local/bin"
+{{ end }}
+
+# uv + Python
+step "Installing uv and Python toolchains"
+if ! command -v uv >/dev/null 2>&1; then
+  curl -Ls https://astral.sh/uv/install.sh | sh
+fi
+export PATH="$HOME/.local/bin:$PATH"
+uv self update || true
+uv python install 3.11 3.12 3.13 3.14 || true
+for tool in 'python-lsp-server[all]' ruff mypy pytest pre-commit; do
+  uv tool install "$tool" 2>/dev/null || true
+done
+ok "Python tools installed"
+
+# nvm + Node
+step "Installing nvm and Node.js LTS"
+export NVM_DIR="$HOME/.nvm"
+if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+fi
+. "$NVM_DIR/nvm.sh"
+nvm install --lts
+nvm alias default 'lts/*'
+ok "Node.js installed"
+
+# CLIs
+step "Installing global CLI tools"
+npm install -g @google/gemini-cli@latest @openai/codex@latest \
+  typescript typescript-language-server 2>/dev/null || true
+ok "CLI tools installed"
+
+ok "Developer tools setup complete"

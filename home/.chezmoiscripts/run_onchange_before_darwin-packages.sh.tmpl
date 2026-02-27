@@ -1,0 +1,30 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+# Homebrew packages hash: {{ include ".chezmoidata.yaml" | sha256sum }}
+
+section "Install Homebrew"
+if ! command -v brew >/dev/null 2>&1; then
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+eval "$("$(command -v brew || echo /opt/homebrew/bin/brew)" shellenv)"
+ok "Homebrew ready"
+
+section "Install Homebrew packages"
+brew bundle --no-lock --file=/dev/stdin <<'BREWFILE'
+{{ range .packages.darwin.taps -}}
+tap {{ . | quote }}
+{{ end -}}
+{{ range .packages.darwin.brews -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ range .packages.darwin.casks -}}
+cask {{ . | quote }}
+{{ end -}}
+BREWFILE
+
+"$(brew --prefix)"/opt/fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish 2>/dev/null || true
+ok "Homebrew packages installed"
+{{ end -}}

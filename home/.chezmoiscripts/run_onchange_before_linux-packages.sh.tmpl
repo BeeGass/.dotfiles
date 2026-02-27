@@ -1,0 +1,20 @@
+{{ if and (eq .chezmoi.os "linux") (not .isHpc) (not .isTermux) -}}
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+# APT packages hash: {{ include ".chezmoidata.yaml" | sha256sum }}
+
+section "Update APT"
+sudo apt update
+sudo apt install -y --no-install-recommends software-properties-common ca-certificates gnupg
+
+section "Install APT packages"
+sudo apt install -y \
+{{ range .packages.linux.apt -}}
+  {{ . }} \
+{{ end }}
+  || true
+
+ok "APT packages installed"
+{{ end -}}
