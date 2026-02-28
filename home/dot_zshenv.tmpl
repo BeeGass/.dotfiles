@@ -30,5 +30,9 @@ if [[ -n ${ZSH_VERSION-} ]]; then
   typeset -U path PATH
 fi
 
+# Default editor: neovim everywhere, vim on HPC
+export EDITOR=nvim
+export VISUAL=nvim
+
 unset _base prefix
 [[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
