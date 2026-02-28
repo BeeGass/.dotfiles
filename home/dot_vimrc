@@ -462,10 +462,10 @@ let g:which_key_map.s = {
       \ 't' : ['Startify'             , 'startify-dashboard'],
       \ }
 
-" Register the dictionary with which-key
-call which_key#register('<Space>', "g:which_key_map")
-
-" Show which-key popup automatically when leader is pressed
+" Register the dictionary with which-key (deferred until plugin loads)
+if exists('*which_key#register')
+  call which_key#register('<Space>', "g:which_key_map")
+endif
 autocmd! User vim-which-key call which_key#register('<Space>', 'g:which_key_map')
 
 "------------------------------------------------------------------------------

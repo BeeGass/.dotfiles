@@ -1,0 +1,3 @@
+# Files to remove from target when they no longer exist in source
+# See: https://www.chezmoi.io/reference/special-files/chezmoiremove/
+.config/nvim/init.vim
