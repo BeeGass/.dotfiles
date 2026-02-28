@@ -28,10 +28,12 @@ ssh -p 49152 beegass@<EXTERNAL-IP>
 ```
 
 ## Router Configuration
+
 - **Port Forward**: External 49152 → Internal 49152 (TCP)
 - **Internal IP**: Use server's local IP from above
 
 ## Troubleshooting
+
 ```bash
 # On Client - YubiKey not working:
 gpgconf --kill gpg-agent && gpgconf --launch gpg-agent

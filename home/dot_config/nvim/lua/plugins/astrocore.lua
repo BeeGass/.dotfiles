@@ -58,8 +58,18 @@ return {
         -- Redo (displaced by C-r window nav)
         ["U"] = { "<C-r>", desc = "Redo" },
         -- Buffer navigation
-        ["<S-t>"] = { function() require("astrocore.buffer").nav(vim.v.count1) end, desc = "Next buffer" },
-        ["<S-r>"] = { function() require("astrocore.buffer").nav(-vim.v.count1) end, desc = "Previous buffer" },
+        ["<S-t>"] = {
+          function()
+            require("astrocore.buffer").nav(vim.v.count1)
+          end,
+          desc = "Next buffer",
+        },
+        ["<S-r>"] = {
+          function()
+            require("astrocore.buffer").nav(-vim.v.count1)
+          end,
+          desc = "Previous buffer",
+        },
         -- Centered scrolling
         ["<C-d>"] = { "<C-d>zz", desc = "Scroll down (centered)" },
         ["<C-u>"] = { "<C-u>zz", desc = "Scroll up (centered)" },

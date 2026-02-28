@@ -2,9 +2,9 @@
 set -euo pipefail
 
 bold() { printf "\033[1m%s\033[0m\n" "$*"; }
-ok()   { printf "  ✅ %s\n" "$*"; }
+ok() { printf "  ✅ %s\n" "$*"; }
 warn() { printf "  ⚠️  %s\n" "$*"; }
-err()  { printf "  ❌ %s\n" "$*"; }
+err() { printf "  ❌ %s\n" "$*"; }
 
 # Always point to gpg-agent’s SSH socket for the check (doesn't change your shell)
 GPG_SSH_SOCK="$(gpgconf --list-dirs agent-ssh-socket 2>/dev/null || true)"

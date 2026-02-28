@@ -118,7 +118,7 @@ case "$hook_event" in
 
     # Only check Write/Edit operations
     case "$tool_name" in
-      Write|Edit) ;;
+      Write | Edit) ;;
       *) exit 0 ;;
     esac
 

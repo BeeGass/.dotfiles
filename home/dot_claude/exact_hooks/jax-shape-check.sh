@@ -20,7 +20,7 @@ if ! grep -qE "^(import jax|from jax|from flax|from jaxtyping)" "$file" 2>/dev/n
 fi
 
 # Run Python analysis
-python3 - "$file" << 'PYTHON'
+python3 - "$file" <<'PYTHON'
 import sys
 import ast
 import re

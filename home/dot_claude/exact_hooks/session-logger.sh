@@ -19,7 +19,7 @@ cwd=$(echo "$input" | jq -r '.cwd // "unknown"')
 
 # Get tool-specific info
 case "$tool_name" in
-  Edit|Write)
+  Edit | Write)
     file_path=$(echo "$input" | jq -r '.tool_input.file_path // "unknown"')
     detail="file=$file_path"
     ;;
@@ -31,7 +31,7 @@ case "$tool_name" in
     file_path=$(echo "$input" | jq -r '.tool_input.file_path // "unknown"')
     detail="file=$file_path"
     ;;
-  Glob|Grep)
+  Glob | Grep)
     pattern=$(echo "$input" | jq -r '.tool_input.pattern // "unknown"')
     detail="pattern=$pattern"
     ;;
@@ -41,7 +41,7 @@ case "$tool_name" in
 esac
 
 # Log entry
-echo "[$timestamp] session=$session_id tool=$tool_name $detail" >> "$LOG_FILE"
+echo "[$timestamp] session=$session_id tool=$tool_name $detail" >>"$LOG_FILE"
 
 # Rotate logs older than 30 days
 find "$LOG_DIR" -name "session-*.log" -mtime +30 -delete 2>/dev/null

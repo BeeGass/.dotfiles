@@ -36,15 +36,18 @@ choose_backend() {
     # Nudge tmux to finalize terminal feature detection, then wait a beat
     tmux refresh-client -S >/dev/null 2>&1 || true
     sleep 0.15
-    echo "kitty"; return
+    echo "kitty"
+    return
   fi
 
   # Crisp fallback hierarchy
   if command -v chafa >/dev/null 2>&1; then
-    echo "chafa"; return
+    echo "chafa"
+    return
   fi
   if command -v w3mimgdisplay >/dev/null 2>&1; then
-    echo "w3m"; return
+    echo "w3m"
+    return
   fi
   echo "ascii"
 }
@@ -94,11 +97,11 @@ main() {
 
   # Draw using chosen backend; if it fails, fall back to ASCII cleanly
   case "$backend" in
-    kitty)  neofetch --kitty  --source "$img" --size "$size" || neofetch ;;
-    iterm)  neofetch --iterm  --source "$img" --size "$size" || neofetch ;;
-    chafa)  neofetch --chafa  --source "$img" --size "$size" || neofetch ;;
-    w3m)    neofetch --w3m    --source "$img" --size auto    || neofetch ;;
-    *)      neofetch ;;
+    kitty) neofetch --kitty --source "$img" --size "$size" || neofetch ;;
+    iterm) neofetch --iterm --source "$img" --size "$size" || neofetch ;;
+    chafa) neofetch --chafa --source "$img" --size "$size" || neofetch ;;
+    w3m) neofetch --w3m --source "$img" --size auto || neofetch ;;
+    *) neofetch ;;
   esac
 }
 

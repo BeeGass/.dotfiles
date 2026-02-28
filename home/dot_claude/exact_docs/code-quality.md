@@ -1,6 +1,7 @@
 # Code Quality - General Principles
 
 Language-agnostic principles. See language-specific guides for detailed conventions:
+
 - `python-style.md` - Comprehensive Python style guide
 - `jax-ml.md` - JAX/Flax/NNX conventions
 
@@ -31,6 +32,7 @@ Language-agnostic principles. See language-specific guides for detailed conventi
 ## Function Extraction Priority
 
 Extract when:
+
 1. **Multiple decision branches** - Extract each branch
 2. **Domain logic** (business rules, calculations) - Always extract
 3. **Reused code** - Extract to utility

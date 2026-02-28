@@ -18,12 +18,12 @@ if [[ -f "$_lib" ]]; then
 else
   # Fallback: minimal logging to stderr
   section() { printf "==> %s\n" "$*" >&2; }
-  step()    { printf "  -> %s\n" "$*" >&2; }
-  ok()      { printf "  [ok] %s\n" "$*" >&2; }
-  warn()    { printf "  [warn] %s\n" "$*" >&2; }
-  err()     { printf "  [err ] %s\n" "$*" >&2; }
-  note()    { printf "  %s\n" "$*" >&2; }
-  have()    { command -v "$1" >/dev/null 2>&1; }
+  step() { printf "  -> %s\n" "$*" >&2; }
+  ok() { printf "  [ok] %s\n" "$*" >&2; }
+  warn() { printf "  [warn] %s\n" "$*" >&2; }
+  err() { printf "  [err ] %s\n" "$*" >&2; }
+  note() { printf "  %s\n" "$*" >&2; }
+  have() { command -v "$1" >/dev/null 2>&1; }
 fi
 
 # === Configuration ===
@@ -73,7 +73,7 @@ load_from_pass() {
       printf 'export %s=%q\n' "$entry" "$value"
       success=1
     fi
-  done <<< "$entries"
+  done <<<"$entries"
 
   [[ $success -eq 1 ]]
 }
@@ -256,7 +256,7 @@ main() {
     --pull)
       cmd_pull
       ;;
-    --help|-h)
+    --help | -h)
       cat >&2 <<'USAGE'
 Usage: load-secrets [OPTION]
 

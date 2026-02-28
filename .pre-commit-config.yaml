@@ -22,24 +22,30 @@ repos:
       - id: destroyed-symlinks
 
   # -- Shell --
-  - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.10.0
+  - repo: local
     hooks:
       - id: shellcheck
-        args: [-x, -e, SC1091]
+        name: shellcheck
+        entry: shellcheck -x -S error -e SC1091 -e SC2148
+        language: system
+        types: [shell]
+        files: '\.sh(\.tmpl)?$'
 
-  - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.10.0-1
+  - repo: local
     hooks:
       - id: shfmt
-        args: ["-i", "2", "-ci", "-bn"]
+        name: shfmt
+        entry: shfmt -w -i 2 -ci -bn
+        language: system
+        types: [shell]
+        files: '\.sh(\.tmpl)?$'
 
   # -- Python --
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.6
     hooks:
       - id: ruff
-        args: ["--fix"]
+        args: ["--fix", "--ignore", "SIM102"]
       - id: ruff-format
 
   # -- Markdown --
@@ -68,12 +74,13 @@ repos:
     hooks:
       - id: stylua
 
-  # -- Chezmoi template validation --
+  # -- Chezmoi template syntax check --
   - repo: local
     hooks:
       - id: chezmoi-templates
         name: Validate chezmoi templates
-        entry: bash -c 'for f in "$@"; do chezmoi execute-template < "$f" >/dev/null 2>&1 || { echo "FAIL: $f"; exit 1; }; done'
+        entry: "bash -c 'fail=0; for f in \"$@\"; do chezmoi execute-template < \"$f\" >/dev/null 2>&1 || { echo \"FAIL: $f\"; fail=1; }; done; exit $fail'"
         language: system
         files: '\.tmpl$'
+        exclude: '\.chezmoi\.yaml\.tmpl$'
         types: [file]

@@ -11,6 +11,7 @@
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation only changes
@@ -23,6 +24,7 @@
 - `build`: Build system or external dependencies
 
 **Examples:**
+
 ```
 feat(auth): add OAuth2 authentication
 
@@ -45,6 +47,7 @@ Use nnx.Sequential instead of manual layer composition for cleaner code.
 ```
 
 **Rules:**
+
 - Use lowercase for type and subject
 - Subject line <= 50 characters
 - Body wraps at 72 characters

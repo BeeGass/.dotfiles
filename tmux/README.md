@@ -3,6 +3,7 @@
 This directory contains my personal tmux configuration optimized for productivity and ease of use.
 
 ## Table of Contents
+
 - [Quick Start](#quick-start)
 - [Installation](#installation)
 - [Key Concepts](#key-concepts)
@@ -134,6 +135,7 @@ To send a literal `Ctrl+Space` to applications, press `Ctrl+Space` twice.
 | `Ctrl+Space ]` | Paste from buffer |
 
 **In copy mode (vim bindings):**
+
 - `h/j/k/l` - Navigate
 - `w/b` - Next/previous word
 - `f/F` - Find character forward/backward
@@ -181,22 +183,26 @@ To send a literal `Ctrl+Space` to applications, press `Ctrl+Space` twice.
 ## Features
 
 ### Appearance
+
 - **Minimal black theme** with transparency support
 - **Status bar** shows windows and time
 - **Active window** highlighted in gray
 - **Clean borders** for easy pane identification
 
 ### Mouse Support
+
 - Full mouse integration for clicking, scrolling, and resizing
 - Right-click to paste
 - Drag to select text in copy mode
 
 ### Vim Integration
+
 - Vim-style navigation keys
 - Vim mode in copy mode
 - Seamless integration with vim/neovim
 
 ### Performance
+
 - Optimized for fast key response
 - Large scrollback buffer (10,000 lines)
 - Efficient status updates
@@ -252,6 +258,7 @@ export TERM=screen-256color
 ### Mouse Not Working
 
 Ensure you have tmux 2.1 or later:
+
 ```bash
 tmux -V
 ```
@@ -259,6 +266,7 @@ tmux -V
 ### Can't Copy to System Clipboard
 
 Install xclip:
+
 ```bash
 sudo apt install xclip
 ```
@@ -266,6 +274,7 @@ sudo apt install xclip
 ### Prefix Key Conflicts
 
 If `Ctrl+Space` conflicts with other programs, change the prefix in `~/.dotfiles/home/dot_tmux.conf`:
+
 ```bash
 # Change to Ctrl+b (tmux default)
 set -g prefix C-b
@@ -294,6 +303,7 @@ tmux attach -t dev
 ### Synchronized Panes
 
 Control multiple panes simultaneously:
+
 ```bash
 # Toggle synchronization
 Ctrl+Space :setw synchronize-panes
@@ -302,6 +312,7 @@ Ctrl+Space :setw synchronize-panes
 ### Save/Restore Sessions
 
 Using tmux-resurrect plugin (uncomment in config):
+
 - `Ctrl+Space Ctrl+s` - Save session
 - `Ctrl+Space Ctrl+r` - Restore session
 
@@ -323,6 +334,7 @@ ssh user@host -t tmux attach -t pair
 For best integration with WezTerm or other terminals:
 
 1. Start tmux automatically:
+
    ```bash
    # Add to ~/.zshrc or ~/.bashrc
    if [ -z "$TMUX" ]; then
@@ -331,6 +343,7 @@ For best integration with WezTerm or other terminals:
    ```
 
 2. Or use terminal launch command:
+
    ```bash
    wezterm start -- tmux new -s main
    ```

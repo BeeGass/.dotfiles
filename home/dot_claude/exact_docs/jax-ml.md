@@ -52,6 +52,7 @@ def attention(
 ```
 
 **Shape Naming Conventions:**
+
 - `batch` or `b` for batch dimension
 - `seq_len` or `seq` for sequence length
 - `d_model`, `d_head`, `d_ff` for model dimensions
@@ -60,6 +61,7 @@ def attention(
 - `batch_per_gpu` for sharded batch
 
 **Multi-GPU Shape Convention:**
+
 ```python
 @jaxtyped(typechecker=typechecked)
 def distributed_forward(
@@ -106,11 +108,13 @@ class ModelConfig(BaseModel):
 ```
 
 **When to use float32:**
+
 - Loss computation and gradients accumulation
 - Numerical stability-sensitive ops (softmax, layer norm, loss scales)
 - Small models where precision matters more than speed
 
 **When to use bfloat16:**
+
 - Default for all parameters and activations
 - Matrix multiplications (einsum, matmul)
 - Attention scores (after scaling)
@@ -214,6 +218,7 @@ def attention_scores(
 ```
 
 **When NOT to use einsum:**
+
 - Simple element-wise ops: use `*` directly
 - Single matrix multiply with clear semantics: `@` is fine
 - Broadcasting that's clearer with explicit reshape

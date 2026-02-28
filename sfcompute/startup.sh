@@ -4,7 +4,7 @@ set -euxo pipefail
 # 1) Ensure SSH keys for root (so you can actually log in)
 mkdir -p /root/.ssh
 chmod 700 /root/.ssh
-cat >> /root/.ssh/authorized_keys <<"EOF"
+cat >>/root/.ssh/authorized_keys <<"EOF"
 # paste one or more public keys here
 ssh-ed25519 AAAA... you@host
 EOF

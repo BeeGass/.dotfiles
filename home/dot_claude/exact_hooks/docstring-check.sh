@@ -16,10 +16,10 @@ esac
 
 # Skip test files and __init__.py
 case "$file" in
-  *test_*|*_test.py|*__init__.py|*conftest.py) exit 0 ;;
+  *test_* | *_test.py | *__init__.py | *conftest.py) exit 0 ;;
 esac
 
-python3 - "$file" << 'PYTHON'
+python3 - "$file" <<'PYTHON'
 import sys
 import ast
 from pathlib import Path

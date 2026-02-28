@@ -8,7 +8,7 @@ file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
 
 # Only check Edit and Write operations
 case "$tool_name" in
-  Edit|Write) ;;
+  Edit | Write) ;;
   *) exit 0 ;;
 esac
 
@@ -63,15 +63,15 @@ if [ "$tool_name" = "Write" ]; then
 
   # Check for potential secrets in content
   secret_patterns=(
-    "AKIA[0-9A-Z]{16}"                    # AWS Access Key ID
-    "sk-[a-zA-Z0-9]{48}"                  # OpenAI API Key
-    "sk-proj-[a-zA-Z0-9-]{80,}"           # OpenAI Project Key
-    "ghp_[a-zA-Z0-9]{36}"                 # GitHub PAT
-    "gho_[a-zA-Z0-9]{36}"                 # GitHub OAuth
-    "github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}"  # GitHub Fine-grained PAT
-    "xox[baprs]-[a-zA-Z0-9-]+"            # Slack tokens
-    "sk_live_[a-zA-Z0-9]+"                # Stripe live key
-    "rk_live_[a-zA-Z0-9]+"                # Stripe restricted key
+    "AKIA[0-9A-Z]{16}"                           # AWS Access Key ID
+    "sk-[a-zA-Z0-9]{48}"                         # OpenAI API Key
+    "sk-proj-[a-zA-Z0-9-]{80,}"                  # OpenAI Project Key
+    "ghp_[a-zA-Z0-9]{36}"                        # GitHub PAT
+    "gho_[a-zA-Z0-9]{36}"                        # GitHub OAuth
+    "github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}" # GitHub Fine-grained PAT
+    "xox[baprs]-[a-zA-Z0-9-]+"                   # Slack tokens
+    "sk_live_[a-zA-Z0-9]+"                       # Stripe live key
+    "rk_live_[a-zA-Z0-9]+"                       # Stripe restricted key
   )
 
   for pattern in "${secret_patterns[@]}"; do

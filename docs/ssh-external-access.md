@@ -1,6 +1,7 @@
 # Setting Up External SSH Access with YubiKey/GPG
 
 ## Prerequisites
+
 - OpenSSH server installed (`sudo apt install openssh-server`)
 - GPG key on YubiKey already in `~/.ssh/authorized_keys`
 - Router/firewall access for port forwarding
@@ -21,6 +22,7 @@ sudo systemctl restart ssh
 ## 2. Configure Router/Firewall
 
 ### Port Forwarding
+
 1. Access your router's admin panel (usually 192.168.1.1 or 192.168.0.1)
 2. Find "Port Forwarding" or "Virtual Server" settings
 3. Add a new rule:
@@ -30,6 +32,7 @@ sudo systemctl restart ssh
    - Protocol: TCP
 
 ### Find Your Local IP
+
 ```bash
 hostname -I | awk '{print $1}'
 ```
@@ -37,11 +40,13 @@ hostname -I | awk '{print $1}'
 ## 3. Set Up Dynamic DNS (if no static IP)
 
 Options:
-- **DuckDNS** (free): https://www.duckdns.org
-- **No-IP** (free tier): https://www.noip.com
+
+- **DuckDNS** (free): <https://www.duckdns.org>
+- **No-IP** (free tier): <https://www.noip.com>
 - **Cloudflare** (if you own a domain)
 
-### Example with DuckDNS:
+### Example with DuckDNS
+
 ```bash
 # Install DuckDNS updater
 mkdir ~/duckdns
@@ -57,6 +62,7 @@ crontab -e
 ## 4. Additional Security Measures
 
 ### Install Fail2Ban
+
 ```bash
 sudo apt install fail2ban
 sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
@@ -65,6 +71,7 @@ sudo systemctl start fail2ban
 ```
 
 ### Configure Firewall (UFW)
+
 ```bash
 # Install UFW
 sudo apt install ufw
@@ -77,6 +84,7 @@ sudo ufw enable
 ```
 
 ### Monitor SSH Access
+
 ```bash
 # Check auth logs
 sudo tail -f /var/log/auth.log
@@ -90,7 +98,8 @@ sudo grep "Failed password" /var/log/auth.log
 
 ## 5. Connect from External Network
 
-### From Client Machine:
+### From Client Machine
+
 ```bash
 # Ensure YubiKey is connected
 # Ensure GPG agent is running with SSH support
@@ -103,7 +112,8 @@ ssh -p 49152 beegass@your-external-ip
 ssh -p 49152 beegass@yourdomain.duckdns.org
 ```
 
-### Find Your External IP:
+### Find Your External IP
+
 ```bash
 curl -s https://api.ipify.org
 # or
@@ -112,29 +122,34 @@ curl -s https://icanhazip.com
 
 ## 6. Troubleshooting
 
-### Test Connection Locally First:
+### Test Connection Locally First
+
 ```bash
 ssh beegass@localhost
 ```
 
-### Check SSH Service:
+### Check SSH Service
+
 ```bash
 sudo systemctl status ssh
 sudo journalctl -u ssh -n 50
 ```
 
-### Check Port is Open:
+### Check Port is Open
+
 ```bash
 # From external network
 nc -zv your-external-ip 49152
 ```
 
-### Common Issues:
+### Common Issues
+
 1. **Connection refused**: Check firewall and port forwarding
 2. **Permission denied**: Check GPG agent is running and YubiKey is connected
 3. **Timeout**: Check router settings and ISP blocking
 
 ## Security Notes
+
 - Using port 49152 (non-standard) to reduce automated attacks
 - Regularly check logs for suspicious activity
 - Keep system and SSH updated

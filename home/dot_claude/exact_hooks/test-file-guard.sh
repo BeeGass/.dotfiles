@@ -8,7 +8,7 @@ file_path=$(echo "$input" | jq -r '.tool_input.file_path // empty')
 
 # Only check Edit and Write operations
 case "$tool_name" in
-  Edit|Write) ;;
+  Edit | Write) ;;
   *) exit 0 ;;
 esac
 
@@ -17,7 +17,7 @@ esac
 # Check if this is a test file
 is_test_file=false
 case "$file_path" in
-  *test_*.py|*_test.py|*/tests/*.py|*Test.java|*Test.ts|*Test.tsx|*.test.ts|*.test.tsx|*.test.js|*.spec.ts|*.spec.js)
+  *test_*.py | *_test.py | */tests/*.py | *Test.java | *Test.ts | *Test.tsx | *.test.ts | *.test.tsx | *.test.js | *.spec.ts | *.spec.js)
     is_test_file=true
     ;;
 esac
@@ -25,7 +25,7 @@ esac
 if [ "$is_test_file" = true ]; then
   # Track the edit in a temp file for session awareness
   tracking_file="/tmp/claude_test_edits_$$"
-  echo "$file_path" >> "$tracking_file"
+  echo "$file_path" >>"$tracking_file"
 
   # Count how many test files edited this session
   if [ -f "$tracking_file" ]; then

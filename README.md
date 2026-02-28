@@ -214,6 +214,7 @@ chezmoi init --apply BeeGass/.dotfiles
 ```
 
 This installs everything to `~/.local/bin` and `~/.cargo/bin`:
+
 * Detects zsh via environment modules (`module load zsh`)
 * Falls back to `.bash_profile` exec stub if `chsh` is denied
 * Installs uv + Python, oh-my-posh, Rust toolchain, cargo tools (bat, fd, rg, delta, eza), fzf

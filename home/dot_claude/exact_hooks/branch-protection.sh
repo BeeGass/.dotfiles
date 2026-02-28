@@ -7,7 +7,7 @@ tool_name=$(echo "$input" | jq -r '.tool_name // empty')
 
 # Only check Edit and Write operations
 case "$tool_name" in
-  Edit|Write) ;;
+  Edit | Write) ;;
   *) exit 0 ;;
 esac
 

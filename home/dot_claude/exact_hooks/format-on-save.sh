@@ -30,7 +30,7 @@ case "$file" in
       echo "WARNING: rustfmt not found, skipping Rust formatting for $file" >&2
     fi
     ;;
-  *.ts|*.tsx|*.js|*.jsx|*.json)
+  *.ts | *.tsx | *.js | *.jsx | *.json)
     # TypeScript/JavaScript: prettier
     if command -v npx &>/dev/null; then
       npx prettier --write "$file" --log-level warn

@@ -43,7 +43,7 @@ fi
 
 # Fallback: simple import cycle detection using Python
 # This is a basic check - won't catch all cycles
-python3 - "$file" "$project_root" << 'PYTHON'
+python3 - "$file" "$project_root" <<'PYTHON'
 import sys
 import ast
 from pathlib import Path

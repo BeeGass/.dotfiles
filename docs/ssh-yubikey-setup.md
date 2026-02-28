@@ -1,7 +1,9 @@
 # SSH Access with YubiKey/GPG - Complete Setup Guide
 
 ## Overview
+
 This guide sets up SSH access using GPG keys stored on YubiKey, with clear separation between:
+
 - **SERVER**: The machine you want to SSH into (this computer)
 - **CLIENT**: The machine you're connecting FROM (with YubiKey)
 
@@ -87,6 +89,7 @@ echo "External IP: $(curl -s https://api.ipify.org)"
    - Applications & Gaming
 
 3. Create new port forwarding rule:
+
    ```
    Service Name: SSH-YubiKey
    External Port: 49152
@@ -205,6 +208,7 @@ gpg-restart() {
 ```
 
 Then reload your shell:
+
 ```bash
 source ~/.bashrc  # or source ~/.zshrc
 ```
@@ -257,7 +261,7 @@ ssh myserver
 
 ## TROUBLESHOOTING
 
-### On Server:
+### On Server
 
 ```bash
 # Check SSH service status
@@ -279,7 +283,7 @@ sudo ss -tlnp | grep 49152
 sudo ufw status verbose
 ```
 
-### On Client:
+### On Client
 
 ```bash
 # Check YubiKey is detected
@@ -303,7 +307,7 @@ ssh -vvv -p 49152 beegass@YOUR_EXTERNAL_IP
 gpg --card-status | grep "Authentication key"
 ```
 
-### Common Issues:
+### Common Issues
 
 1. **"Permission denied (publickey)"**
    - YubiKey not inserted
@@ -342,7 +346,8 @@ gpg --card-status | grep "Authentication key"
 
 ## QUICK REFERENCE
 
-**Server**: 
+**Server**:
+
 ```bash
 sudo systemctl status ssh
 sudo ufw status
@@ -350,6 +355,7 @@ sudo fail2ban-client status sshd
 ```
 
 **Client**:
+
 ```bash
 # Connect with YubiKey
 ssh -p 49152 beegass@external-ip

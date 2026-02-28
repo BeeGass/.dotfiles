@@ -3,7 +3,9 @@
 ## Planning Requirements
 
 ### Mandatory Planning Phase
+
 **CRITICAL**: Before ANY implementation:
+
 1. **Analyze Request**: Fully understand requirements
 2. **Create Clear Plan**: Break into actionable steps
 3. **Use TodoWrite**: Document all planned steps
@@ -11,6 +13,7 @@
 5. **Identify Risks**: Note potential breaking changes
 
 ### Planning Template
+
 ```markdown
 ## Task: [Brief Description]
 
@@ -33,7 +36,9 @@
 ## Todo Management
 
 ### TodoWrite Usage Rules
+
 **ALWAYS use TodoWrite when:**
+
 - Task has 3+ distinct steps
 - Working on complex features
 - User provides multiple tasks
@@ -41,11 +46,13 @@
 - Tracking parallel work
 
 **SKIP TodoWrite when:**
+
 - Single, trivial tasks
 - Pure conversation/info
 - Tasks under 3 simple steps
 
 ### Todo State Management
+
 ```yaml
 States:
   pending: Not started yet
@@ -60,6 +67,7 @@ Rules:
 ```
 
 ### Todo Patterns
+
 ```markdown
 Good Todo Items:
 ✓ "Implement user authentication with JWT"
@@ -75,6 +83,7 @@ Bad Todo Items:
 ## Execution Workflows
 
 ### Feature Implementation Flow
+
 ```mermaid
 1. Research Phase (Parallel)
    ├── Search existing patterns
@@ -98,6 +107,7 @@ Bad Todo Items:
 ```
 
 ### Debugging Workflow
+
 ```yaml
 1. Reproduce & Analyze:
    - Read error messages
@@ -116,6 +126,7 @@ Bad Todo Items:
 ```
 
 ### Code Review Workflow
+
 ```yaml
 1. Understand Context:
    - Read PR description
@@ -136,7 +147,9 @@ Bad Todo Items:
 ## Quality Assurance
 
 ### Pre-Commit Verification
+
 **ALWAYS ensure before marking task complete:**
+
 - **Type Safety**: Code passes type checking
 - **Code Quality**: Linting checks pass
 - **Formatting**: Code follows project style
@@ -145,7 +158,9 @@ Bad Todo Items:
 - **Security**: No exposed secrets or vulnerabilities
 
 ### Definition of Done
+
 Task is ONLY complete when:
+
 - ✓ All code changes implemented
 - ✓ Tests pass successfully
 - ✓ Type checking passes
@@ -154,6 +169,7 @@ Task is ONLY complete when:
 - ✓ Requirements verified
 
 ### Quality Check Commands
+
 ```bash
 # Run project-specific quality checks
 # Check README or ask user for specific commands
@@ -168,6 +184,7 @@ Task is ONLY complete when:
 ## Parallel Execution
 
 ### Parallel Task Patterns
+
 ```python
 # Good - Parallel execution
 tasks = [
@@ -185,6 +202,7 @@ then task3.start()
 ```
 
 ### Parallel Guidelines
+
 - **DEFAULT**: Assume parallel execution
 - **BATCH**: Group related operations
 - **MAXIMIZE**: Concurrent tool usage
@@ -193,6 +211,7 @@ then task3.start()
 ## Error Handling
 
 ### Error Response Pattern
+
 ```yaml
 1. Capture Error:
    - Full error message
@@ -211,7 +230,9 @@ then task3.start()
 ```
 
 ### Blocked State Handling
+
 When blocked:
+
 1. Keep task as `in_progress`
 2. Create new todo for blocker
 3. Document what's needed
@@ -220,17 +241,19 @@ When blocked:
 ## Communication
 
 ### Progress Updates
+
 - Brief status when starting major tasks
 - Explain complex operations
 - Report completion of milestones
 - Ask for clarification when needed
 
 ### Response Patterns
+
 ```markdown
 # Starting task
 "Implementing authentication system using JWT tokens."
 
-# During execution  
+# During execution
 "Found 3 type errors in auth module, fixing now."
 
 # Completion
@@ -243,6 +266,7 @@ When blocked:
 ## Git Workflow Integration
 
 ### Branch Operations
+
 ```bash
 # Feature development
 dev feature-name    # Create dev branch
@@ -257,6 +281,7 @@ test feature-name   # Create test branch
 ```
 
 ### Commit Patterns
+
 - Make logical, atomic commits
 - Write clear commit messages
 - Never reference AI assistance
@@ -265,18 +290,21 @@ test feature-name   # Create test branch
 ## Optimization Strategies
 
 ### Token Efficiency
+
 1. Read only necessary files
 2. Use targeted searches
 3. Batch related operations
 4. Leverage caching
 
-### Time Efficiency  
+### Time Efficiency
+
 1. Parallel by default
 2. Minimize round trips
 3. Predictive actions
 4. Efficient tool selection
 
 ### Context Management
+
 1. Focus on current task
 2. Prune irrelevant info
 3. Summarize long outputs

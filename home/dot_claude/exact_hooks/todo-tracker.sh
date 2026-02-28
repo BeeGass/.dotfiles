@@ -8,7 +8,7 @@ file="$1"
 
 # Only check code files
 case "$file" in
-  *.py|*.rs|*.ts|*.tsx|*.js|*.jsx|*.go|*.java|*.c|*.cpp|*.h) ;;
+  *.py | *.rs | *.ts | *.tsx | *.js | *.jsx | *.go | *.java | *.c | *.cpp | *.h) ;;
   *) exit 0 ;;
 esac
 

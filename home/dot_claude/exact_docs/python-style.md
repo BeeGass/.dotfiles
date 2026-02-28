@@ -5,6 +5,7 @@ Comprehensive Python conventions. For JAX/Flax specifics, see `jax-ml.md`.
 ## 1. Type System
 
 **Rules:**
+
 - `mypy --strict` enforced in pre-commit
 - All functions typed: parameters, return values, no `Any` without justification
 - Use `| None` for optionals (not `Optional`)
@@ -12,6 +13,7 @@ Comprehensive Python conventions. For JAX/Flax specifics, see `jax-ml.md`.
 - Custom `Result[T, E]` type for error handling (see Error Handling section)
 
 **Example:**
+
 ```python
 def calculate_price(
     items: list[dict[str, int | float]],
@@ -23,6 +25,7 @@ def calculate_price(
 ```
 
 **mypy.ini:**
+
 ```ini
 [mypy]
 python_version = 3.11
@@ -38,21 +41,25 @@ disallow_any_explicit = False  # Allow explicit Any with comment
 ## 2. Naming Conventions
 
 **Functions:**
+
 - Abbreviated + verb prefixes: `calc_total`, `fetch_user`, `parse_config`
 - Prefix verbs: `get_*` (pure access), `fetch_*` (I/O), `calc_*` (computation), `parse_*`, `validate_*`
 - Boolean checks: `is_valid`, `has_permission`, `can_edit`
 
 **Classes:**
+
 - Mutability-aware:
   - Immutable: `User`, `Config`, `TrainingState`
   - Mutable: `UserBuilder`, `ConfigLoader`, `StateManager`
   - DTOs/models: plain nouns `UserProfile`, `TrainingMetrics`
 
 **Booleans:**
+
 - State: `is_active`, `has_data`, `enabled`
 - Capabilities: `can_retry`, `should_validate`, `may_override`
 
 **Examples:**
+
 ```python
 # Good
 def calc_discount(price: Decimal, user: User) -> Decimal: ...
@@ -77,12 +84,14 @@ class UserData: ...  # unclear mutability
 ## 3. Import Organization
 
 **Order:**
+
 1. Standard library (grouped by category)
 2. Third-party libraries (alphabetical)
 3. Blank line
 4. Local imports (absolute, alphabetical)
 
 **Template:**
+
 ```python
 # Standard library - by category
 import logging
@@ -107,6 +116,7 @@ from models.user import User
 ```
 
 **Rules:**
+
 - Explicit imports: `from module import Class1, func1` (no wildcards)
 - Namespace for deep APIs: `import jax.numpy as jnp`
 - Group local imports by top-level module
@@ -117,10 +127,12 @@ from models.user import User
 ## 4. Error Handling
 
 **Strategy:**
+
 - **Primary:** `Result[T, E]` types for expected failures
 - **Secondary:** Exceptions for unexpected/catastrophic errors only
 
 **Result Type Implementation:**
+
 ```python
 # core/result.py
 from dataclasses import dataclass
@@ -184,6 +196,7 @@ Result = Ok[T] | Err[E]
 ```
 
 **Error Context:**
+
 ```python
 from dataclasses import dataclass, field
 from typing import Any
@@ -214,6 +227,7 @@ def validate_user_id(user_id: int, request_id: str) -> Result[int, ValidationErr
 ```
 
 **When to use exceptions:**
+
 - Programmer errors: `AssertionError`, `TypeError`, `ValueError` for contract violations
 - External failures: network timeouts, file not found (wrap in Result at boundary)
 - Library integration: when third-party raises exceptions unavoidably
@@ -223,6 +237,7 @@ def validate_user_id(user_id: int, request_id: str) -> Result[int, ValidationErr
 ## 5. Code Structure
 
 **File Organization:**
+
 ```
 src/
     models/          # Data models, entities
@@ -240,11 +255,13 @@ tests/
 ```
 
 **Function Length:**
+
 - **Guideline:** 100 lines max
 - **True constraint:** complexity (cyclomatic, cognitive)
 - Extract when: >1 decision branch, reused logic, domain rules, testability
 
 **Example - Extract Branches:**
+
 ```python
 # Before: multiple branches inline
 def process_request(request: Request) -> Result[Response, Error]:
@@ -273,6 +290,7 @@ def process_request(request: Request) -> Result[Response, Error]:
 ## 6. Declarative Patterns
 
 **Pydantic for Configuration:**
+
 ```python
 from pydantic import BaseModel, Field, field_validator
 
@@ -293,6 +311,7 @@ class TrainingConfig(BaseModel):
 ```
 
 **Protocol-based Declarative Logic:**
+
 ```python
 from typing import Protocol
 
@@ -318,6 +337,7 @@ def run_training(
 ```
 
 **Hybrid Controller Pattern:**
+
 ```python
 def handle_user_request(request: Request) -> Result[Response, Error]:
     """Handle request with validation and business logic.
@@ -346,6 +366,7 @@ def handle_user_request(request: Request) -> Result[Response, Error]:
 **Google Docstrings with Examples:**
 
 All public functions/classes require:
+
 1. One-line summary
 2. Args section with type info and constraints
 3. Returns section with success/error cases
@@ -353,6 +374,7 @@ All public functions/classes require:
 5. Raises section (only for exceptions, not Result errors)
 
 **Template:**
+
 ```python
 def calc_discounted_price(
     base_price: Decimal,
@@ -389,6 +411,7 @@ def calc_discounted_price(
 **Coverage:** 90% required, 100% for critical paths (payment, auth, data loss)
 
 **Organization:** Hybrid by type + structure
+
 ```
 tests/
     unit/
@@ -402,6 +425,7 @@ tests/
 ```
 
 **Test Naming:**
+
 ```python
 def test_calc_discount_with_valid_inputs_returns_discounted_price():
     """Test discount calculation with standard inputs."""
@@ -413,6 +437,7 @@ def test_calc_discount_with_negative_price_returns_error():
 ```
 
 **Fixtures for Result Types:**
+
 ```python
 import pytest
 from core.result import Err, Ok, Result
@@ -449,6 +474,7 @@ def test_pricing_pipeline_invalid_price():
 ## 9. Tooling Configuration
 
 **pyproject.toml:**
+
 ```toml
 [tool.ruff]
 line-length = 100
@@ -507,6 +533,7 @@ exclude_lines = [
 ```
 
 **.pre-commit-config.yaml:**
+
 ```yaml
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -533,6 +560,7 @@ repos:
 ```
 
 **.importlinter:**
+
 ```ini
 [importlinter]
 root_package = src

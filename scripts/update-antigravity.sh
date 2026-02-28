@@ -80,15 +80,15 @@ cleanup_old_versions() {
   done
 
   local total="${#candidates[@]}"
-  if (( total <= keep )); then
+  if ((total <= keep)); then
     log "Found ${total} old install(s); keep=${keep}. Nothing to remove."
     return 0
   fi
 
-  local to_delete=$(( total - keep ))
+  local to_delete=$((total - keep))
   log "Removing ${to_delete} oldest ${APP} install(s)..."
 
-  for ((i=0; i<to_delete; i++)); do
+  for ((i = 0; i < to_delete; i++)); do
     local dir="${candidates[i]}"
     log "  rm -rf ${dir}"
     sudo rm -rf "${dir}"

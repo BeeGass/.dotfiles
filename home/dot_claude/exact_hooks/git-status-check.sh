@@ -9,7 +9,7 @@ cwd=$(echo "$input" | jq -r '.cwd // empty')
 
 # Only check for Edit/Write operations
 case "$tool_name" in
-  Edit|Write) ;;
+  Edit | Write) ;;
   *) exit 0 ;;
 esac
 
@@ -17,7 +17,7 @@ esac
 
 # Find git root
 git_root=$(cd "$(dirname "$file_path")" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null)
-[ -z "$git_root" ] && exit 0  # Not a git repo
+[ -z "$git_root" ] && exit 0 # Not a git repo
 
 # Check if the specific file has uncommitted changes
 if [ -f "$file_path" ]; then
@@ -26,7 +26,7 @@ if [ -f "$file_path" ]; then
   if [ -n "$file_status" ]; then
     status_code="${file_status:0:2}"
     case "$status_code" in
-      " M"|"MM"|"AM")
+      " M" | "MM" | "AM")
         echo "WARNING: File has uncommitted modifications" >&2
         echo "File: $file_path" >&2
         echo "Consider committing or stashing changes first." >&2

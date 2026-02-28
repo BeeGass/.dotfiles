@@ -18,7 +18,7 @@ case "$file" in
       exit 2
     fi
     ;;
-  *.ts|*.tsx)
+  *.ts | *.tsx)
     # TypeScript: tsc with noEmit
     dir=$(dirname "$file")
     # Find tsconfig.json in parent directories

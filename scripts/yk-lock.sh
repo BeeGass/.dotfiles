@@ -9,7 +9,7 @@ gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1 || true
 # Kill scdaemon first so the card is fully released
 gpgconf --kill scdaemon >/dev/null 2>&1 || true
 # Restart gpg-agent (this clears ssh+gpg caches)
-gpgconf --kill gpg-agent  >/dev/null 2>&1 || true
+gpgconf --kill gpg-agent >/dev/null 2>&1 || true
 gpgconf --launch gpg-agent >/dev/null 2>&1 || true
 
 # Also ask the SSH layer to forget any loaded identities (harmless with gpg-agent)

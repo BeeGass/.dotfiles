@@ -6,7 +6,7 @@ input=$(cat)
 tool_name=$(echo "$input" | jq -r '.tool_name // empty')
 
 case "$tool_name" in
-  Write|Edit) ;;
+  Write | Edit) ;;
   *) exit 0 ;;
 esac
 
@@ -49,15 +49,15 @@ VERIFY_LIBS=(
 get_aliases() {
   local lib="$1"
   case "$lib" in
-    "jax.numpy")  echo "jnp" ;;
-    "jax.lax")    echo "lax" ;;
+    "jax.numpy") echo "jnp" ;;
+    "jax.lax") echo "lax" ;;
     "jax.random") echo "jr|jrand|random" ;;
-    "jax.nn")     echo "jnn" ;;
-    "flax.nnx")   echo "nnx" ;;
+    "jax.nn") echo "jnn" ;;
+    "flax.nnx") echo "nnx" ;;
     "flax.linen") echo "nn" ;;
-    "equinox")    echo "eqx" ;;
-    "fiddle")     echo "fdl" ;;
-    *)            echo "" ;;
+    "equinox") echo "eqx" ;;
+    "fiddle") echo "fdl" ;;
+    *) echo "" ;;
   esac
 }
 
