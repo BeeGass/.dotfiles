@@ -22,6 +22,7 @@ packages:
       - pfetch
       - pinentry-mac
       - pre-commit
+      - prek
       - ripgrep
       - shellcheck
       - shfmt

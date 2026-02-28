@@ -1,21 +1,79 @@
 repos:
+  # -- Standard hygiene --
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: detect-private-key
       - id: check-merge-conflict
       - id: mixed-line-ending
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-json
+      - id: check-toml
+      - id: check-ast
+      - id: check-executables-have-shebangs
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-symlinks
+      - id: check-case-conflict
+      - id: fix-byte-order-marker
+      - id: destroyed-symlinks
+
+  # -- Shell --
   - repo: https://github.com/koalaman/shellcheck-precommit
     rev: v0.10.0
-    hooks: [{ id: shellcheck }]
+    hooks:
+      - id: shellcheck
+        args: [-x, -e, SC1091]
+
   - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.7.0-4
-    hooks: [{ id: shfmt, args: ["-i", "2", "-ci", "-bn"] }]
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.6.8
-    hooks: [{ id: ruff, args: ["--fix"] }]
+    rev: v3.10.0-1
+    hooks:
+      - id: shfmt
+        args: ["-i", "2", "-ci", "-bn"]
+
+  # -- Python --
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+
+  # -- Markdown --
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.43.0
+    hooks:
+      - id: markdownlint
+        args: ["--fix", "--disable", "MD013", "MD033", "MD041", "--"]
+
+  # -- YAML --
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [-d, relaxed]
+
+  # -- Secrets --
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.4
-    hooks: [{id: gitleaks}]
+    rev: v8.22.1
+    hooks:
+      - id: gitleaks
+
+  # -- Lua (for neovim config) --
+  - repo: https://github.com/JohnnyMorganz/StyLua
+    rev: v2.0.2
+    hooks:
+      - id: stylua
+
+  # -- Chezmoi template validation --
+  - repo: local
+    hooks:
+      - id: chezmoi-templates
+        name: Validate chezmoi templates
+        entry: bash -c 'for f in "$@"; do chezmoi execute-template < "$f" >/dev/null 2>&1 || { echo "FAIL: $f"; exit 1; }; done'
+        language: system
+        files: '\.tmpl$'
+        types: [file]

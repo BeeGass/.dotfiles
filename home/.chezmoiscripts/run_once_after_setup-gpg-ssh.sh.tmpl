@@ -1,0 +1,93 @@
+{{ if and (not .isHpc) (not .isTermux) -}}
+#!/bin/bash
+set -euo pipefail
+source "$HOME/.dotfiles/scripts/lib-common.sh"
+
+# GPG + SSH bootstrap (automated via chezmoi)
+# Config files (gpg-agent.conf, gpg.conf, dirmngr.conf) are deployed by chezmoi.
+# This script handles operations that benefit from a YubiKey being inserted:
+# - Imports GPG public keys from GitHub
+# - Probes smartcard and loads key stubs
+# - Exports SSH public key from auth subkey
+# - Verifies gpg-agent SSH socket is working
+
+GITHUB_GPG_URL="${GITHUB_GPG_URL:-https://github.com/beegass.gpg}"
+STAMP_DIR="$HOME/.cache/gpg-setup"
+STAMP_FILE="$STAMP_DIR/github-beegass.imported"
+SSH_PUB_OUT="$HOME/.ssh/id_gpg_yubikey.pub"
+
+section "GPG + SSH bootstrap"
+
+# Ensure directories exist
+step "Preparing directories"
+mkdir -p "$STAMP_DIR" "$HOME/.gnupg" "$HOME/.ssh"
+chmod 700 "$HOME/.gnupg" "$HOME/.ssh"
+ok "Directories ready"
+
+# Verify chezmoi-deployed configs
+step "Checking GnuPG configs"
+for cfg in gpg-agent.conf gpg.conf dirmngr.conf; do
+  if [[ -f "$HOME/.gnupg/$cfg" ]]; then
+    ok "$cfg present"
+  else
+    warn "$cfg missing -- run 'chezmoi apply' to deploy"
+  fi
+done
+
+# Import public keys from GitHub
+step "Importing GPG public keys from GitHub"
+if [[ -f "$STAMP_FILE" ]]; then
+  note "GitHub keys already imported (stamp exists)"
+elif ! command -v curl >/dev/null 2>&1; then
+  warn "curl not found; skipping GitHub key import"
+else
+  if curl -fsSL "$GITHUB_GPG_URL" | gpg --import 2>/dev/null; then
+    date +%s > "$STAMP_FILE"
+    ok "Imported public keys from GitHub"
+  else
+    warn "GPG key import failed (network issue or keys already present)"
+  fi
+fi
+
+# Probe smartcard for key stubs
+step "Probing smartcard"
+if gpg --card-status >/dev/null 2>&1; then
+  ok "Smartcard detected and key stubs loaded"
+else
+  warn "No smartcard detected (insert YubiKey and run 'gpg --card-status' manually)"
+fi
+
+# Export SSH public key from auth subkey
+step "Exporting SSH public key from auth subkey"
+auth_fpr="$(gpg --list-keys --with-colons 2>/dev/null \
+  | awk -F: '$1=="sub" && $12 ~ /a/ { want=1; next } want && $1=="fpr" { print $10; exit }' || true)"
+
+if [[ -z "$auth_fpr" ]]; then
+  warn "No auth-capable subkey found; skipping SSH pubkey export"
+elif [[ -f "$SSH_PUB_OUT" ]]; then
+  if ! gpg --export-ssh-key "$auth_fpr" 2>/dev/null | diff -q - "$SSH_PUB_OUT" >/dev/null 2>&1; then
+    gpg --export-ssh-key "$auth_fpr" > "$SSH_PUB_OUT"
+    chmod 644 "$SSH_PUB_OUT"
+    ok "Updated ${SSH_PUB_OUT/#$HOME/~}"
+  else
+    note "SSH pubkey already up-to-date"
+  fi
+else
+  gpg --export-ssh-key "$auth_fpr" > "$SSH_PUB_OUT" 2>/dev/null
+  chmod 644 "$SSH_PUB_OUT"
+  ok "Wrote ${SSH_PUB_OUT/#$HOME/~}"
+fi
+
+# Launch gpg-agent
+step "Launching gpg-agent"
+export GPG_TTY="$(tty 2>/dev/null || echo /dev/tty)"
+gpgconf --launch gpg-agent >/dev/null 2>&1 || true
+agent_sock="$(gpgconf --list-dirs agent-ssh-socket 2>/dev/null || true)"
+if [[ -S "$agent_sock" ]]; then
+  ok "gpg-agent SSH socket: $agent_sock"
+else
+  warn "gpg-agent SSH socket not found (agent may need manual restart)"
+fi
+
+ok "GPG + SSH bootstrap complete"
+{{ end -}}

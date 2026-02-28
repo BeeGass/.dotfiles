@@ -31,8 +31,13 @@ if [[ -n ${ZSH_VERSION-} ]]; then
 fi
 
 # Default editor: neovim everywhere, vim on HPC
+{{- if .isHpc }}
+export EDITOR=vim
+export VISUAL=vim
+{{- else }}
 export EDITOR=nvim
 export VISUAL=nvim
+{{- end }}
 
 unset _base prefix
 [[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"

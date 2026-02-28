@@ -12,6 +12,14 @@ brew install jandedobbeleer/oh-my-posh/oh-my-posh || true
 curl -s https://ohmyposh.dev/install.sh | bash -s -- -d "$HOME/.local/bin"
 {{ end }}
 
+# prek (pre-commit replacement)
+step "Installing prek"
+{{ if ne .chezmoi.os "darwin" -}}
+if ! command -v prek >/dev/null 2>&1; then
+  curl -fsSL https://raw.githubusercontent.com/j178/prek/main/install.sh | bash || warn "prek install failed"
+fi
+{{ end -}}
+
 # uv + Python
 step "Installing uv and Python toolchains"
 if ! command -v uv >/dev/null 2>&1; then
@@ -83,6 +91,20 @@ if ! find "$NEOFETCH_IMG_DIR" -type f \( -iname '*.png' -o -iname '*.jpg' -o -in
       || warn "Neofetch asset download failed"
   else
     warn "uvx not found; skipping neofetch assets"
+  fi
+fi
+
+# prek (pre-commit) hooks for dotfiles repo
+step "Installing prek git hooks"
+if [[ -d "$HOME/.dotfiles/.git" ]]; then
+  if command -v prek >/dev/null 2>&1; then
+    (cd "$HOME/.dotfiles" && prek install --install-hooks 2>/dev/null) || warn "prek hook install failed"
+    ok "prek hooks installed"
+  elif command -v pre-commit >/dev/null 2>&1; then
+    (cd "$HOME/.dotfiles" && pre-commit install --install-hooks 2>/dev/null) || warn "pre-commit hook install failed"
+    ok "pre-commit hooks installed (fallback)"
+  else
+    note "Neither prek nor pre-commit found; skipping hook install"
   fi
 fi
 

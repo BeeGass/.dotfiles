@@ -17,6 +17,7 @@ docs/**
 .config/kitty/**
 .config/wezterm/**
 .config/ghostty/**
+.config/nvim/**
 .config/picom/**
 .config/systemd/**
 {{ end }}
