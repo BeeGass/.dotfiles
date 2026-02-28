@@ -16,4 +16,6 @@ return {
       },
     },
   },
+  -- Disable textobjects until it supports nvim-treesitter 1.x (configs module removed)
+  { "nvim-treesitter/nvim-treesitter-textobjects", enabled = false },
 }
