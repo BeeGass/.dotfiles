@@ -1,21 +1,22 @@
 # === Appearance ===
 background = 000000
 foreground = ffffff
-# Global transparency like WezTerm's window_background_opacity
 background-opacity = 0.80
-# Make apps that repaint the background (tmux, nvim) honor opacity
 background-opacity-cells = true
+background-blur = true
+unfocused-split-opacity = 0.85
 
 # === Window ===
-# macOS: transparent titlebar; Linux: use client-side decorations
-macos-titlebar-style = transparent
 window-decoration = client
-# Padding (roughly equivalent to wezterm.window_padding)
 window-padding-x = 10
 window-padding-y = 10
 window-padding-balance = true
-# Hide tab bar (you're using tmux) - Linux/GTK only
-window-show-tab-bar = never
+
+# === Tabs ===
+window-show-tab-bar = auto
+gtk-tabs-location = top
+gtk-wide-tabs = true
+gtk-titlebar-style = tabs
 
 # === Font ===
 # Fallback order like wezterm.font_with_fallback
@@ -28,6 +29,18 @@ font-size = 10
 # === Cursor ===
 cursor-style = bar
 cursor-style-blink = true
+
+# === Keybindings ===
+# Unbind Alt+1-9 so they pass through to tmux for window selection
+keybind = alt+1=unbind
+keybind = alt+2=unbind
+keybind = alt+3=unbind
+keybind = alt+4=unbind
+keybind = alt+5=unbind
+keybind = alt+6=unbind
+keybind = alt+7=unbind
+keybind = alt+8=unbind
+keybind = alt+9=unbind
 
 # === Behavior ===
 # Right-click paste (wezterm mouse binding)
