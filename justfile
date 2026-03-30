@@ -264,3 +264,41 @@ secrets-pull:
 [confirm("This will remove all dotfiles-managed state. Continue?")]
 clean *FLAGS:
     @bash "{{DOTFILES_DIR}}/install/clean.sh" --yes {{FLAGS}}
+
+# ------------------------------------------------------------------------------
+# NixOS
+# ------------------------------------------------------------------------------
+
+# Build and activate the NixOS configuration
+[group('nixos')]
+[linux]
+nixos-switch:
+    sudo nixos-rebuild switch --flake {{DOTFILES_DIR}}#manifold
+
+# Test the NixOS configuration (activate without adding to boot menu)
+[group('nixos')]
+[linux]
+nixos-test:
+    sudo nixos-rebuild test --flake {{DOTFILES_DIR}}#manifold
+
+# Build and add to boot menu without activating
+[group('nixos')]
+[linux]
+nixos-boot:
+    sudo nixos-rebuild boot --flake {{DOTFILES_DIR}}#manifold
+
+# Build the NixOS configuration without activating (dry build)
+[group('nixos')]
+[linux]
+nixos-build:
+    nixos-rebuild build --flake {{DOTFILES_DIR}}#manifold
+
+# Update all flake inputs (nixpkgs, home-manager, niri, etc.)
+[group('nixos')]
+nixos-update:
+    nix flake update --flake {{DOTFILES_DIR}}
+
+# Garbage collect old NixOS generations and nix store
+[group('nixos')]
+nixos-gc:
+    sudo nix-collect-garbage -d && nix-collect-garbage -d
