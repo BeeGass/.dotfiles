@@ -1,3 +1,9 @@
+---
+description: JAX/Flax NNX, Optax, Orbax, Grain, and Fiddle conventions
+paths:
+  - "**/*.py"
+---
+
 # JAX/Flax ML Conventions
 
 Comprehensive JAX ecosystem guide covering Flax NNX, Optax, Orbax, Grain, Tunix, and Fiddle.
