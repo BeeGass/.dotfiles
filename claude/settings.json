@@ -1,14 +1,22 @@
 {
-  "cleanupPeriodDays": 90,
+  "cleanupPeriodDays": 120,
   "env": {
     "MAX_THINKING_TOKENS": "32000",
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000",
-    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-opus-4-5-20251101"
+    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-opus-4-6",
+    "CLAUDECODE": "1",
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "DISABLE_BUG_COMMAND": "1",
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
+    "ENABLE_LSP_TOOL": "1",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-6[1m]",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-6[1m]"
   },
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
-      "Read(**)",
+      "Read(~/Downloads/*.pdf)",
       "Glob(**)",
       "Grep(**)",
       "Bash(uv run:*)",
@@ -35,6 +43,14 @@
       "Bash(cargo check:*)",
       "Bash(cargo fmt:*)",
       "Bash(cargo clippy:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh repo view:*)",
+      "Bash(curl -sL 'https://raw.githubusercontent.com:*)",
+      "Bash(curl -s \"https://api.github.com/:*)",
+      "Bash(gh api repo:*)",
+      "Bash(gh api repos/:*)",
+      "Bash(gh api 'repos:*)",
+      "Bash(gh issue list:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -49,6 +65,7 @@
       "Bash(du:*)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:*.github.com)",
+      "WebFetch(domain:api.github.com)",
       "WebFetch(domain:docs.python.org)",
       "WebFetch(domain:*.readthedocs.io)",
       "WebFetch(domain:pypi.org)",
@@ -84,7 +101,36 @@
       "WebFetch(domain:cloud.google.com)",
       "WebFetch(domain:www.npmjs.com)",
       "WebFetch(domain:agentskills.io)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:docs.kidger.site)",
+      "WebFetch(domain:kidger.site)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "WebFetch(domain:www.anthropic.com)",
+      "WebFetch(domain:claude.com)",
+      "WebFetch(domain:gist.github.com)",
+      "Bash(gh search:*)",
+      "WebFetch(domain:help.obsidian.md)",
+      "WebFetch(domain:obsidian.md)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:openreview.net)",
+      "Bash(./infra/sync-copybara.sh:*)",
+      "WebFetch(domain:developer.nvidia.com)",
+      "Bash(tree:*)",
+      "WebFetch(domain:bazel.build)",
+      "WebFetch(domain:fiddle.readthedocs.io)",
+      "Bash(ls:*)",
+      "WebFetch(domain:docs.jax.dev)",
+      "Bash(wc -l:*)",
+      "Bash(PYTHONPATH=/home/beegass/Projects/FreeCtrl/refactor-fig-experiments uv run python:*)",
+      "WebFetch(domain:prek.j178.dev)",
+      "WebFetch(domain:pre-commit.com)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(gh run view:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(wget -O ~/Downloads/*.pdf:*)",
+      "WebFetch(domain:docs.manim.community)",
+      "WebFetch(domain:centers.hpc.mil)"
     ],
     "deny": [
       "Bash(sudo:*)",
@@ -103,7 +149,8 @@
       "Bash(pip uninstall:*)",
       "Bash(pip3 install:*)",
       "Bash(pip3 uninstall:*)"
-    ]
+    ],
+    "defaultMode": "default"
   },
   "enableAllProjectMcpServers": false,
   "enabledMcpjsonServers": [
@@ -117,16 +164,11 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/protect-files.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/large-file-check.sh",
+            "command": "$HOME/.dotfiles/claude/hooks-rs/target/release/claude-hooks pre-edit",
             "timeout": 5
           }
         ]
@@ -136,12 +178,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/dangerous-command.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/validate-commit.sh",
+            "command": "$HOME/.dotfiles/claude/hooks-rs/target/release/claude-hooks pre-bash",
             "timeout": 5
           }
         ]
@@ -149,12 +186,17 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/jax-shape-check.sh",
+            "command": "$HOME/.dotfiles/claude/hooks-rs/target/release/claude-hooks jax-shape-check",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.local/share/claude-format-hook/format-code.sh",
+            "timeout": 10
           }
         ]
       }
@@ -165,20 +207,97 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/context7-docs.sh",
+            "command": "$HOME/.dotfiles/claude/hooks-rs/target/release/claude-hooks user-prompt",
             "timeout": 5
           }
         ]
       }
-    ]
+    ],
+    "Stop": [],
+    "SubagentStop": [],
+    "SessionStart": []
   },
   "statusLine": {
     "type": "command",
-    "command": "uv run --project $HOME/.claude/statusline statusline"
+    "command": "npx -y ccstatusline@latest",
+    "padding": 0
   },
   "enabledPlugins": {
-    "rust-analyzer-lsp@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true
+    "rust-analyzer-lsp@claude-plugins-official": false,
+    "typescript-lsp@claude-plugins-official": true,
+    "clangd-lsp@claude-plugins-official": false,
+    "context7@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "plugin-dev@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "plannotator@plannotator": true,
+    "obsidian@obsidian-skills": true,
+    "git@beegass-claude-plugins": true,
+    "mcp-builder@beegass-claude-plugins": false,
+    "test-audit@beegass-claude-plugins": true,
+    "upskill-eval@beegass-claude-plugins": true,
+    "cuda-kernels@kernel-plugin": true,
+    "hugging-face-model-trainer@huggingface-skills": false,
+    "hf-kernel-builder@kernel-plugin": true,
+    "flashinfer@kernel-plugin": true,
+    "pallas-expert@kernel-plugin": true,
+    "zoo-scaffolder@freectrl-claude-plugins": true,
+    "ralph-loop@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": false,
+    "julia-lsp@beegass-claude-plugins": true,
+    "toml-lsp@beegass-claude-plugins": true,
+    "ty-lsp@beegass-claude-plugins": false,
+    "rust-analyzer-lsp@beegass-claude-plugins": true,
+    "typescript-lsp@beegass-claude-plugins": true,
+    "clangd-lsp@beegass-claude-plugins": true,
+    "jaxtyc-lsp@beegass-claude-plugins": false,
+    "python-lsp@beegass-claude-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "beegass-claude-plugins": {
+      "source": {
+        "source": "directory",
+        "path": "/home/beegass/Projects/beegass-claude-plugins"
+      }
+    },
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
+    },
+    "plannotator": {
+      "source": {
+        "source": "github",
+        "repo": "backnotprop/plannotator"
+      }
+    },
+    "obsidian-skills": {
+      "source": {
+        "source": "github",
+        "repo": "kepano/obsidian-skills"
+      }
+    },
+    "kernel-plugin": {
+      "source": {
+        "source": "directory",
+        "path": "/home/beegass/Projects/kernel-plugin"
+      }
+    },
+    "huggingface-skills": {
+      "source": {
+        "source": "github",
+        "repo": "huggingface/skills"
+      }
+    },
+    "freectrl-claude-plugins": {
+      "source": {
+        "source": "directory",
+        "path": "/home/beegass/Projects/freectrl-claude-plugins"
+      }
+    }
   },
   "sandbox": {
     "enabled": false,
@@ -196,13 +315,15 @@
     ]
   },
   "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
+  "autoUpdatesChannel": "latest",
+  "autoDreamEnabled": true,
   "showTurnDuration": false,
   "mcpToolSearch": "auto:15",
   "defaultMode": "plan",
   "disableBypassPermissionsMode": true,
   "additionalDirectories": [
     "~/.dotfiles",
-    "~/Projects",
     "/data"
   ]
 }

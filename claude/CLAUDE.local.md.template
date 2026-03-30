@@ -1,0 +1,16 @@
+# Machine: <HOSTNAME> (<ROLE>)
+
+## Hardware
+- CPU: <CPU_MODEL> (<CORES>c/<THREADS>t)
+- GPU: <GPU_MODEL> (<VRAM> VRAM)
+- RAM: <RAM_SIZE>
+- Storage: <STORAGE_DETAILS>
+- OS: <OS_VERSION>
+
+## Network
+- IP: <IP_ADDRESS>
+- Homelab: 2.5GbE switch
+- Peers: <PEER_LIST>
+
+## Role
+<ROLE_DESCRIPTION>

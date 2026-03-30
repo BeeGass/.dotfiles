@@ -43,15 +43,19 @@ uv run mypy .
 - Individual changes exceed atomic principle
 
 ### 4. Message Generation
-**Format:** `<type>(<scope>): <description>`
+**Format:** `<type>(<scope>): <description>` or `<type>(<scope>)!: <description>` for breaking changes
 
-**Types:** feat, fix, docs, style, refactor, perf, test, chore
+**Types:** feat, fix, docs, style, refactor, perf, test, chore, ci, build, revert
 
 **Rules:**
 - Imperative mood, present tense
-- First line ≤72 characters
-- Body wrapped at 72 characters
-- Reference issues in footer
+- Description starts with lowercase letter
+- First line ≤72 characters (aim for ≤50)
+- No trailing period on subject line
+- Body separated from subject by blank line
+- Body lines wrapped at 72 characters
+- Breaking changes: use `!` after type/scope AND add `BREAKING CHANGE:` footer
+- Reference issues in footer (e.g., `Closes #123`)
 - No emojis or AI references
 
 ## Commit Splitting Logic

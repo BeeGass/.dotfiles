@@ -1,55 +1,44 @@
 # Global Development Guidelines
 
-## Hard Rules
 - Never mention being an AI, Anthropic, or "Claude" in code, comments, or commits
 - No emojis in code or comments
 - Prioritize correctness and maintainability over cleverness
+- Dotfiles managed at @~/.dotfiles/ (symlinked to target locations)
+- Machine-specific config at @~/.claude/CLAUDE.local.md
+- New plugin extensions go in @~/Projects/beegass-claude-plugins/ (unless explicitly for FreeCtrl, which uses @~/Projects/freectrl-claude-plugins/):
+  1. Skills
+  2. Agents (subagents)
+  3. Hooks
+  4. MCP servers
+  5. LSP servers
+  6. Output styles
+  7. Commands
 
-## Environment
-- **Dotfiles**: `~/.dotfiles/` (symlinked to target locations)
-- **Primary workstation**: `manifold` (192.168.68.10) - RTX 5090, 64GB, Ubuntu 25.10
-- **Secondary workstation**: `tensor` (192.168.68.11) - RTX 3080, 32GB
-- See `~/.claude/docs/hardware.md` for full homelab specs
+## Remote Control Services
 
-## Code Search
-- **Prefer ast-grep** for structural searches (function calls, imports, syntax patterns)
-- **Use grep** for simple text searches or non-code files
-- See `~/.claude/docs/ast-grep.md` for pattern syntax and examples
+Manifold runs persistent Claude Code Remote Control servers as systemd user services. Each appears as a separate environment in the Claude mobile app and claude.ai/code.
 
-## Language Tooling
-| Language | Formatter/Linter | Type Checker | Package Manager |
-|----------|------------------|--------------|-----------------|
-| Python 3.11+ | ruff | mypy --strict | uv |
-| TypeScript | prettier + eslint | tsc (strict) | npm/pnpm |
-| Rust | rustfmt + clippy | rustc | cargo |
+| Environment | Service | Directory |
+|---|---|---|
+| Manifold | `claude-rc-manifold` | `~/` |
+| Manifold Projects | `claude-rc-projects` | `~/Projects` |
+| Manifold FreeCtrl | `claude-rc-freectrl` | `~/Projects/FreeCtrl` |
+| Manifold RSDE | `claude-rc-rsde` | `~/Projects/RSDE` |
 
-## Python Style
-- Use `Result[T, E]` types for error handling (see `python-style.md` for implementation)
-- Type all functions with `| None` syntax (not `Optional`)
-- Naming: `calc_*`, `fetch_*`, `parse_*` prefixes; `is_*`, `has_*`, `can_*` for booleans
-- See `~/.claude/docs/python-style.md` for comprehensive Python conventions
+Service files: `~/.config/systemd/user/claude-rc-*.service`
 
-## ML Stack (JAX Ecosystem)
-- **Neural networks**: Flax NNX (not Linen)
-- **Optimization**: Optax
-- **Checkpointing**: Orbax
-- **Data loading**: Grain
-- **Config**: Fiddle
-- Use jaxtyping for array annotations: `Float[Array, "batch seq_len d_model"]`
-- See `~/.claude/docs/jax-ml.md` for detailed patterns
+### Management (via SSH or terminal)
 
-## Verification
-Before committing, run project-specific checks:
-- **Python**: `uv run ruff check . && uv run ruff format . && uv run mypy . --strict`
-- **Rust**: `cargo fmt && cargo clippy && cargo test`
-- **TypeScript**: `npm run lint && npm run typecheck && npm run test`
+```bash
+systemctl --user status claude-rc-*          # Status of all
+systemctl --user stop claude-rc-freectrl     # Stop one
+systemctl --user start claude-rc-freectrl    # Start one
+systemctl --user restart claude-rc-manifold   # Restart one
+```
 
-## Reference Docs
-- `~/.claude/docs/code-quality.md` - General principles, function extraction
-- `~/.claude/docs/python-style.md` - Comprehensive Python style (types, Result, patterns)
-- `~/.claude/docs/jax-ml.md` - JAX/Flax/NNX conventions, sharding, safety checks
-- `~/.claude/docs/security.md` - OWASP, secure coding patterns
-- `~/.claude/docs/testing.md` - Testing philosophy, frameworks
-- `~/.claude/docs/documentation.md` - Code comments, docstrings, README guidelines
-- `~/.claude/docs/git-workflow.md` - Conventional commits, branch naming
+### Notes
 
+- All four auto-start on login and restart on failure
+- Sessions are sandboxed to each service's working directory
+- Each server supports up to 32 concurrent sessions
+- Trust state is stored in `~/.claude.json` under `projects.<path>.hasTrustDialogAccepted`
