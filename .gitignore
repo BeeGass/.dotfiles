@@ -325,3 +325,30 @@ authorized_keys
 *.gpg
 *.asc
 *.sig
+
+# ============================================================================
+# Claude Harness Runtime State
+# ============================================================================
+# Per-instance state, not source. Durable migration/design docs live under
+# docs/nixos/ or docs/ generally; these dirs hold ephemeral harness artifacts.
+claude/CLAUDE.local.md
+claude/plans/
+claude/plugins/
+claude/skills/
+
+# ============================================================================
+# Build Artifacts
+# ============================================================================
+# Rust target dirs for in-repo tools (generic 'target/' already covered above)
+claude/hooks-rs/target/
+
+# Python venvs for in-repo tools
+claude/statusline/.venv/
+scripts/zen-nv/.venv/
+
+# Ruff cache
+.ruff_cache/
+
+# Nix build symlinks (in case `nix build` is ever run without --no-link)
+/result
+/result-*
