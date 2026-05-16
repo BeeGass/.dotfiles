@@ -1,6 +1,6 @@
 # CLI tools and their configurations.
 # Replaces tool integration from zsh/80-tools.zsh and packages from install/ubuntu-install.sh.
-{ pkgs, lib, ... }:
+{ config, pkgs, lib, ... }:
 {
   programs.fzf = {
     enable = true;
@@ -68,6 +68,8 @@
     wl-clipboard # Wayland clipboard (Linux-only)
   ];
 
-  # Neofetch config
-  xdg.configFile."neofetch/config.conf".source = ../../../neofetch/desktop-neofetch.conf;
+  # Neofetch config — live-symlinked so edits to the dotfile are picked up
+  # without a home-manager rebuild.
+  xdg.configFile."neofetch/config.conf".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/neofetch/desktop-neofetch.conf";
 }

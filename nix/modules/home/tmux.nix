@@ -1,5 +1,6 @@
 # Tmux configuration.
-# Loads the existing tmux.conf (432 lines) via extraConfig.
+# Sources tmux/tmux.conf at runtime (not build time) so edits to the dotfile
+# take effect on next `tmux source-file` without a home-manager rebuild.
 { config, pkgs, lib, ... }:
 {
   programs.tmux = {
@@ -21,7 +22,9 @@
       sidebar
     ];
 
-    extraConfig = builtins.readFile ../../../tmux/tmux.conf;
+    extraConfig = ''
+      source-file ${config.home.homeDirectory}/.dotfiles/tmux/tmux.conf
+    '';
   };
 
   # Bootstrap TPM (tmux plugin manager)

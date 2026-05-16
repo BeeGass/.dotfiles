@@ -1,5 +1,6 @@
 # Neovim configuration.
-# Loads the existing vimrc (534 lines) via extraConfig.
+# Sources vim/vimrc at runtime (not build time) so edits to the dotfile
+# take effect on next nvim start without a home-manager rebuild.
 # The vimrc uses vim-plug for plugins and Colemak-DH keybindings.
 { config, pkgs, ... }:
 {
@@ -8,8 +9,9 @@
     defaultEditor = true;
     viAlias = true;
     vimAlias = true;
-    # Relative path from this file (works regardless of home directory)
-    extraConfig = builtins.readFile ../../../vim/vimrc;
+    extraConfig = ''
+      source ${config.home.homeDirectory}/.dotfiles/vim/vimrc
+    '';
   };
 
   home.packages = [ pkgs.vim ];

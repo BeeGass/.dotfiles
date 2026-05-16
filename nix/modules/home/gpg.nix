@@ -1,6 +1,12 @@
 # GPG configuration.
 # Translates: gnupg/gpg.conf + gnupg/linux-gpg-agent.conf
 # Enhanced with security-hardened settings from feat/nix-flake-setup
+#
+# NOTE: source-of-truth duplication with ../../../gnupg/* pending refactor.
+# Edits to ../../../gnupg/* will NOT take effect on NixOS until the
+# dead-source-files refactor lands. For now, edit this file directly for GPG
+# changes on NixOS; the ../../../gnupg/* files remain canonical for the
+# imperative installer (macOS, RPi, Termux).
 { pkgs, lib, vars, ... }:
 {
   programs.gpg = {

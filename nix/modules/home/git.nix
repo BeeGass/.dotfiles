@@ -1,6 +1,12 @@
 # Git configuration.
 # Translates: git/gitconfig (69 lines)
-{ pkgs, lib, vars, ... }:
+#
+# NOTE: source-of-truth duplication with ../../../git/gitconfig pending refactor.
+# Edits to ../../../git/gitconfig will NOT take effect on NixOS until the
+# dead-source-files refactor lands. For now, edit this file directly for git
+# changes on NixOS; the ../../../git/gitconfig file remains canonical for the
+# imperative installer (macOS, RPi, Termux).
+{ config, pkgs, lib, vars, ... }:
 {
   programs.git = {
     enable = true;
@@ -59,6 +65,15 @@
 
     includes = [{ path = "~/.gitconfig.local"; }];
   };
+
+  # Provide the per-platform local override file referenced by programs.git.includes.
+  # Without this, `git` warns on every invocation that ~/.gitconfig.local is missing.
+  # On Linux: symlink to git/gitconfig.linux. On Darwin: git/gitconfig.macos.
+  home.file.".gitconfig.local".source = config.lib.file.mkOutOfStoreSymlink (
+    if pkgs.stdenv.isDarwin
+    then "${config.home.homeDirectory}/.dotfiles/git/gitconfig.macos"
+    else "${config.home.homeDirectory}/.dotfiles/git/gitconfig.linux"
+  );
 
   # GitHub CLI
   programs.gh = {

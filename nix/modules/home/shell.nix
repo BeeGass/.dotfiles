@@ -1,5 +1,11 @@
 # Complete Zsh configuration.
 # Translates: zsh/00-init.zsh through zsh/90-local.zsh (all 12 files)
+#
+# NOTE: source-of-truth duplication with ../../../zsh/*.zsh pending refactor.
+# Edits to ../../../zsh/* will NOT take effect on NixOS until the dead-source-files
+# refactor lands. For now, edit this file directly for zsh changes on NixOS;
+# the ../../../zsh/* files remain canonical for the imperative installer
+# (macOS, RPi, Termux). See: docs/nixos/manifold-migration-plan.md Phase 2.6.
 { config, pkgs, lib, vars, ... }:
 {
   programs.zsh = {
