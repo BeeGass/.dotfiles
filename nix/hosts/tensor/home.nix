@@ -1,24 +1,21 @@
-# Tensor - Secondary ML server (standalone home-manager while on Ubuntu)
-# RTX 3080, 32GB RAM
-# Usage: home-manager switch --flake ~/.dotfiles#beegass@tensor
+# Tensor - host-specific home-manager overrides.
 #
-# Base modules imported by mkHome in flake.nix.
+# Two consumers:
+#   1. The standalone `homeConfigurations."beegass@tensor"` (used while Tensor
+#      still runs Ubuntu — soon to be obsolete once Phase 6 lands).
+#   2. The NixOS `nixosConfigurations.tensor` home-manager submodule (Phase 6+).
+#
+# CUDA paths are now provided by the system (nix/modules/nixos/optional/cuda.nix)
+# and HF cache env vars come from datasets.nix. Nothing Tensor-specific is needed
+# at the user level beyond what the shared home modules already provide.
 { config, pkgs, vars, ... }:
 {
   home.username = vars.username;
   home.homeDirectory = "/home/${vars.username}";
 
-  # GPU monitoring
+  # GPU monitoring (also installed system-side via cuda.nix; keeping here is a
+  # no-op redundancy that helps the standalone HM path stay functional too).
   home.packages = with pkgs; [
     nvtopPackages.nvidia
-  ];
-
-  # System CUDA on Ubuntu (not Nix-managed)
-  home.sessionVariables = {
-    CUDA_PATH = "/usr/local/cuda";
-  };
-
-  home.sessionPath = [
-    "/usr/local/cuda/bin"
   ];
 }

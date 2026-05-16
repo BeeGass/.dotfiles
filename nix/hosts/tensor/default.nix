@@ -1,6 +1,8 @@
-# Tensor - Secondary ML server
-# Currently runs Ubuntu. This NixOS config is for future migration.
-# RTX 3080, 32GB RAM
+# Tensor - Interim full workstation during the Manifold NixOS migration.
+# Ryzen 9 3900X, 32GB RAM. GPU: RTX 3080 initially, RTX 5090 after Phase 11 transplant.
+#
+# Roles (per flake.nix): nvidia, cuda, datasets, niri, greetd, audio, steam,
+# tailscale, flatpak, docker, filesystems-btrfs.
 { config, pkgs, vars, ... }:
 {
   imports = [
@@ -9,7 +11,7 @@
 
   networking.hostName = "tensor";
 
-  # Static IP (uncomment after first boot, set correct interface name)
+  # Static IP — confirm interface name after first boot (likely enp* for PCIe Ethernet).
   # networking.interfaces.INTERFACE.ipv4.addresses = [{
   #   address = "192.168.68.11";
   #   prefixLength = 24;

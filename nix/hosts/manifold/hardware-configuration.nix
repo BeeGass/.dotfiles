@@ -36,10 +36,13 @@
     device = "/dev/disk/by-label/boot";
     fsType = "vfat";
   };
-  # WD_BLACK SN850X 2TB - existing data drive
+  # Dedicated dataset NVMe (XFS, label "data"). Real probe will replace this
+  # stub via `nixos-generate-config` during Phase 8.4. The new 4 TB NVMe
+  # (planned install during Phase 8.1) becomes the long-term home for /data.
   fileSystems."/data" = {
     device = "/dev/disk/by-label/data";
     fsType = "xfs";
+    options = [ "noatime" "nofail" ];
   };
 
   swapDevices = [];

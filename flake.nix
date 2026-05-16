@@ -73,12 +73,14 @@
   {
     # ── NixOS System Configurations (full system management) ──────────
     nixosConfigurations = {
-      # Primary workstation: Ryzen 9 9950X3D, RTX 5090, 64GB, Niri WM
+      # Primary workstation: Ryzen 9 9950X3D, RTX 5090 -> RTX Pro 6000, 64GB, Niri WM.
+      # Migrated to NixOS in Phase 8 after Tensor receives Manifold's data.
       manifold = mkHost {
         name = "manifold";
         roles = [
           "nvidia"
           "cuda"
+          "datasets"
           "niri"
           "greetd"
           "audio"
@@ -90,18 +92,24 @@
         ];
       };
 
-      # Secondary ML server: RTX 3080, 32GB
-      # NOTE: Tensor currently runs Ubuntu. When migrating to NixOS,
-      # uncomment this and create nix/hosts/tensor/hardware-configuration.nix
-      # tensor = mkHost {
-      #   name = "tensor";
-      #   roles = [
-      #     "nvidia"
-      #     "cuda"
-      #     "tailscale"
-      #     "docker"
-      #   ];
-      # };
+      # Interim full workstation during migration: Ryzen 9 3900X, RTX 3080 -> RTX 5090.
+      # Migrated to NixOS in Phase 6 (first); inherits the 5090 from Manifold in Phase 11.
+      tensor = mkHost {
+        name = "tensor";
+        roles = [
+          "nvidia"
+          "cuda"
+          "datasets"
+          "niri"
+          "greetd"
+          "audio"
+          "steam"
+          "tailscale"
+          "flatpak"
+          "docker"
+          "filesystems-btrfs"
+        ];
+      };
     };
 
     # ── nix-darwin Configuration (macOS) ──────────────────────────────

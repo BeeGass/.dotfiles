@@ -5,7 +5,7 @@
   # -- User Identity --
   username = "beegass";
   fullName = "Bryan Gass";
-  email = "bryank123@live.com";
+  email = "44324535+BeeGass@users.noreply.github.com";
   githubUser = "BeeGass";
 
   # -- GPG Key IDs (from YubiKey) --
@@ -25,13 +25,13 @@
         ip = "192.168.68.10";
         system = "x86_64-linux";
         username = "beegass";
-        description = "Primary ML workstation (Ryzen 9 9950X3D, RTX 5090, 64GB)";
+        description = "Primary ML workstation (Ryzen 9 9950X3D, 64GB). GPU: RTX Pro 6000 (Blackwell 96GB) planned; RTX 5090 current. NixOS + Niri.";
       };
       tensor = {
         ip = "192.168.68.11";
         system = "x86_64-linux";
         username = "beegass";
-        description = "Secondary ML server (RTX 3080, 32GB)";
+        description = "Interim workstation during migration (Ryzen 9 3900X, 32GB). GPU: RTX 5090 (Blackwell 32GB) planned via transplant from manifold; RTX 3080 current. NixOS + Niri.";
       };
       matrix = {
         # macOS - Apple Silicon MacBook
