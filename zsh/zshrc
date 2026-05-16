@@ -9,6 +9,7 @@ source ~/.dotfiles/zsh/30-plugins.zsh
 source ~/.dotfiles/zsh/40-aliases.zsh
 source ~/.dotfiles/zsh/50-functions.zsh
 source ~/.dotfiles/zsh/60-completions.zsh
+source ~/.dotfiles/zsh/65-claude.zsh
 source ~/.dotfiles/zsh/70-keybindings.zsh
 source ~/.dotfiles/zsh/80-tools.zsh
 source ~/.dotfiles/zsh/90-local.zsh 2>/dev/null  # Local overrides (not in git)

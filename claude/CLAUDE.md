@@ -4,6 +4,7 @@
 - No emojis in code or comments
 - Prioritize correctness and maintainability over cleverness
 - Dotfiles managed at @~/.dotfiles/ (symlinked to target locations)
+- Three Claude config instances: `~/.claude/`, `~/.claude-alt/`, `~/.claude-main/` — share `settings.json`, `CLAUDE.md`, `commands`, `hooks`, `rules`, `statusline`, `templates`, and `.mcp.json` via symlinks to `~/.dotfiles/claude/`; state (sessions, history, plugins, projects, tasks) is independent per instance
 - Machine-specific config at @~/.claude/CLAUDE.local.md
 - New plugin extensions go in @~/Projects/beegass-claude-plugins/ (unless explicitly for FreeCtrl, which uses @~/Projects/freectrl-claude-plugins/):
   1. Skills
@@ -14,31 +15,9 @@
   6. Output styles
   7. Commands
 
-## Remote Control Services
+## Memory Convention
 
-Manifold runs persistent Claude Code Remote Control servers as systemd user services. Each appears as a separate environment in the Claude mobile app and claude.ai/code.
-
-| Environment | Service | Directory |
-|---|---|---|
-| Manifold | `claude-rc-manifold` | `~/` |
-| Manifold Projects | `claude-rc-projects` | `~/Projects` |
-| Manifold FreeCtrl | `claude-rc-freectrl` | `~/Projects/FreeCtrl` |
-| Manifold RSDE | `claude-rc-rsde` | `~/Projects/RSDE` |
-
-Service files: `~/.config/systemd/user/claude-rc-*.service`
-
-### Management (via SSH or terminal)
-
-```bash
-systemctl --user status claude-rc-*          # Status of all
-systemctl --user stop claude-rc-freectrl     # Stop one
-systemctl --user start claude-rc-freectrl    # Start one
-systemctl --user restart claude-rc-manifold   # Restart one
-```
-
-### Notes
-
-- All four auto-start on login and restart on failure
-- Sessions are sandboxed to each service's working directory
-- Each server supports up to 32 concurrent sessions
-- Trust state is stored in `~/.claude.json` under `projects.<path>.hasTrustDialogAccepted`
+- Project memory lives in the repo at `.claude/memory/`, distributed per-package for monorepos. The harness per-project memory path symlinks to the repo for backward compatibility.
+- In `freectrl`, see `.claude/rules/auto-memory.md` for the 3-tier placement rule (package / root cross-cutting / harness-global).
+- Harness-global memory (doc/commit conventions, Claude Code config audits) lives in `~/<harness>/memory/` and is never committed.
+- For other projects, follow the same convention: source of truth in the repo, symlink from the harness.

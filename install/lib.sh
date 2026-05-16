@@ -122,7 +122,7 @@ _symlink_claude_file() {
   local src_name="$1"
   local dst_name="$2"
   local claude_dotfiles="${DOTFILES_DIR}/claude"
-  local claude_dir="$HOME/.claude"
+  local claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude-main}"
   local src="$claude_dotfiles/$src_name"
   local dst="$claude_dir/$dst_name"
 
@@ -152,7 +152,7 @@ _symlink_claude_file() {
 _symlink_claude_dir() {
   local dir="$1"
   local claude_dotfiles="${DOTFILES_DIR}/claude"
-  local claude_dir="$HOME/.claude"
+  local claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude-main}"
   local src="$claude_dotfiles/$dir"
   local dst="$claude_dir/$dir"
 

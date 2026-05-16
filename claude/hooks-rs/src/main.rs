@@ -1460,7 +1460,10 @@ fn session_logger(input: &HookInput) -> HookResult {
         Err(_) => return HookResult::ok(),
     };
 
-    let log_dir = PathBuf::from(&home).join(".claude/logs");
+    let log_dir = env::var("CLAUDE_CONFIG_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from(&home).join(".claude-main"))
+        .join("logs");
     let _ = fs::create_dir_all(&log_dir);
 
     let now = std::time::SystemTime::now()

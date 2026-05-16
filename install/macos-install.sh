@@ -213,8 +213,8 @@ setup_claude() {
         return 0
     fi
 
-    step "Ensuring ~/.claude directory exists"
-    mkdir -p "$HOME/.claude"
+    step "Ensuring ${CLAUDE_CONFIG_DIR:-$HOME/.claude-main} directory exists"
+    mkdir -p "${CLAUDE_CONFIG_DIR:-$HOME/.claude-main}"
 
     step "Symlinking Claude configuration files"
     # Files: src_name -> dst_name (same name for all currently)

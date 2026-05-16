@@ -517,6 +517,85 @@ def build_disk_warning() -> Text | None:
     return None
 
 
+# --- ccx Profile + OAuth Usage ---
+def _resolve_ccx_profile() -> str | None:
+    """Determine the active ccx profile name from CLAUDE_CONFIG_DIR or the
+    ccx state file. Returns None if no profile can be identified."""
+    ccd = os.environ.get("CLAUDE_CONFIG_DIR", "")
+    prefix = os.path.expanduser("~/.claude-")
+    if ccd.startswith(prefix):
+        return ccd[len(prefix):]
+    xdg = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+    state = Path(xdg) / "ccx" / "current"
+    if state.exists():
+        try:
+            name = state.read_text(encoding="utf-8").strip()
+            return name or None
+        except OSError:
+            return None
+    return None
+
+
+def build_ccx_usage_segment() -> Text | None:
+    """Build ccx segment: <profile> 5h X% 7d Y% from ccx-poll output.
+
+    Hits the OAuth /api/oauth/usage endpoint via ccx-poll, which caches
+    responses for 30s so rapid prompt renders do not cause network traffic.
+    Returns None if ccx-poll is not installed, no profile can be resolved,
+    the subprocess fails, or the endpoint is unreachable.
+    """
+    ccx_poll = os.path.expanduser("~/Projects/ccx/bin/ccx-poll")
+    if not os.path.exists(ccx_poll):
+        return None
+
+    profile = _resolve_ccx_profile()
+    if profile is None:
+        return None
+
+    try:
+        result = subprocess.run(
+            [ccx_poll, "--profile", profile, "--all"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return None
+    if result.returncode != 0:
+        return None
+
+    data: dict[str, float] = {}
+    for line in result.stdout.strip().splitlines():
+        if "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        try:
+            data[k] = float(v.rstrip("%"))
+        except ValueError:
+            continue
+    if not data:
+        return None
+
+    text = Text()
+    text.append(profile, style=style("magenta", bold=True))
+    if "5h" in data:
+        text.append(" 5h ", style=style("dim"))
+        text.append(
+            f"{data['5h']:.0f}%", style=Style(color=gradient_color(data["5h"]))
+        )
+    if "7d" in data:
+        text.append(" 7d ", style=style("dim"))
+        text.append(
+            f"{data['7d']:.0f}%", style=Style(color=gradient_color(data["7d"]))
+        )
+    if "extra" in data and data["extra"] > 0:
+        text.append(" extra ", style=style("dim"))
+        text.append(
+            f"{data['extra']:.0f}%", style=Style(color=gradient_color(data["extra"]))
+        )
+    return text
+
+
 # --- Context Window Usage ---
 def build_context_segment(ctx: dict[str, object] | None) -> Text | None:
     """Build context window usage segment: CTX 32%"""
@@ -602,6 +681,11 @@ def main() -> None:
             if i > 0:
                 line.append(" ", style=style("dim"))
             line.append_text(part)
+
+    # ccx profile + 5h/7d OAuth usage
+    if ccx_seg := build_ccx_usage_segment():
+        add_separator(line)
+        line.append_text(ccx_seg)
 
     # Context window usage
     if ctx_seg := build_context_segment(ctx):

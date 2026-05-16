@@ -205,14 +205,14 @@ clean_symlinks() {
   remove_symlink "$HOME/.config/fontconfig/conf.d/30-google-sans-mono-mono.conf"
 
   # Claude config symlinks
-  remove_symlink "$HOME/.claude/CLAUDE.md"
-  remove_symlink "$HOME/.claude/settings.json"
-  remove_symlink "$HOME/.claude/.mcp.json"
-  remove_symlink "$HOME/.claude/docs"
-  remove_symlink "$HOME/.claude/hooks"
-  remove_symlink "$HOME/.claude/statusline"
-  remove_symlink "$HOME/.claude/templates"
-  remove_symlink "$HOME/.claude/commands"
+  remove_symlink "${CLAUDE_CONFIG_DIR:-$HOME/.claude-main}/CLAUDE.md"
+  remove_symlink "${CLAUDE_CONFIG_DIR:-$HOME/.claude-main}/settings.json"
+  remove_symlink "${CLAUDE_CONFIG_DIR:-$HOME/.claude-main}/.mcp.json"
+  remove_symlink "${CLAUDE_CONFIG_DIR:-$HOME/.claude-main}/docs"
+  remove_symlink "${CLAUDE_CONFIG_DIR:-$HOME/.claude-main}/hooks"
+  remove_symlink "${CLAUDE_CONFIG_DIR:-$HOME/.claude-main}/statusline"
+  remove_symlink "${CLAUDE_CONFIG_DIR:-$HOME/.claude-main}/templates"
+  remove_symlink "${CLAUDE_CONFIG_DIR:-$HOME/.claude-main}/commands"
 
   # Platform-specific git config
   remove_symlink "$HOME/.gitconfig.local"
