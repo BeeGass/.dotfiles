@@ -52,6 +52,12 @@ else
   export PATH="$HOME/.julia/juliaup/bin:$PATH"
 fi
 
+# llama.cpp (llama-cli, llama-server, llama-bench, ...)
+if [[ -d "$HOME/Projects/llama.cpp/build/bin" ]]; then
+  export PATH="$HOME/Projects/llama.cpp/build/bin:$PATH"
+  export LD_LIBRARY_PATH="$HOME/Projects/llama.cpp/.venv/lib/python3.14/site-packages/nvidia/cu13/lib:${LD_LIBRARY_PATH:-}"
+fi
+
 # Editor (vim on HPC where neovim is unavailable)
 if [[ -e "$DOTFILES_FLAGS_DIR/IS_HPC" ]] && ! command -v nvim >/dev/null 2>&1; then
   export EDITOR="vim"

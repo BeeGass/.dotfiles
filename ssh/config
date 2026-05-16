@@ -9,6 +9,9 @@ Host *
     ServerAliveInterval 60
     ServerAliveCountMax 3
     IdentitiesOnly no
+    HashKnownHosts yes
+    UpdateHostKeys yes
+    StrictHostKeyChecking accept-new
 
 # Tailscale short names → MagicDNS
 Host Jacobian Hessian
@@ -16,12 +19,18 @@ Host Jacobian Hessian
     User beegass
     Port 40822
     ForwardAgent no
+    ControlMaster auto
+    ControlPath ~/.ssh/cm-%C
+    ControlPersist 10m
 
 Host Tensor Matrix Vector Manifold
     HostName %h.tailf7d439.ts.net
     User beegass
     Port 40822            # make sure sshd on each device actually listens here (or change to 22)
     ForwardAgent no
+    ControlMaster auto
+    ControlPath ~/.ssh/cm-%C
+    ControlPersist 10m
 
 # ─────────────────────────────────────────────────────────────────────────────
 
