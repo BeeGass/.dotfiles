@@ -268,37 +268,67 @@ clean *FLAGS:
 # ------------------------------------------------------------------------------
 # NixOS
 # ------------------------------------------------------------------------------
+# Default host is the local machine (read from /etc/hostname). Pass an explicit
+# host to target a different config: `just nixos-switch tensor`.
 
 # Build and activate the NixOS configuration
 [group('nixos')]
 [linux]
-nixos-switch:
-    sudo nixos-rebuild switch --flake {{DOTFILES_DIR}}#manifold
+nixos-switch host=`cat /etc/hostname 2>/dev/null || echo manifold`:
+    sudo nixos-rebuild switch --flake {{DOTFILES_DIR}}#{{host}}
 
 # Test the NixOS configuration (activate without adding to boot menu)
 [group('nixos')]
 [linux]
-nixos-test:
-    sudo nixos-rebuild test --flake {{DOTFILES_DIR}}#manifold
+nixos-test host=`cat /etc/hostname 2>/dev/null || echo manifold`:
+    sudo nixos-rebuild test --flake {{DOTFILES_DIR}}#{{host}}
 
 # Build and add to boot menu without activating
 [group('nixos')]
 [linux]
-nixos-boot:
-    sudo nixos-rebuild boot --flake {{DOTFILES_DIR}}#manifold
+nixos-boot host=`cat /etc/hostname 2>/dev/null || echo manifold`:
+    sudo nixos-rebuild boot --flake {{DOTFILES_DIR}}#{{host}}
 
 # Build the NixOS configuration without activating (dry build)
 [group('nixos')]
 [linux]
-nixos-build:
-    nixos-rebuild build --flake {{DOTFILES_DIR}}#manifold
+nixos-build host=`cat /etc/hostname 2>/dev/null || echo manifold`:
+    nixos-rebuild build --flake {{DOTFILES_DIR}}#{{host}}
 
-# Update all flake inputs (nixpkgs, home-manager, niri, etc.)
+# Update all flake inputs. GPU stack tracks unstable; run ml-check before/after.
 [group('nixos')]
 nixos-update:
+    @echo "WARNING: GPU stack tracks unstable. Run 'just ml-check' before and after."
+    @echo "         Lock flake.lock with a commit when you reach a known-good state."
     nix flake update --flake {{DOTFILES_DIR}}
 
 # Garbage collect old NixOS generations and nix store
 [group('nixos')]
 nixos-gc:
     sudo nix-collect-garbage -d && nix-collect-garbage -d
+
+# ------------------------------------------------------------------------------
+# GPU / ML smoke tests
+# ------------------------------------------------------------------------------
+# Run these after first NixOS boot, after each GPU swap, and after any
+# `just nixos-update` to catch driver regressions. Require NixOS + working
+# NVIDIA driver; will fail on plain Ubuntu unless a Nix shell is available.
+
+# Report GPU name, driver, VRAM, compute capability
+[group('ml')]
+gpu-check:
+    nvidia-smi --query-gpu=name,driver_version,memory.total,compute_cap --format=csv
+
+# Verify PyTorch sees the GPU (needs Blackwell-capable torch ≥ 2.7 from PyPI)
+[group('ml')]
+torch-check:
+    nix develop {{DOTFILES_DIR}}#ml -c uv run --with 'torch>=2.7' python -c "import torch; print('cuda:', torch.cuda.is_available()); print('device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else None); print('cap:', torch.cuda.get_device_capability() if torch.cuda.is_available() else None)"
+
+# Verify JAX sees the GPU (jax[cuda12] from PyPI; nixpkgs JAX lags Blackwell)
+[group('ml')]
+jax-check:
+    nix develop {{DOTFILES_DIR}}#ml -c uv run --with 'jax[cuda12]' python -c "import jax; print('devices:', jax.devices())"
+
+# Run all three GPU smoke tests in sequence
+[group('ml')]
+ml-check: gpu-check torch-check jax-check
