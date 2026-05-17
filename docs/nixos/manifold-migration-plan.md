@@ -1,6 +1,8 @@
 # NixOS Migration Plan: Ubuntu -> NixOS + Niri
 
-> **Update:** GPU choreography revised — Manifold RTX 5090 → RTX Pro 6000 (Blackwell); displaced 5090 transplants to Tensor. Sequencing: Tensor migrates to NixOS first (Phase 6), holds Manifold's data, Manifold migrates second (Phase 8) with a new 4 TB NVMe for `/data`, then GPU swaps. Verify post-swap with `just ml-check`. Driver/CUDA decisions unchanged. See `claude/plans/im-about-to-begin-swift-blum.md` for the execution plan.
+> **SUPERSEDED.** The authoritative install plan is now `docs/nixos/manifold-install-plan.md` and the post-install runbook is `docs/nixos/first-boot.md`. The reality also changed: Tensor was decommissioned (hardware moved into Manifold), the RTX Pro 6000 is already installed in Manifold, and the disk layout is now six drives with LUKS on the system drive.
+>
+> This file is kept as a historical reference for the original research (reference configurations from ryan4yin, Misterio77, breakds/nixvital, graham33; ML/CUDA patterns from pierrot-lc, SomeoneSerge, natsukium, hf-nix; the Blackwell sm_120 PyTorch ≥ 2.7 constraint). Do not execute against this document.
 
 ## Context
 

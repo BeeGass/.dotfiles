@@ -1,6 +1,6 @@
 # Tensor Setup Guide
 
-> **TODO (post-migration rewrite):** This guide documents the Ubuntu + standalone home-manager path. After the Tensor NixOS migration (Phase 6 of `claude/plans/im-about-to-begin-swift-blum.md`) and the 5090 transplant (Phase 11), this document needs a rewrite: NixOS-installer path instead of `home-manager switch`, RTX 5090 instead of 3080 in the verification block. Leaving as-is for historical reference until the migration lands.
+> **OBSOLETE — Tensor has been decommissioned.** Its hardware (RTX Pro 6000, several SSDs) was moved into Manifold. The Manifold install plan is at `docs/nixos/manifold-install-plan.md`. This file is kept as a historical reference for the Ubuntu + standalone home-manager pattern in case it's useful for a future host.
 
 Step-by-step instructions for applying the Nix home-manager configuration
 to **Tensor** (secondary ML server, Ubuntu, RTX 3080, 32GB RAM, IP 192.168.68.11).

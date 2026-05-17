@@ -1,8 +1,11 @@
-# Tensor - Interim full workstation during the Manifold NixOS migration.
-# Ryzen 9 3900X, 32GB RAM. GPU: RTX 3080 initially, RTX 5090 after Phase 11 transplant.
+# Tensor - DECOMMISSIONED. Hardware (RTX Pro 6000, several SSDs) moved into
+# Manifold. The flake.nix nixosConfigurations.tensor entry is commented out.
 #
-# Roles (per flake.nix): nvidia, cuda, datasets, niri, greetd, audio, steam,
-# tailscale, flatpak, docker, filesystems-btrfs.
+# This file is kept as a stub for potential reuse on a future host with the
+# same hostname. Original spec: Ryzen 9 3900X, 32GB RAM, RTX 3080.
+#
+# Roles (per the commented flake entry): nvidia, cuda, datasets, niri,
+# greetd, audio, steam, tailscale, flatpak, docker, filesystems-btrfs.
 { config, pkgs, vars, ... }:
 {
   imports = [

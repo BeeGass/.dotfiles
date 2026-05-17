@@ -25,13 +25,15 @@
         ip = "192.168.68.10";
         system = "x86_64-linux";
         username = "beegass";
-        description = "Primary ML workstation (Ryzen 9 9950X3D, 64GB). GPU: RTX Pro 6000 (Blackwell 96GB) planned; RTX 5090 current. NixOS + Niri.";
+        description = "Primary ML workstation (Ryzen 9 9950X3D, 64GB, RTX Pro 6000 Blackwell 96GB). NixOS + Niri. Multi-drive: system LUKS+btrfs on 9100 PRO; /data on T705 4TB; /srv/ml on SN850X; /work on 980; /games on QVO; /rescue on 750 EVO.";
       };
+      # tensor - DECOMMISSIONED. Hardware moved into manifold. Entry kept for
+      # potential reuse on a future host with the same hostname.
       tensor = {
         ip = "192.168.68.11";
         system = "x86_64-linux";
         username = "beegass";
-        description = "Interim workstation during migration (Ryzen 9 3900X, 32GB). GPU: RTX 5090 (Blackwell 32GB) planned via transplant from manifold; RTX 3080 current. NixOS + Niri.";
+        description = "DECOMMISSIONED. Original: Ryzen 9 3900X, 32GB, RTX 3080. Hardware moved into manifold.";
       };
       matrix = {
         # macOS - Apple Silicon MacBook

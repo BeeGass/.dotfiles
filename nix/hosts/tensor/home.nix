@@ -1,13 +1,8 @@
-# Tensor - host-specific home-manager overrides.
+# Tensor - DECOMMISSIONED stub. Kept for potential reuse on a future host.
 #
-# Two consumers:
-#   1. The standalone `homeConfigurations."beegass@tensor"` (used while Tensor
-#      still runs Ubuntu — soon to be obsolete once Phase 6 lands).
-#   2. The NixOS `nixosConfigurations.tensor` home-manager submodule (Phase 6+).
-#
-# CUDA paths are now provided by the system (nix/modules/nixos/optional/cuda.nix)
-# and HF cache env vars come from datasets.nix. Nothing Tensor-specific is needed
-# at the user level beyond what the shared home modules already provide.
+# Original purpose: host-specific home-manager overrides for the standalone
+# `homeConfigurations."beegass@tensor"` and the NixOS submodule (both now
+# commented in flake.nix).
 { config, pkgs, vars, ... }:
 {
   home.username = vars.username;

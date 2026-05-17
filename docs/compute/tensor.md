@@ -1,17 +1,25 @@
-# Tensor
+# Tensor — DECOMMISSIONED
 
-Interim full workstation during the Manifold NixOS migration. Becomes a permanent secondary ML/workstation after Phase 11 (5090 transplant).
+This host has been retired. Hardware was migrated into Manifold to consolidate the x86_64-linux compute footprint:
 
-## Hardware
+- **RTX Pro 6000** (Blackwell, 96GB) — now Manifold's primary GPU (replaced the RTX 5090, which was Manifold's previous GPU; 5090 disposition: TBD).
+- **Samsung SSD 980 1TB (NVMe)** — now Manifold's `/work` (XFS, containers/VMs/builds/scratch).
+- **Samsung SSD 860 QVO 1TB (SATA)** — now Manifold's `/games` (btrfs+zstd).
+- **Samsung SSD 750 EVO 250GB (SATA)** — now Manifold's `/rescue` (ext4).
+- **Samsung SSD 970 EVO 1TB (NVMe)** — not currently in use (Manifold's NVMe slots are populated by the 9100 PRO + T705 + SN850X + 980).
+
+The hostname `tensor`, the Tailscale node, and the homeConfigurations/nixosConfigurations entries are commented out in `flake.nix` but kept in the repo as stubs for potential reuse on a future host.
+
+## Original hardware (pre-decommission)
 
 | Component | Spec |
 |-----------|------|
 | CPU | AMD Ryzen 9 3900X (12c/24t) |
-| GPU | NVIDIA RTX 5090 (Blackwell, 32GB VRAM) planned via transplant from Manifold (Phase 11); RTX 3080 (10GB) current. Disposition of displaced 3080: TBD. |
+| GPU | NVIDIA GeForce RTX 3080 (10GB VRAM) |
 | RAM | 32GB DDR4 |
 | Motherboard | Gigabyte B550I AORUS PRO AX |
-| Storage | Samsung SSD 980 1TB (NVMe, system Btrfs) + Samsung SSD 970 EVO 1TB (NVMe, /data XFS) + Samsung SSD 860 QVO 1TB (SATA, unused/scratch) + Samsung SSD 750 EVO 250GB (SATA, unused) |
-| OS | NixOS + Niri (Phase 6); was Ubuntu 25.10 |
+| Storage | Samsung 980 1TB (NVMe) + 970 EVO 1TB (NVMe) + 860 QVO 1TB (SATA) + 750 EVO 250GB (SATA) |
+| OS | Ubuntu 25.10 |
 
 ## Network
 
@@ -25,6 +33,4 @@ Interim full workstation during the Manifold NixOS migration. Becomes a permanen
 
 ## Role
 
-- **Interim full workstation** during the Manifold NixOS migration (Phases 6–10): NixOS + Niri, the same role set Manifold has. Holds Manifold's `/data` and `/home` content during the cutover.
-- Long-term: secondary ML/workstation. Receives the RTX 5090 from Manifold in Phase 11.
-- CUDA toolkit from `nix/modules/nixos/optional/cuda.nix` (system-side); per-project ML stacks via the `.#ml` devShell.
+Retired. See decommissioning notes at the top of this file for where each component went.

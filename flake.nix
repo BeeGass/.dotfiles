@@ -2,10 +2,9 @@
 #
 # NixOS hosts (full system management):
 #   sudo nixos-rebuild switch --flake ~/.dotfiles#manifold
-#   sudo nixos-rebuild switch --flake ~/.dotfiles#tensor
 #
 # Standalone home-manager (non-NixOS Linux hosts):
-#   home-manager switch --flake ~/.dotfiles#beegass@jacobian
+#   home-manager switch --flake ~/.dotfiles#ubuntu@jacobian
 #   home-manager switch --flake ~/.dotfiles#ubuntu@hessian
 #
 # macOS (nix-darwin + home-manager):
@@ -13,6 +12,9 @@
 #
 # Dev shells:
 #   nix develop .#ml  (CUDA + uv + Python)
+#
+# Note: Tensor was decommissioned. Its RTX Pro 6000 and several SSDs were
+# moved into Manifold. See docs/nixos/manifold-install-plan.md.
 {
   description = "BeeGass multi-host NixOS, nix-darwin, and Home Manager configuration";
 
@@ -73,8 +75,10 @@
   {
     # ── NixOS System Configurations (full system management) ──────────
     nixosConfigurations = {
-      # Primary workstation: Ryzen 9 9950X3D, RTX 5090 -> RTX Pro 6000, 64GB, Niri WM.
-      # Migrated to NixOS in Phase 8 after Tensor receives Manifold's data.
+      # Primary workstation: Ryzen 9 9950X3D, RTX Pro 6000 (Blackwell, 96GB),
+      # 64GB DDR5, Niri WM. Multi-drive layout (system LUKS+btrfs on 9100 PRO;
+      # /data on T705; /srv/ml on SN850X; /work on 980; /games on QVO; /rescue
+      # on 750 EVO). See docs/nixos/manifold-install-plan.md.
       manifold = mkHost {
         name = "manifold";
         roles = [
@@ -92,24 +96,25 @@
         ];
       };
 
-      # Interim full workstation during migration: Ryzen 9 3900X, RTX 3080 -> RTX 5090.
-      # Migrated to NixOS in Phase 6 (first); inherits the 5090 from Manifold in Phase 11.
-      tensor = mkHost {
-        name = "tensor";
-        roles = [
-          "nvidia"
-          "cuda"
-          "datasets"
-          "niri"
-          "greetd"
-          "audio"
-          "steam"
-          "tailscale"
-          "flatpak"
-          "docker"
-          "filesystems-btrfs"
-        ];
-      };
+      # Tensor - DECOMMISSIONED. Hardware (RTX Pro 6000, several SSDs) moved
+      # into Manifold. Kept commented for potential reuse on a future host —
+      # the role list and host stub files at nix/hosts/tensor/ remain in place.
+      # tensor = mkHost {
+      #   name = "tensor";
+      #   roles = [
+      #     "nvidia"
+      #     "cuda"
+      #     "datasets"
+      #     "niri"
+      #     "greetd"
+      #     "audio"
+      #     "steam"
+      #     "tailscale"
+      #     "flatpak"
+      #     "docker"
+      #     "filesystems-btrfs"
+      #   ];
+      # };
     };
 
     # ── nix-darwin Configuration (macOS) ──────────────────────────────
@@ -157,12 +162,12 @@
         username = "ubuntu";
       };
 
-      # Tensor - Secondary ML server (while still on Ubuntu)
-      # Usage: home-manager switch --flake ~/.dotfiles#beegass@tensor
-      "beegass@tensor" = mkHome {
-        system = "x86_64-linux";
-        hostname = "tensor";
-      };
+      # Tensor - DECOMMISSIONED. Hardware moved into Manifold. Kept commented
+      # for potential reuse on a future host.
+      # "beegass@tensor" = mkHome {
+      #   system = "x86_64-linux";
+      #   hostname = "tensor";
+      # };
 
       # Generic fallback (for testing or unknown hosts)
       # Usage: home-manager switch --flake ~/.dotfiles#beegass
