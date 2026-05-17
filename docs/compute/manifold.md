@@ -17,14 +17,14 @@ Primary ML workstation. Currently runs Ubuntu 25.10. NixOS + Niri migration in p
 
 | Device | Model | Mount | FS | Encrypted |
 |---|---|---|---|---|
-| nvme0n1 | Samsung 9100 PRO 2TB (PCIe 5.0) | /boot + LUKS(system) | vfat + btrfs subvols (@, @home, @nix, @log, @swap) | yes |
-| nvme1n1 | Crucial T705 4TB (PCIe 5.0) | /data | XFS | no |
-| nvme2n1 | WD_BLACK SN850X 2TB (PCIe 4.0) | /srv/ml (bind: /models, /checkpoints) | XFS | no |
-| nvme3n1 | Samsung 980 1TB (PCIe 3.0) | /work | XFS | no |
-| sdb | Samsung 860 QVO 1TB (SATA) | /games | btrfs+zstd | no |
-| sda | Samsung 750 EVO 250GB (SATA) | /rescue | ext4 | no |
+| nvme0n1 | Samsung 9100 PRO 2TB (PCIe 5.0) | /boot + LUKS(system) | vfat + btrfs subvols (@root, @home, @nix, @log) | yes |
+| nvme1n1 | Crucial T705 4TB (PCIe 5.0) | /library (datasets, HF cache, external models) | btrfs (compress=zstd:1) | no |
+| nvme2n1 | WD_BLACK SN850X 2TB (PCIe 4.0) | /work (runs, checkpoints, logs, projects) | btrfs (compress=zstd:1) | no |
+| nvme3n1 | Samsung 980 1TB (PCIe 3.0) | /cache (docker, uv, pip, triton, jax, ccache) | btrfs (compress=zstd:1) | no |
+| sdb | Samsung 860 QVO 1TB (SATA) | /games | ext4 | no |
+| sda | Samsung 750 EVO 250GB (SATA) | /pad (scratchpad: ideas, scripts, snippets) | ext4 | no |
 
-T7 Shield external is reserved for business documents and is explicitly not part of this layout.
+Swap is zram-only; no on-disk swap. T7 Shield external is reserved for business documents and is explicitly not part of this layout.
 
 ## Network
 

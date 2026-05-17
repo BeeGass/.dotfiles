@@ -1,23 +1,29 @@
 # Manifold hardware/filesystem layout.
 #
-# This file mirrors the disk layout in docs/nixos/manifold-install-plan.md:
+# This file mirrors the disk layout in docs/nixos/manifold-install-plan.md.
+# All six drives are encoded here; the install plan covers Phase 0/A/B
+# operational steps (data pre-migration, install, drop Ubuntu).
 #
-#   /boot        nvme0n1p1  vfat (label NIXBOOT, 1 GiB)
-#   /, /home,
-#   /nix, /var/log,
-#   /swap        nvme0n1p2  LUKS (partlabel cryptnixos) -> btrfs subvols
-#                           (label nixos, subvols: @ @home @nix @log @swap)
-#   /data        nvme1n1p1  XFS  (label data)   -- Crucial T705 4 TB
-#   /srv/ml      nvme2n1p1  XFS  (label ml)     -- WD_BLACK SN850X 2 TB
-#                           (with bind mounts at /models and /checkpoints)
-#   /work        nvme3n1p1  XFS  (label work)   -- Samsung 980 1 TB
-#   /games       sdb1       btrfs (label games, compress=zstd) -- 860 QVO
-#   /rescue      sda1       ext4 (label rescue) -- 750 EVO
+#   /boot      nvme0n1p1  vfat   (label NIXBOOT, 1 GiB)
+#   system     nvme0n1p2  LUKS (partlabel cryptnixos) -> btrfs label `nixos`
+#                         subvols: @root @home @nix @log
+#                         (no @swap -- swap is zram-only)
+#   /library   nvme1n1p1  btrfs  (label library, compress=zstd:1) -- T705 4 TB
+#   /work      nvme2n1p1  btrfs  (label work,    compress=zstd:1) -- SN850X 2 TB
+#   /cache     nvme3n1p1  btrfs  (label cache)                    -- 980 1 TB
+#   /games     sdb1       ext4   (label games)                    -- 860 QVO 1 TB
+#   /pad       sda1       ext4   (label pad)                      -- 750 EVO 250 GB
+#
+# Semantic model:
+#   /library = read-mostly reference (datasets, HF cache, external models)
+#   /work    = active outputs       (runs, checkpoints, logs, notes, projects)
+#   /cache   = rebuildable          (docker, uv, pip, triton, jax, ccache)
+#   /pad     = scratchpad           (ideas, scripts, probes, snippets)
 #
 # `boot.initrd.{availableKernelModules,kernelModules}` and the AMD microcode
-# line are stubs that will be replaced by `nixos-generate-config --root /mnt`
-# output during install. The fileSystems block + LUKS device declaration are
-# authoritative — preserve them when merging the generated probe.
+# line are stubs replaced by `nixos-generate-config --root /mnt` output during
+# install. The fileSystems block + LUKS device + swap config are authoritative
+# and should be preserved when merging the generated probe.
 { config, lib, pkgs, modulesPath, ... }:
 {
   imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
@@ -33,7 +39,7 @@
   fileSystems."/" = {
     device = "/dev/disk/by-label/nixos";
     fsType = "btrfs";
-    options = [ "subvol=@" "compress=zstd" "noatime" "ssd" "space_cache=v2" ];
+    options = [ "subvol=@root" "compress=zstd" "noatime" "ssd" "space_cache=v2" ];
   };
   fileSystems."/home" = {
     device = "/dev/disk/by-label/nixos";
@@ -50,11 +56,6 @@
     fsType = "btrfs";
     options = [ "subvol=@log" "compress=zstd" "noatime" "ssd" "space_cache=v2" ];
   };
-  fileSystems."/swap" = {
-    device = "/dev/disk/by-label/nixos";
-    fsType = "btrfs";
-    options = [ "subvol=@swap" "noatime" "nodatacow" ];
-  };
 
   # ESP
   fileSystems."/boot" = {
@@ -63,43 +64,36 @@
   };
 
   # Bulk filesystems (unencrypted; machine assumed physically secure)
-  fileSystems."/data" = {
-    device = "/dev/disk/by-label/data";
-    fsType = "xfs";
-    options = [ "noatime" "nofail" ];
-  };
-  fileSystems."/srv/ml" = {
-    device = "/dev/disk/by-label/ml";
-    fsType = "xfs";
-    options = [ "noatime" "nofail" ];
-  };
-  fileSystems."/models" = {
-    device = "/srv/ml/models";
-    options = [ "bind" ];
-  };
-  fileSystems."/checkpoints" = {
-    device = "/srv/ml/checkpoints";
-    options = [ "bind" ];
+  fileSystems."/library" = {
+    device = "/dev/disk/by-label/library";
+    fsType = "btrfs";
+    options = [ "compress=zstd:1" "noatime" "nofail" ];
   };
   fileSystems."/work" = {
     device = "/dev/disk/by-label/work";
-    fsType = "xfs";
-    options = [ "noatime" "nofail" ];
+    fsType = "btrfs";
+    options = [ "compress=zstd:1" "noatime" "nofail" ];
+  };
+  fileSystems."/cache" = {
+    device = "/dev/disk/by-label/cache";
+    fsType = "btrfs";
+    options = [ "compress=zstd:1" "noatime" "nofail" ];
   };
   fileSystems."/games" = {
     device = "/dev/disk/by-label/games";
-    fsType = "btrfs";
-    options = [ "compress=zstd" "noatime" "nofail" ];
+    fsType = "ext4";
+    options = [ "noatime" "nofail" ];
   };
-  fileSystems."/rescue" = {
-    device = "/dev/disk/by-label/rescue";
+  fileSystems."/pad" = {
+    device = "/dev/disk/by-label/pad";
     fsType = "ext4";
     options = [ "noatime" "nosuid" "nodev" "nofail" ];
   };
 
-  # 32 GiB swapfile on the @swap subvol (created via `btrfs filesystem mkswapfile`
-  # during install) + zram for additional in-memory swap. No hibernation.
-  swapDevices = [ { device = "/swap/swapfile"; } ];
+  # No disk swap -- zram-only. The 9100 PRO has an optional p3 reserved for
+  # future disk swap (zram backing-device or plain swap) but is unused by
+  # default.
+  swapDevices = [ ];
   zramSwap.enable = true;
 
   hardware.cpu.amd.updateMicrocode = true;

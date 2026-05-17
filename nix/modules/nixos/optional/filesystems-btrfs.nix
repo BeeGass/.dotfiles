@@ -7,20 +7,22 @@
 #
 # Expected subvolume layout (created during install per
 # docs/nixos/manifold-install-plan.md):
-#   @       -> mounted at /
+#   @root   -> mounted at /
 #   @home   -> mounted at /home
 #   @nix    -> mounted at /nix
 #   @log    -> mounted at /var/log
-#   @swap   -> mounted at /swap (holds the swapfile, nodatacow)
+#
+# Swap is zram-only on this host; no @swap subvol, no swapfile.
 #
 # btrbk snapshots are stored alongside the subvolumes on the same
 # Btrfs filesystem. For off-site backups, configure btrbk send/receive
 # targets separately.
 #
 # This module covers ONLY the system Btrfs pool (label `nixos`) on the
-# encrypted system drive. The /games btrfs filesystem on the QVO does NOT
-# get btrbk snapshots (rebuildable game data) or scrubs from this module —
-# scrubbing /games is per-mount and not configured here.
+# encrypted system drive. The /library, /work, /cache btrfs filesystems on
+# the bulk drives are NOT snapshotted by this module — they hold rebuildable
+# or external-source data, and snapshotting their volume of churn would be
+# expensive. Add per-mount btrbk targets if a specific bulk subtree needs it.
 { config, lib, pkgs, ... }:
 
 {
@@ -35,7 +37,7 @@
       # The Btrfs volume to snapshot. This is the top-level (subvolid=5)
       # mount, which gives btrbk access to all subvolumes.
       volume."/mnt/btrfs-root" = {
-        subvolume."@" = {};
+        subvolume."@root" = {};
         subvolume."@home" = {};
       };
     };

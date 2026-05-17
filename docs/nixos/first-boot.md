@@ -48,16 +48,33 @@ cat > ~/.dotfiles/zsh/90-local.zsh <<'EOF'
 #
 # SECRETS POLICY: API keys and tokens are loaded via `load-secrets` from the
 # pass store. Run `load-secrets` in any shell that needs them.
+#
+# These env vars are also set system-side by nix/modules/nixos/optional/datasets.nix.
+# Duplicated here for tools that read shell init (some IDE terminals) and as
+# documentation when reading the file.
 
-# Hugging Face cache + ML roots (also system sessionVariables; redundant for
-# tools that read shell init like some IDE terminals).
-export HF_HOME="/data/hf-cache"
-export HF_HUB_CACHE="/data/hf-cache/hub"
-export TRANSFORMERS_CACHE="/data/hf-cache"
-export DATASETS_ROOT="/data/datasets"
-export MODELS_ROOT="/models"
-export CHECKPOINTS_ROOT="/checkpoints"
-export SCRATCH_ROOT="/work/scratch"
+# /library -- read-mostly reference (datasets, HF cache, external models)
+export LIBRARY_ROOT=/library
+export DATASETS_ROOT=/library/datasets
+export HF_HOME=/library/hf-cache
+export HF_HUB_CACHE=/library/hf-cache/hub
+export TRANSFORMERS_CACHE=/library/hf-cache
+export MODELS_ROOT=/library/models-external
+
+# /work -- active outputs
+export WORK_ROOT=/work
+export RUNS_ROOT=/work/runs
+export CHECKPOINTS_ROOT=/work/checkpoints
+
+# /cache -- rebuildable tool caches
+export CACHE_ROOT=/cache
+export UV_CACHE_DIR=/cache/uv
+export PIP_CACHE_DIR=/cache/pip
+export TRITON_CACHE_DIR=/cache/triton
+export JAX_COMPILATION_CACHE_DIR=/cache/jax
+
+# /pad -- scratchpad
+export PAD_ROOT=/pad
 
 # OpenCode CLI (installed manually, not in nixpkgs)
 export PATH="$HOME/.opencode/bin:$PATH"
@@ -169,12 +186,16 @@ journalctl --user -u claude-rc-manifold -n 50 --no-pager
 ## 11. Mount + drive verification
 
 ```sh
-findmnt -t btrfs,xfs,vfat,ext4 | grep -v snap
-df -h /data /srv/ml /models /checkpoints /work /games /rescue
+findmnt -t btrfs,ext4,vfat | grep -v snap
+df -h /library /work /cache /games /pad
 lsblk -o NAME,SIZE,FSTYPE,LABEL,PARTLABEL,MOUNTPOINT
 btrfs subvolume list /
+btrfs filesystem df /library
+btrfs filesystem df /work
+btrfs filesystem df /cache
 cryptsetup status cryptroot
-swapon --show
+swapon --show   # zram only
+env | grep -E '^(LIBRARY|WORK|CACHE|PAD)_ROOT='
 ```
 
 ---
